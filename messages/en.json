@@ -1,0 +1,42 @@
+{
+  "App": {
+    "name": "Logistics CRM",
+    "tagline": "Driver document and trip management"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "search": "Search"
+  },
+  "Auth": {
+    "signInTitle": "Sign In",
+    "signInSubtitle": "Sign in to access your account",
+    "email": "Email",
+    "emailPlaceholder": "example@company.com",
+    "password": "Password",
+    "signInButton": "Sign In",
+    "magicLinkButton": "Send magic link",
+    "magicLinkSent": "A sign-in link has been sent to your email.",
+    "or": "or",
+    "signOut": "Sign Out",
+    "invalidCredentials": "Invalid email or password.",
+    "genericError": "An error occurred. Please try again."
+  },
+  "Roles": {
+    "admin": "Company Admin",
+    "dispatcher": "Dispatcher",
+    "driver": "Driver"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome"
+  },
+  "Driver": {
+    "title": "My Trips",
+    "noTrips": "No assigned trips"
+  }
+}

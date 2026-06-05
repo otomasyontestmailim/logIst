@@ -1,0 +1,42 @@
+{
+  "App": {
+    "name": "Lojistik CRM",
+    "tagline": "Şoför belge ve sefer yönetimi"
+  },
+  "Common": {
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "back": "Geri",
+    "search": "Ara"
+  },
+  "Auth": {
+    "signInTitle": "Giriş Yap",
+    "signInSubtitle": "Hesabınıza erişmek için giriş yapın",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@firma.com",
+    "password": "Parola",
+    "signInButton": "Giriş Yap",
+    "magicLinkButton": "E-posta ile giriş bağlantısı gönder",
+    "magicLinkSent": "Giriş bağlantısı e-postanıza gönderildi.",
+    "or": "veya",
+    "signOut": "Çıkış Yap",
+    "invalidCredentials": "E-posta veya parola hatalı.",
+    "genericError": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "Roles": {
+    "admin": "Firma Admini",
+    "dispatcher": "Dispatcher",
+    "driver": "Şoför"
+  },
+  "Dashboard": {
+    "title": "Panel",
+    "welcome": "Hoş geldiniz"
+  },
+  "Driver": {
+    "title": "Seferlerim",
+    "noTrips": "Atanmış sefer yok"
+  }
+}
