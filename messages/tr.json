@@ -31,9 +31,40 @@
     "dispatcher": "Dispatcher",
     "driver": "Şoför"
   },
+  "Nav": {
+    "dashboard": "Panel",
+    "drivers": "Şoförler",
+    "customers": "Müşteriler",
+    "trips": "Seferler",
+    "documents": "Belgeler"
+  },
   "Dashboard": {
     "title": "Panel",
-    "welcome": "Hoş geldiniz"
+    "welcome": "Hoş geldiniz",
+    "activeTrips": "Aktif Sefer",
+    "pendingDocuments": "Bekleyen Belge",
+    "lateDeliveries": "Geciken Teslimat",
+    "drivers": "Şoför"
+  },
+  "Drivers": {
+    "title": "Şoförler",
+    "subtitle": "Şoförleri ve belge geçerliliklerini yönetin",
+    "comingSoon": "Şoför yönetimi yakında (Supabase bağlanınca aktif olacak)."
+  },
+  "Customers": {
+    "title": "Müşteriler",
+    "subtitle": "Gönderen ve alıcı firmalar",
+    "comingSoon": "Müşteri yönetimi yakında."
+  },
+  "Trips": {
+    "title": "Seferler",
+    "subtitle": "Sefer oluştur ve şoförlere ata",
+    "comingSoon": "Sefer yönetimi yakında."
+  },
+  "Documents": {
+    "title": "Belgeler",
+    "subtitle": "Şoförlerin yüklediği taramalar",
+    "comingSoon": "Belge gelen kutusu yakında."
   },
   "Driver": {
     "title": "Seferlerim",

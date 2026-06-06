@@ -5,7 +5,8 @@ import { updateSession } from "./lib/supabase/middleware";
 
 const handleI18nRouting = createMiddleware(routing);
 
-export default async function middleware(request: NextRequest) {
+// Next.js 16: "middleware" → "proxy" dosya konvansiyonu.
+export default async function proxy(request: NextRequest) {
   // 1) Locale yönlendirmesi (tr/en) — response üretir
   const response = handleI18nRouting(request);
   // 2) Aynı response üzerine Supabase oturum çerezlerini yenile

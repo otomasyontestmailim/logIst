@@ -31,9 +31,40 @@
     "dispatcher": "Dispatcher",
     "driver": "Driver"
   },
+  "Nav": {
+    "dashboard": "Dashboard",
+    "drivers": "Drivers",
+    "customers": "Customers",
+    "trips": "Trips",
+    "documents": "Documents"
+  },
   "Dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "activeTrips": "Active Trips",
+    "pendingDocuments": "Pending Documents",
+    "lateDeliveries": "Late Deliveries",
+    "drivers": "Drivers"
+  },
+  "Drivers": {
+    "title": "Drivers",
+    "subtitle": "Manage drivers and document validity",
+    "comingSoon": "Driver management coming soon (activates once Supabase is connected)."
+  },
+  "Customers": {
+    "title": "Customers",
+    "subtitle": "Shipper and consignee companies",
+    "comingSoon": "Customer management coming soon."
+  },
+  "Trips": {
+    "title": "Trips",
+    "subtitle": "Create trips and assign to drivers",
+    "comingSoon": "Trip management coming soon."
+  },
+  "Documents": {
+    "title": "Documents",
+    "subtitle": "Scans uploaded by drivers",
+    "comingSoon": "Document inbox coming soon."
   },
   "Driver": {
     "title": "My Trips",
