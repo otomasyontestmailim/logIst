@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/database.types";
+
+type ProfileRow = Pick<
+  Database["public"]["Tables"]["users"]["Row"],
+  "organization_id" | "role" | "full_name"
+>;
 
 export type CurrentUser = {
   id: string;
@@ -21,9 +27,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("id, organization_id, role, full_name")
+    .select("organization_id, role, full_name")
     .eq("id", user.id)
-    .single();
+    .single<ProfileRow>();
 
   return {
     id: user.id,
