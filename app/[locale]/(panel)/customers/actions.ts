@@ -48,7 +48,7 @@ export async function createCustomer(
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/[locale]/(panel)/customers", "page");
+  revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "created" };
 }
 
@@ -99,7 +99,7 @@ export async function updateCustomer(
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/[locale]/(panel)/customers", "page");
+  revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "updated" };
 }
 
@@ -128,6 +128,6 @@ export async function deleteCustomer(
   const { error } = await admin.from("customers").delete().eq("id", customerId);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/[locale]/(panel)/customers", "page");
+  revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "deleted" };
 }

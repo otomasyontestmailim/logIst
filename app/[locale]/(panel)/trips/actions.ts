@@ -52,7 +52,7 @@ export async function createTrip(
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/[locale]/(panel)/trips", "page");
+  revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "created" };
 }
 
@@ -111,7 +111,7 @@ export async function updateTrip(
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/[locale]/(panel)/trips", "page");
+  revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "updated" };
 }
 
@@ -140,7 +140,7 @@ export async function deleteTrip(
   const { error } = await admin.from("trips").delete().eq("id", tripId);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/[locale]/(panel)/trips", "page");
+  revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "deleted" };
 }
 
@@ -185,6 +185,6 @@ export async function updateTripStatus(
     return { ok: false, error: error.message };
   }
 
-  revalidatePath("/[locale]/(panel)/trips", "page");
+  revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "updated" };
 }

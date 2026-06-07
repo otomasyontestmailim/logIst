@@ -151,7 +151,12 @@ function CustomerTable({ customers }: { customers: CustomerRow[] }) {
             <tr key={c.id} className="align-top">
               <td className="px-4 py-3 font-medium">{c.name}</td>
               <td className="px-4 py-3 text-sm text-muted-foreground">
-                {t(`type${c.type}`)}
+                {t(
+                  `type${c.type.charAt(0).toUpperCase()}${c.type.slice(1)}` as
+                    | "typeShipper"
+                    | "typeConsignee"
+                    | "typeBoth",
+                )}
               </td>
               <td className="px-4 py-3 text-sm text-muted-foreground">
                 <div>

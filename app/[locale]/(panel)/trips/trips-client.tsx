@@ -234,8 +234,26 @@ function TripTable({
   );
 }
 
+const STATUS_CLASSES: Record<string, string> = {
+  created: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  loaded: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  in_transit:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  delivered:
+    "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+};
+
 function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
   const t = useTranslations("Trips");
+  // Optimistic value — güncelleme beklenirken hemen renklendirir
+  const [current, setCurrent] = useState(status);
+  // Sunucu revalidation'dan gelen yeni prop'u render sırasında (useEffect olmadan) senkronize et
+  const [prevProp, setPrevProp] = useState(status);
+  if (prevProp !== status) {
+    setPrevProp(status);
+    setCurrent(status);
+  }
+
   const [state, formAction, pending] = useActionState(
     updateTripStatus,
     initialState,
@@ -250,31 +268,20 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const statusClasses: Record<string, string> = {
-    created:
-      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-    loaded: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    in_transit:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-    delivered:
-      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  };
-
   return (
     <form action={formAction} className="inline-block">
       <input type="hidden" name="trip_id" value={tripId} />
       <select
         name="status"
-        defaultValue={status}
+        value={current}
         disabled={pending}
         onChange={(e) => {
+          const next = e.currentTarget.value;
+          setCurrent(next);
           const form = e.currentTarget.form;
-          if (form) {
-            const formData = new FormData(form);
-            formAction(formData);
-          }
+          if (form) formAction(new FormData(form));
         }}
-        className={`rounded px-2 py-1 text-xs font-medium ${statusClasses[status] ?? statusClasses.created}`}
+        className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[current] ?? STATUS_CLASSES.created}`}
       >
         <option value="created">{t("statusCreated")}</option>
         <option value="loaded">{t("statusLoaded")}</option>
