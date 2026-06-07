@@ -1,10 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const STAT_KEYS = [
   "activeTrips",

@@ -44,7 +44,9 @@ export type Database = {
           plan?: string;
           created_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["organizations"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["organizations"]["Insert"]
+        >;
         Relationships: [];
       };
       users: {

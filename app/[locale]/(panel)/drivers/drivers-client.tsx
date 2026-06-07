@@ -7,11 +7,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  createDriver,
-  deleteDriver,
-  type DriverFormState,
-} from "./actions";
+import { createDriver, deleteDriver, type DriverFormState } from "./actions";
 import type { Database } from "@/lib/supabase/database.types";
 
 type UserRow = Pick<
@@ -198,13 +194,7 @@ function DriverTable({ drivers }: { drivers: DriverRow[] }) {
   );
 }
 
-function ExpiryBadge({
-  label,
-  date,
-}: {
-  label: string;
-  date?: string | null;
-}) {
+function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
   const t = useTranslations("Drivers");
   if (!date) return null;
 

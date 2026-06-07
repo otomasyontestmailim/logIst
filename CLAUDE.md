@@ -17,11 +17,11 @@ Platform sahibi olarak sen de "süper admin" olarak firmaları (kiracıları) a�
 
 ## 2. Roller
 
-| Rol | Nerede | Ne yapar |
-|-----|--------|----------|
-| **Süper admin** (sen) | Web | Firmaları (tenant) açar, abonelik/lisans yönetir |
-| **Firma admini / dispatcher** | Web | Şoför, sefer, müşteri ve belge yönetimi |
-| **Şoför** | Mobil | Sefer görüntüleme, belge tarama/yükleme, durum güncelleme |
+| Rol                           | Nerede | Ne yapar                                                  |
+| ----------------------------- | ------ | --------------------------------------------------------- |
+| **Süper admin** (sen)         | Web    | Firmaları (tenant) açar, abonelik/lisans yönetir          |
+| **Firma admini / dispatcher** | Web    | Şoför, sefer, müşteri ve belge yönetimi                   |
+| **Şoför**                     | Mobil  | Sefer görüntüleme, belge tarama/yükleme, durum güncelleme |
 
 Çok kiracılılık (multi-tenancy): her kayıtta `organization_id` tutulur, veri izolasyonu satır bazlı güvenlikle (RLS) sağlanır.
 
@@ -30,6 +30,7 @@ Platform sahibi olarak sen de "süper admin" olarak firmaları (kiracıları) a�
 ## 3. Temel Özellikler
 
 ### Şoför tarafı (mobil)
+
 - Giriş (firma daveti / e-posta veya telefon ile)
 - Atanan seferlerin listesi (yükleme yeri, boşaltma yeri, durum)
 - **Kamera ile belge tarama:** kenar tespiti, otomatik kırpma, düzeltme (deskew), çok sayfalı belge
@@ -39,6 +40,7 @@ Platform sahibi olarak sen de "süper admin" olarak firmaları (kiracıları) a�
 - Yüklenen belgeyi/durumunu görme
 
 ### Firma tarafı (web CRM)
+
 - Dashboard (aktif sefer sayısı, bekleyen belge, geciken teslimat)
 - **Şoför yönetimi:** ekle/düzenle, ehliyet/SRC/ADR/psikoteknik/yeşil kart gibi belge geçerlilik tarihlerini takip et ve süre dolmadan uyarı ver
 - **Sefer yönetimi:** sefer oluştur, şoföre ata, gönderen/alıcı/rota/tarih bilgisi
@@ -52,14 +54,14 @@ Platform sahibi olarak sen de "süper admin" olarak firmaları (kiracıları) a�
 
 Tek geliştirici + VSCode'da Claude ile kodlama için verimlilik ve Claude'un güçlü olduğu, dokümantasyonu bol bir stack seçtim.
 
-| Katman | Öneri | Neden |
-|--------|-------|-------|
-| Web CRM | **Next.js + TypeScript + Tailwind + shadcn/ui** | Tek dilde full-stack, hızlı UI, Claude bu stack'te çok iyi |
-| Şoför uygulaması (MVP) | **PWA** (aynı Next.js içinde) | Tek kod tabanı, tarayıcı kamerası, hızlı çıkış |
-| Şoför uygulaması (v2) | **Expo / React Native** | Daha iyi tarama UX'i, push bildirim, sağlam offline |
-| Backend + DB + Auth + Storage | **Supabase** (PostgreSQL) | Tek seferde auth, dosya depolama, RLS ile tenant izolasyonu — solo geliştirici için backend yükünü çok azaltır |
-| ORM (isteğe bağlı) | Prisma veya Drizzle | Tip güvenli sorgular |
-| OCR / alan çıkarımı | **Claude Vision API** veya Google Document AI | Taranan belgeden CMR/fatura alanlarını otomatik doldurma |
+| Katman                        | Öneri                                           | Neden                                                                                                          |
+| ----------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Web CRM                       | **Next.js + TypeScript + Tailwind + shadcn/ui** | Tek dilde full-stack, hızlı UI, Claude bu stack'te çok iyi                                                     |
+| Şoför uygulaması (MVP)        | **PWA** (aynı Next.js içinde)                   | Tek kod tabanı, tarayıcı kamerası, hızlı çıkış                                                                 |
+| Şoför uygulaması (v2)         | **Expo / React Native**                         | Daha iyi tarama UX'i, push bildirim, sağlam offline                                                            |
+| Backend + DB + Auth + Storage | **Supabase** (PostgreSQL)                       | Tek seferde auth, dosya depolama, RLS ile tenant izolasyonu — solo geliştirici için backend yükünü çok azaltır |
+| ORM (isteğe bağlı)            | Prisma veya Drizzle                             | Tip güvenli sorgular                                                                                           |
+| OCR / alan çıkarımı           | **Claude Vision API** veya Google Document AI   | Taranan belgeden CMR/fatura alanlarını otomatik doldurma                                                       |
 
 **Alternatifler:** Backend'i ayrı tutmak istersen NestJS/Fastify + PostgreSQL; Supabase yerine Firebase. Ama solo + hız için Supabase tavsiyem güçlü.
 
@@ -86,11 +88,13 @@ Tek geliştirici + VSCode'da Claude ile kodlama için verimlilik ve Claude'un g�
 ## 6. Belge Tarama & OCR Yaklaşımı
 
 **Cihazda (yakalama + kırpma):**
+
 - PWA: `getUserMedia` ile kamera + bir doküman tarayıcı kütüphanesi (ör. OpenCV.js tabanlı `jscanify`)
 - Expo/RN: `react-native-document-scanner-plugin` veya `vision-camera`
 - Çıktı: kırpılmış/düzeltilmiş görüntü, gerekirse çok sayfa → tek PDF
 
 **Sunucuda (alan çıkarımı):**
+
 - Taranan görüntü Storage'a yüklenir
 - OCR/çıkarım: **Claude Vision** ile belgeyi gönderip yapılandırılmış JSON iste (gönderen, alıcı, palet sayısı, brüt ağırlık, fatura no/tutar vb.). Avantajı: CMR ve fatura gibi farklı formatları aynı yaklaşımla çözer
 - Alternatif: Google Document AI / AWS Textract (fatura için hazır modeller)
@@ -212,3 +216,35 @@ Müşteri yönetimi, şoför belge süresi uyarıları, raporlar, dışa aktarma
 4. Firma admini → şoför ekleme ekranını (Faz 1) uçtan uca bitir.
 5. Sefer oluşturma + şoföre atama (Faz 2).
 6. Şoför tarafında kamera ile belge yükleme prototipini çıkar (Faz 3).
+
+---
+
+## 13. Altın Kurallar (kod yazarken ZORUNLU)
+
+> Bu özet her session'da okunur ve **model fark etmeksizin** (Sonnet/Opus) aynı
+> kaliteyi sağlamak içindir. Tam detay: **`CONVENTIONS.md`**. Güncel durum:
+> **`memory/project_state.md`**. Yol haritası: **`ROADMAP.md`**.
+
+1. **Kalite kapısı:** "bitti" demeden önce `npm run check` + `npm run build`
+   temiz geçmeli. Biçim Prettier'a, kurallar ESLint'e bırakılır.
+2. **i18n zorunlu:** kullanıcıya görünen her metin çeviri anahtarı; her anahtar
+   **hem `messages/tr.json` hem `en.json`'a** eklenir.
+3. **shadcn = base-ui (Radix değil):** `Button`'da `asChild` yok →
+   `buttonVariants()`. İkon `lucide-react`, bildirim `sonner`.
+4. **Supabase tipleri elle:** `lib/supabase/database.types.ts` migration ile
+   senkron tutulur; her tabloda `Relationships: []`; gerekirse `.single<T>()` /
+   `.returns<T[]>()`.
+5. **Mutasyon = Server Action** (`{ ok, error?, message? }` deseni); varsayılan
+   Server Component, `"use client"` sadece gerekince.
+6. **Multi-tenant + RLS:** her satırda `organization_id`; normal sorgu RLS'e
+   güvenir.
+7. **Service-role yalnız sunucuda** (`lib/supabase/admin.ts`, `server-only`);
+   RLS bypass olduğu için org/rol/çapraz-tenant **el ile** doğrulanır.
+8. **Sırlar yalnız `.env.local`** (gitignored); `.env.example`/commit/sohbete
+   ASLA gerçek anahtar yazma.
+9. **PowerShell:** `app/[locale]` gibi `[...]` yollarında **`-LiteralPath`** şart.
+10. **Git:** commit kimliği `otomasyontestmailim`; mesaj sonunda
+    `Co-Authored-By: Claude`; `push` sadece kullanıcı onayıyla.
+11. **Dikey dilimler:** DB → action → UI uçtan uca, küçük adımlarla.
+12. **Session ritmi:** başta `project_state.md` oku, sonda güncelle (token
+    tasarrufu — büyük CLAUDE.md'yi yeniden okuma).

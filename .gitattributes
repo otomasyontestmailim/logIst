@@ -1,0 +1,11 @@
+# Tüm metin dosyalarında satır sonu LF olsun (model/işletim sistemi bağımsız tutarlılık)
+* text=auto eol=lf
+
+# İkili dosyalar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

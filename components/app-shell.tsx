@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  LayoutDashboard,
-  Truck,
-  Users,
-  Package,
-  FileText,
-} from "lucide-react";
+import { LayoutDashboard, Truck, Users, Package, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
