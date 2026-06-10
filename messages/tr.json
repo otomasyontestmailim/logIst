@@ -51,6 +51,8 @@
     "subtitle": "Şoförleri ve belge geçerliliklerini yönetin",
     "addDriver": "Şoför Ekle",
     "newDriver": "Yeni Şoför",
+    "editDriver": "Şoför Düzenle",
+    "updatedToast": "Şoför güncellendi.",
     "fullName": "Ad Soyad",
     "email": "E-posta",
     "phone": "Telefon",

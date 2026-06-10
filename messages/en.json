@@ -51,6 +51,8 @@
     "subtitle": "Manage drivers and document validity",
     "addDriver": "Add Driver",
     "newDriver": "New Driver",
+    "editDriver": "Edit Driver",
+    "updatedToast": "Driver updated.",
     "fullName": "Full Name",
     "email": "Email",
     "phone": "Phone",

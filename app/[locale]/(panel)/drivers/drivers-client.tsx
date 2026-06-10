@@ -3,11 +3,16 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createDriver, deleteDriver, type DriverFormState } from "./actions";
+import {
+  createDriver,
+  deleteDriver,
+  updateDriver,
+  type DriverFormState,
+} from "./actions";
 import type { Database } from "@/lib/supabase/database.types";
 
 type UserRow = Pick<
@@ -23,34 +28,60 @@ const initialState: DriverFormState = { ok: false };
 export function DriversClient({ drivers }: { drivers: DriverRow[] }) {
   const t = useTranslations("Drivers");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<DriverRow | null>(null);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setOpen((v) => !v)}>
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setOpen((v) => !v);
+          }}
+        >
           <Plus className="size-4" />
           {t("addDriver")}
         </Button>
       </div>
 
-      {open && <DriverForm onDone={() => setOpen(false)} />}
+      {(open || editing) && (
+        <DriverForm
+          key={editing?.id ?? "new"}
+          driver={editing}
+          onDone={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
+        />
+      )}
 
-      <DriverTable drivers={drivers} />
+      <DriverTable drivers={drivers} onEdit={(d) => setEditing(d)} />
     </div>
   );
 }
 
-function DriverForm({ onDone }: { onDone: () => void }) {
+function DriverForm({
+  driver,
+  onDone,
+}: {
+  driver: DriverRow | null;
+  onDone: () => void;
+}) {
   const t = useTranslations("Drivers");
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
-    createDriver,
+    driver ? updateDriver : createDriver,
     initialState,
   );
 
   useEffect(() => {
-    if (state.ok && state.message === "created") {
-      toast.success(t("createdToast"));
+    if (
+      state.ok &&
+      (state.message === "created" || state.message === "updated")
+    ) {
+      toast.success(
+        state.message === "created" ? t("createdToast") : t("updatedToast"),
+      );
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
@@ -59,38 +90,90 @@ function DriverForm({ onDone }: { onDone: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
+  const p = driver?.profile;
+
   return (
     <form
       ref={formRef}
       action={formAction}
       className="rounded-lg border bg-card p-6 shadow-sm"
     >
-      <h2 className="mb-4 text-lg font-semibold">{t("newDriver")}</h2>
+      <h2 className="mb-4 text-lg font-semibold">
+        {driver ? t("editDriver") : t("newDriver")}
+      </h2>
+      {driver && <input type="hidden" name="driver_id" value={driver.id} />}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field name="full_name" label={t("fullName")} />
-        <Field name="email" label={t("email")} type="email" required />
-        <Field name="phone" label={t("phone")} />
-        <Field name="license_no" label={t("licenseNo")} />
-        <Field name="plate" label={t("plate")} />
-        <Field name="trailer_no" label={t("trailerNo")} />
-        <Field name="src_expiry" label={t("srcExpiry")} type="date" />
-        <Field name="adr_expiry" label={t("adrExpiry")} type="date" />
+        <Field
+          name="full_name"
+          label={t("fullName")}
+          defaultValue={driver?.full_name}
+        />
+        {driver ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="email">{t("email")}</Label>
+            <Input
+              id="email"
+              type="email"
+              defaultValue={driver.email ?? undefined}
+              disabled
+            />
+          </div>
+        ) : (
+          <Field name="email" label={t("email")} type="email" required />
+        )}
+        <Field name="phone" label={t("phone")} defaultValue={driver?.phone} />
+        <Field
+          name="license_no"
+          label={t("licenseNo")}
+          defaultValue={p?.license_no}
+        />
+        <Field name="plate" label={t("plate")} defaultValue={p?.plate} />
+        <Field
+          name="trailer_no"
+          label={t("trailerNo")}
+          defaultValue={p?.trailer_no}
+        />
+        <Field
+          name="src_expiry"
+          label={t("srcExpiry")}
+          type="date"
+          defaultValue={p?.src_expiry}
+        />
+        <Field
+          name="adr_expiry"
+          label={t("adrExpiry")}
+          type="date"
+          defaultValue={p?.adr_expiry}
+        />
         <Field
           name="psikoteknik_expiry"
           label={t("psikoteknikExpiry")}
           type="date"
+          defaultValue={p?.psikoteknik_expiry}
         />
         <Field
           name="green_card_expiry"
           label={t("greenCardExpiry")}
           type="date"
+          defaultValue={p?.green_card_expiry}
         />
-        <div className="space-y-1.5">
-          <Label htmlFor="password">{t("password")}</Label>
-          <Input id="password" name="password" type="text" autoComplete="off" />
-        </div>
+        {!driver && (
+          <div className="space-y-1.5">
+            <Label htmlFor="password">{t("password")}</Label>
+            <Input
+              id="password"
+              name="password"
+              type="text"
+              autoComplete="off"
+            />
+          </div>
+        )}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{t("passwordHint")}</p>
+      {!driver && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("passwordHint")}
+        </p>
+      )}
       <div className="mt-5 flex gap-2">
         <Button type="submit" disabled={pending}>
           {pending ? t("saving") : t("save")}
@@ -113,11 +196,13 @@ function Field({
   label,
   type = "text",
   required = false,
+  defaultValue,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  defaultValue?: string | null;
 }) {
   return (
     <div className="space-y-1.5">
@@ -125,12 +210,24 @@ function Field({
         {label}
         {required && <span className="text-destructive"> *</span>}
       </Label>
-      <Input id={name} name={name} type={type} required={required} />
+      <Input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        defaultValue={defaultValue ?? undefined}
+      />
     </div>
   );
 }
 
-function DriverTable({ drivers }: { drivers: DriverRow[] }) {
+function DriverTable({
+  drivers,
+  onEdit,
+}: {
+  drivers: DriverRow[];
+  onEdit: (driver: DriverRow) => void;
+}) {
   const t = useTranslations("Drivers");
 
   if (drivers.length === 0) {
@@ -184,7 +281,18 @@ function DriverTable({ drivers }: { drivers: DriverRow[] }) {
                 </div>
               </td>
               <td className="px-4 py-3 text-right">
-                <DeleteDriverButton driverId={d.id} />
+                <div className="flex justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(d)}
+                    aria-label={t("editDriver")}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <DeleteDriverButton driverId={d.id} />
+                </div>
               </td>
             </tr>
           ))}

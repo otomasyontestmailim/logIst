@@ -88,6 +88,65 @@ export async function createDriver(
   return { ok: true, message: "created" };
 }
 
+/**
+ * Şoför bilgilerini günceller: public.users (ad/telefon) + driver_profiles (upsert).
+ * E-posta değişikliği MVP'de yok. Yalnızca admin/dispatcher, kendi firmasındaki şoför için.
+ */
+export async function updateDriver(
+  _prev: DriverFormState,
+  formData: FormData,
+): Promise<DriverFormState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) return { ok: false, error: "unauthorized" };
+  if (me.role !== "admin" && me.role !== "dispatcher") {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const driverId = nn(formData.get("driver_id"));
+  if (!driverId) return { ok: false, error: "id_required" };
+
+  const admin = createAdminClient();
+
+  // Çapraz-tenant güncellemeyi engelle + hedef gerçekten şoför mü?
+  const { data: target } = await admin
+    .from("users")
+    .select("organization_id, role")
+    .eq("id", driverId)
+    .single();
+  if (
+    !target ||
+    target.organization_id !== me.organization_id ||
+    target.role !== "driver"
+  ) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const { error: userErr } = await admin
+    .from("users")
+    .update({
+      full_name: nn(formData.get("full_name")),
+      phone: nn(formData.get("phone")),
+    })
+    .eq("id", driverId);
+  if (userErr) return { ok: false, error: userErr.message };
+
+  // Profili olmayan eski kayıtlar için upsert
+  const { error: profErr } = await admin.from("driver_profiles").upsert({
+    user_id: driverId,
+    license_no: nn(formData.get("license_no")),
+    plate: nn(formData.get("plate")),
+    trailer_no: nn(formData.get("trailer_no")),
+    src_expiry: nn(formData.get("src_expiry")),
+    adr_expiry: nn(formData.get("adr_expiry")),
+    psikoteknik_expiry: nn(formData.get("psikoteknik_expiry")),
+    green_card_expiry: nn(formData.get("green_card_expiry")),
+  });
+  if (profErr) return { ok: false, error: profErr.message };
+
+  revalidatePath("/[locale]/drivers", "page");
+  return { ok: true, message: "updated" };
+}
+
 /** Şoförü siler (auth.users silinince public.users + driver_profiles cascade). */
 export async function deleteDriver(
   _prev: DriverFormState,
