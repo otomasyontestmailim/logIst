@@ -158,7 +158,20 @@
   "Documents": {
     "title": "Belgeler",
     "subtitle": "Şoförlerin yüklediği taramalar",
-    "comingSoon": "Belge gelen kutusu yakında."
+    "empty": "Henüz yüklenmiş belge yok.",
+    "colType": "Belge Tipi",
+    "colTrip": "Sefer",
+    "colDriver": "Yükleyen",
+    "colDate": "Tarih",
+    "colStatus": "Durum",
+    "view": "Görüntüle",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "approvedToast": "Belge onaylandı.",
+    "rejectedToast": "Belge reddedildi.",
+    "errorToast": "İşlem başarısız: {error}",
+    "filterStatus": "Duruma göre filtrele",
+    "statusAll": "Tüm durumlar"
   },
   "Driver": {
     "title": "Seferlerim",

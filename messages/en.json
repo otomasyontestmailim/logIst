@@ -158,7 +158,20 @@
   "Documents": {
     "title": "Documents",
     "subtitle": "Scans uploaded by drivers",
-    "comingSoon": "Document inbox coming soon."
+    "empty": "No documents uploaded yet.",
+    "colType": "Document Type",
+    "colTrip": "Trip",
+    "colDriver": "Uploaded By",
+    "colDate": "Date",
+    "colStatus": "Status",
+    "view": "View",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approvedToast": "Document approved.",
+    "rejectedToast": "Document rejected.",
+    "errorToast": "Operation failed: {error}",
+    "filterStatus": "Filter by status",
+    "statusAll": "All statuses"
   },
   "Driver": {
     "title": "My Trips",
