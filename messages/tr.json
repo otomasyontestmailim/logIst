@@ -10,7 +10,9 @@
     "delete": "Sil",
     "edit": "Düzenle",
     "back": "Geri",
-    "search": "Ara"
+    "search": "Ara",
+    "searchPlaceholder": "Ara...",
+    "noResults": "Aramanızla eşleşen kayıt bulunamadı."
   },
   "Confirm": {
     "confirm": "Evet, sil",
@@ -149,7 +151,9 @@
     "statusCreated": "Oluşturuldu",
     "statusLoaded": "Yüklendi",
     "statusInTransit": "Yolda",
-    "statusDelivered": "Teslim Edildi"
+    "statusDelivered": "Teslim Edildi",
+    "filterStatus": "Duruma göre filtrele",
+    "statusAll": "Tüm durumlar"
   },
   "Documents": {
     "title": "Belgeler",

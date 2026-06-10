@@ -10,7 +10,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "back": "Back",
-    "search": "Search"
+    "search": "Search",
+    "searchPlaceholder": "Search...",
+    "noResults": "No records match your search."
   },
   "Confirm": {
     "confirm": "Yes, delete",
@@ -149,7 +151,9 @@
     "statusCreated": "Created",
     "statusLoaded": "Loaded",
     "statusInTransit": "In Transit",
-    "statusDelivered": "Delivered"
+    "statusDelivered": "Delivered",
+    "filterStatus": "Filter by status",
+    "statusAll": "All statuses"
   },
   "Documents": {
     "title": "Documents",

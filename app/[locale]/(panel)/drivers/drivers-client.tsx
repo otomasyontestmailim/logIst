@@ -4,6 +4,7 @@ import {
   startTransition,
   useActionState,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -35,12 +36,31 @@ const initialState: DriverFormState = { ok: false };
 
 export function DriversClient({ drivers }: { drivers: DriverRow[] }) {
   const t = useTranslations("Drivers");
+  const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DriverRow | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return drivers;
+    return drivers.filter((d) =>
+      [d.full_name, d.email, d.phone, d.profile?.plate].some((v) =>
+        v?.toLowerCase().includes(q),
+      ),
+    );
+  }, [drivers, query]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={tc("searchPlaceholder")}
+          className="max-w-xs"
+        />
         <Button
           onClick={() => {
             setEditing(null);
@@ -63,7 +83,11 @@ export function DriversClient({ drivers }: { drivers: DriverRow[] }) {
         />
       )}
 
-      <DriverTable drivers={drivers} onEdit={(d) => setEditing(d)} />
+      <DriverTable
+        drivers={filtered}
+        emptyText={drivers.length > 0 ? tc("noResults") : t("empty")}
+        onEdit={(d) => setEditing(d)}
+      />
     </div>
   );
 }
@@ -231,9 +255,11 @@ function Field({
 
 function DriverTable({
   drivers,
+  emptyText,
   onEdit,
 }: {
   drivers: DriverRow[];
+  emptyText: string;
   onEdit: (driver: DriverRow) => void;
 }) {
   const t = useTranslations("Drivers");
@@ -255,7 +281,7 @@ function DriverTable({
   if (drivers.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {t("empty")}
+        {emptyText}
       </div>
     );
   }

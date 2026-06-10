@@ -4,6 +4,7 @@ import {
   startTransition,
   useActionState,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -43,12 +44,55 @@ export function TripsClient({
   drivers: UserRow[];
 }) {
   const t = useTranslations("Trips");
+  const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TripRow | null>(null);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const customerMap = new Map(customers.map((c) => [c.id, c.name]));
+    const driverMap = new Map(
+      drivers.map((d) => [d.id, d.full_name ?? d.email]),
+    );
+    return trips.filter((trip) => {
+      if (statusFilter !== "all" && trip.status !== statusFilter) return false;
+      if (!q) return true;
+      const customerName = trip.customer_id
+        ? customerMap.get(trip.customer_id)
+        : null;
+      const driverName = trip.driver_id ? driverMap.get(trip.driver_id) : null;
+      return [trip.origin, trip.destination, customerName, driverName].some(
+        (v) => v?.toLowerCase().includes(q),
+      );
+    });
+  }, [trips, customers, drivers, query, statusFilter]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tc("searchPlaceholder")}
+            className="max-w-xs"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label={t("filterStatus")}
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <option value="all">{t("statusAll")}</option>
+            <option value="created">{t("statusCreated")}</option>
+            <option value="loaded">{t("statusLoaded")}</option>
+            <option value="in_transit">{t("statusInTransit")}</option>
+            <option value="delivered">{t("statusDelivered")}</option>
+          </select>
+        </div>
         <Button
           onClick={() => {
             setEditing(null);
@@ -74,9 +118,10 @@ export function TripsClient({
       )}
 
       <TripTable
-        trips={trips}
+        trips={filtered}
         customers={customers}
         drivers={drivers}
+        emptyText={trips.length > 0 ? tc("noResults") : t("empty")}
         onEdit={(trip) => setEditing(trip)}
       />
     </div>
@@ -256,11 +301,13 @@ function TripTable({
   trips,
   customers,
   drivers,
+  emptyText,
   onEdit,
 }: {
   trips: TripRow[];
   customers: CustomerRow[];
   drivers: UserRow[];
+  emptyText: string;
   onEdit: (trip: TripRow) => void;
 }) {
   const t = useTranslations("Trips");
@@ -286,7 +333,7 @@ function TripTable({
   if (trips.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {t("empty")}
+        {emptyText}
       </div>
     );
   }

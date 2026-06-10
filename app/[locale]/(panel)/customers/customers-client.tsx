@@ -4,6 +4,7 @@ import {
   startTransition,
   useActionState,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -28,12 +29,31 @@ const initialState: CustomerFormState = { ok: false };
 
 export function CustomersClient({ customers }: { customers: CustomerRow[] }) {
   const t = useTranslations("Customers");
+  const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CustomerRow | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) =>
+      [c.name, c.city, c.country, c.contact].some((v) =>
+        v?.toLowerCase().includes(q),
+      ),
+    );
+  }, [customers, query]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={tc("searchPlaceholder")}
+          className="max-w-xs"
+        />
         <Button
           onClick={() => {
             setEditing(null);
@@ -56,7 +76,11 @@ export function CustomersClient({ customers }: { customers: CustomerRow[] }) {
         />
       )}
 
-      <CustomerTable customers={customers} onEdit={(c) => setEditing(c)} />
+      <CustomerTable
+        customers={filtered}
+        emptyText={customers.length > 0 ? tc("noResults") : t("empty")}
+        onEdit={(c) => setEditing(c)}
+      />
     </div>
   );
 }
@@ -189,9 +213,11 @@ function Field({
 
 function CustomerTable({
   customers,
+  emptyText,
   onEdit,
 }: {
   customers: CustomerRow[];
+  emptyText: string;
   onEdit: (customer: CustomerRow) => void;
 }) {
   const t = useTranslations("Customers");
@@ -213,7 +239,7 @@ function CustomerTable({
   if (customers.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {t("empty")}
+        {emptyText}
       </div>
     );
   }
