@@ -30,7 +30,9 @@
     "or": "or",
     "signOut": "Sign Out",
     "invalidCredentials": "Invalid email or password.",
-    "genericError": "An error occurred. Please try again."
+    "genericError": "An error occurred. Please try again.",
+    "noOrgTitle": "Your account is not linked to a company",
+    "noOrgDescription": "Sign-in succeeded, but your account has not been assigned to a company and role yet. Please contact your company administrator."
   },
   "Roles": {
     "admin": "Company Admin",

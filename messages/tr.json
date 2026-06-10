@@ -30,7 +30,9 @@
     "or": "veya",
     "signOut": "Çıkış Yap",
     "invalidCredentials": "E-posta veya parola hatalı.",
-    "genericError": "Bir hata oluştu. Lütfen tekrar deneyin."
+    "genericError": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "noOrgTitle": "Hesabınız bir firmaya bağlı değil",
+    "noOrgDescription": "Giriş başarılı ancak hesabınız henüz bir firmaya ve role atanmamış. Lütfen firma yöneticinizle iletişime geçin."
   },
   "Roles": {
     "admin": "Firma Admini",
