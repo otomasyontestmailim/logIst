@@ -3,13 +3,14 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createCustomer,
   deleteCustomer,
+  updateCustomer,
   type CustomerFormState,
 } from "./actions";
 import type { Database } from "@/lib/supabase/database.types";
@@ -21,34 +22,60 @@ const initialState: CustomerFormState = { ok: false };
 export function CustomersClient({ customers }: { customers: CustomerRow[] }) {
   const t = useTranslations("Customers");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<CustomerRow | null>(null);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setOpen((v) => !v)}>
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setOpen((v) => !v);
+          }}
+        >
           <Plus className="size-4" />
           {t("addCustomer")}
         </Button>
       </div>
 
-      {open && <CustomerForm onDone={() => setOpen(false)} />}
+      {(open || editing) && (
+        <CustomerForm
+          key={editing?.id ?? "new"}
+          customer={editing}
+          onDone={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
+        />
+      )}
 
-      <CustomerTable customers={customers} />
+      <CustomerTable customers={customers} onEdit={(c) => setEditing(c)} />
     </div>
   );
 }
 
-function CustomerForm({ onDone }: { onDone: () => void }) {
+function CustomerForm({
+  customer,
+  onDone,
+}: {
+  customer: CustomerRow | null;
+  onDone: () => void;
+}) {
   const t = useTranslations("Customers");
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
-    createCustomer,
+    customer ? updateCustomer : createCustomer,
     initialState,
   );
 
   useEffect(() => {
-    if (state.ok && state.message === "created") {
-      toast.success(t("createdToast"));
+    if (
+      state.ok &&
+      (state.message === "created" || state.message === "updated")
+    ) {
+      toast.success(
+        state.message === "created" ? t("createdToast") : t("updatedToast"),
+      );
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
@@ -63,16 +90,30 @@ function CustomerForm({ onDone }: { onDone: () => void }) {
       action={formAction}
       className="rounded-lg border bg-card p-6 shadow-sm"
     >
-      <h2 className="mb-4 text-lg font-semibold">{t("newCustomer")}</h2>
+      <h2 className="mb-4 text-lg font-semibold">
+        {customer ? t("editCustomer") : t("newCustomer")}
+      </h2>
+      {customer && (
+        <input type="hidden" name="customer_id" value={customer.id} />
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field name="name" label={t("name")} required />
-        <Field name="contact" label={t("contact")} />
+        <Field
+          name="name"
+          label={t("name")}
+          required
+          defaultValue={customer?.name}
+        />
+        <Field
+          name="contact"
+          label={t("contact")}
+          defaultValue={customer?.contact}
+        />
         <div className="space-y-1.5">
           <Label htmlFor="type">{t("type")}</Label>
           <select
             id="type"
             name="type"
-            defaultValue="both"
+            defaultValue={customer?.type ?? "both"}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="shipper">{t("typeShipper")}</option>
@@ -80,9 +121,17 @@ function CustomerForm({ onDone }: { onDone: () => void }) {
             <option value="both">{t("typeBoth")}</option>
           </select>
         </div>
-        <Field name="country" label={t("country")} />
-        <Field name="city" label={t("city")} />
-        <Field name="address" label={t("address")} />
+        <Field
+          name="country"
+          label={t("country")}
+          defaultValue={customer?.country}
+        />
+        <Field name="city" label={t("city")} defaultValue={customer?.city} />
+        <Field
+          name="address"
+          label={t("address")}
+          defaultValue={customer?.address}
+        />
       </div>
       <div className="mt-5 flex gap-2">
         <Button type="submit" disabled={pending}>
@@ -106,11 +155,13 @@ function Field({
   label,
   type = "text",
   required = false,
+  defaultValue,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  defaultValue?: string | null;
 }) {
   return (
     <div className="space-y-1.5">
@@ -118,12 +169,24 @@ function Field({
         {label}
         {required && <span className="text-destructive"> *</span>}
       </Label>
-      <Input id={name} name={name} type={type} required={required} />
+      <Input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        defaultValue={defaultValue ?? undefined}
+      />
     </div>
   );
 }
 
-function CustomerTable({ customers }: { customers: CustomerRow[] }) {
+function CustomerTable({
+  customers,
+  onEdit,
+}: {
+  customers: CustomerRow[];
+  onEdit: (customer: CustomerRow) => void;
+}) {
   const t = useTranslations("Customers");
 
   if (customers.length === 0) {
@@ -169,7 +232,18 @@ function CustomerTable({ customers }: { customers: CustomerRow[] }) {
                 {c.contact}
               </td>
               <td className="px-4 py-3 text-right">
-                <DeleteCustomerButton customerId={c.id} />
+                <div className="flex justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(c)}
+                    aria-label={t("editCustomer")}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <DeleteCustomerButton customerId={c.id} />
+                </div>
               </td>
             </tr>
           ))}

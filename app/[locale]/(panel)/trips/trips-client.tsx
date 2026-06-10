@@ -3,13 +3,14 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createTrip,
   deleteTrip,
+  updateTrip,
   updateTripStatus,
   type TripFormState,
 } from "./actions";
@@ -35,45 +36,71 @@ export function TripsClient({
 }) {
   const t = useTranslations("Trips");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<TripRow | null>(null);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setOpen((v) => !v)}>
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setOpen((v) => !v);
+          }}
+        >
           <Plus className="size-4" />
           {t("addTrip")}
         </Button>
       </div>
 
-      {open && (
+      {(open || editing) && (
         <TripForm
-          onDone={() => setOpen(false)}
+          key={editing?.id ?? "new"}
+          trip={editing}
+          onDone={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
           customers={customers}
           drivers={drivers}
         />
       )}
 
-      <TripTable trips={trips} customers={customers} drivers={drivers} />
+      <TripTable
+        trips={trips}
+        customers={customers}
+        drivers={drivers}
+        onEdit={(trip) => setEditing(trip)}
+      />
     </div>
   );
 }
 
 function TripForm({
+  trip,
   onDone,
   customers,
   drivers,
 }: {
+  trip: TripRow | null;
   onDone: () => void;
   customers: CustomerRow[];
   drivers: UserRow[];
 }) {
   const t = useTranslations("Trips");
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, pending] = useActionState(createTrip, initialState);
+  const [state, formAction, pending] = useActionState(
+    trip ? updateTrip : createTrip,
+    initialState,
+  );
 
   useEffect(() => {
-    if (state.ok && state.message === "created") {
-      toast.success(t("createdToast"));
+    if (
+      state.ok &&
+      (state.message === "created" || state.message === "updated")
+    ) {
+      toast.success(
+        state.message === "created" ? t("createdToast") : t("updatedToast"),
+      );
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
@@ -88,16 +115,30 @@ function TripForm({
       action={formAction}
       className="rounded-lg border bg-card p-6 shadow-sm"
     >
-      <h2 className="mb-4 text-lg font-semibold">{t("newTrip")}</h2>
+      <h2 className="mb-4 text-lg font-semibold">
+        {trip ? t("editTrip") : t("newTrip")}
+      </h2>
+      {trip && <input type="hidden" name="trip_id" value={trip.id} />}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Field name="origin" label={t("origin")} required />
-        <Field name="destination" label={t("destination")} required />
+        <Field
+          name="origin"
+          label={t("origin")}
+          required
+          defaultValue={trip?.origin}
+        />
+        <Field
+          name="destination"
+          label={t("destination")}
+          required
+          defaultValue={trip?.destination}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="customer_id">{t("customer")}</Label>
           <select
             id="customer_id"
             name="customer_id"
+            defaultValue={trip?.customer_id ?? ""}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("selectCustomer")}</option>
@@ -114,6 +155,7 @@ function TripForm({
           <select
             id="driver_id"
             name="driver_id"
+            defaultValue={trip?.driver_id ?? ""}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("selectDriver")}</option>
@@ -125,8 +167,35 @@ function TripForm({
           </select>
         </div>
 
-        <Field name="load_date" label={t("loadDate")} type="date" />
-        <Field name="delivery_date" label={t("deliveryDate")} type="date" />
+        <Field
+          name="load_date"
+          label={t("loadDate")}
+          type="date"
+          defaultValue={trip?.load_date}
+        />
+        <Field
+          name="delivery_date"
+          label={t("deliveryDate")}
+          type="date"
+          defaultValue={trip?.delivery_date}
+        />
+
+        {trip && (
+          <div className="space-y-1.5">
+            <Label htmlFor="status">{t("status")}</Label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={trip.status}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="created">{t("statusCreated")}</option>
+              <option value="loaded">{t("statusLoaded")}</option>
+              <option value="in_transit">{t("statusInTransit")}</option>
+              <option value="delivered">{t("statusDelivered")}</option>
+            </select>
+          </div>
+        )}
       </div>
       <div className="mt-5 flex gap-2">
         <Button type="submit" disabled={pending}>
@@ -150,11 +219,13 @@ function Field({
   label,
   type = "text",
   required = false,
+  defaultValue,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
+  defaultValue?: string | null;
 }) {
   return (
     <div className="space-y-1.5">
@@ -162,7 +233,13 @@ function Field({
         {label}
         {required && <span className="text-destructive"> *</span>}
       </Label>
-      <Input id={name} name={name} type={type} required={required} />
+      <Input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        defaultValue={defaultValue ?? undefined}
+      />
     </div>
   );
 }
@@ -171,10 +248,12 @@ function TripTable({
   trips,
   customers,
   drivers,
+  onEdit,
 }: {
   trips: TripRow[];
   customers: CustomerRow[];
   drivers: UserRow[];
+  onEdit: (trip: TripRow) => void;
 }) {
   const t = useTranslations("Trips");
 
@@ -224,7 +303,18 @@ function TripTable({
                 <div>{trip.delivery_date}</div>
               </td>
               <td className="px-4 py-3 text-right">
-                <DeleteTripButton tripId={trip.id} />
+                <div className="flex justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(trip)}
+                    aria-label={t("editTrip")}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <DeleteTripButton tripId={trip.id} />
+                </div>
               </td>
             </tr>
           ))}
