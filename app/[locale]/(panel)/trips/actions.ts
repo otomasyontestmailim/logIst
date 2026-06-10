@@ -186,5 +186,6 @@ export async function updateTripStatus(
   }
 
   revalidatePath("/[locale]/trips", "page");
+  revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: "updated" };
 }

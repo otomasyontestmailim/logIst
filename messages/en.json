@@ -162,7 +162,37 @@
   },
   "Driver": {
     "title": "My Trips",
-    "noTrips": "No assigned trips"
+    "noTrips": "No assigned trips",
+    "customer": "Customer",
+    "loadDate": "Loading",
+    "deliveryDate": "Delivery",
+    "saving": "Saving...",
+    "markLoaded": "Picked Up the Load",
+    "markInTransit": "On the Road",
+    "markDelivered": "Delivered",
+    "statusUpdated": "Trip status updated.",
+    "errorToast": "Operation failed: {error}",
+    "documentsTitle": "Documents",
+    "noDocuments": "No documents yet.",
+    "selectType": "Document type",
+    "uploadDocument": "Scan / Upload Document",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Document uploaded.",
+    "uploadError": "Upload failed: {error}"
+  },
+  "DocumentTypes": {
+    "cmr": "CMR",
+    "invoice": "Invoice",
+    "waybill": "Waybill",
+    "weighbridge": "Weighbridge Ticket",
+    "adr": "ADR",
+    "customs": "Customs Declaration",
+    "delivery_note": "Delivery Note"
+  },
+  "DocumentStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
   },
   "Errors": {
     "title": "Something went wrong",

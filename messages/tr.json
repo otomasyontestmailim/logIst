@@ -162,7 +162,37 @@
   },
   "Driver": {
     "title": "Seferlerim",
-    "noTrips": "Atanmış sefer yok"
+    "noTrips": "Atanmış sefer yok",
+    "customer": "Müşteri",
+    "loadDate": "Yükleme",
+    "deliveryDate": "Teslimat",
+    "saving": "Kaydediliyor...",
+    "markLoaded": "Yükü Aldım",
+    "markInTransit": "Yola Çıktım",
+    "markDelivered": "Teslim Ettim",
+    "statusUpdated": "Sefer durumu güncellendi.",
+    "errorToast": "İşlem başarısız: {error}",
+    "documentsTitle": "Belgeler",
+    "noDocuments": "Henüz belge yok.",
+    "selectType": "Belge tipi",
+    "uploadDocument": "Belge Çek / Yükle",
+    "uploading": "Yükleniyor...",
+    "uploadSuccess": "Belge yüklendi.",
+    "uploadError": "Yükleme başarısız: {error}"
+  },
+  "DocumentTypes": {
+    "cmr": "CMR",
+    "invoice": "Fatura",
+    "waybill": "İrsaliye",
+    "weighbridge": "Kantar Fişi",
+    "adr": "ADR",
+    "customs": "Gümrük Beyannamesi",
+    "delivery_note": "Teslim Tutanağı"
+  },
+  "DocumentStatus": {
+    "pending": "Onay bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi"
   },
   "Errors": {
     "title": "Bir şeyler ters gitti",
