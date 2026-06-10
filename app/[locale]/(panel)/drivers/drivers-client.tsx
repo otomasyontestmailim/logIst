@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   updateDriver,
   type DriverFormState,
 } from "./actions";
+import { formatDate } from "@/lib/format-date";
 import type { Database } from "@/lib/supabase/database.types";
 
 type UserRow = Pick<
@@ -304,6 +305,7 @@ function DriverTable({
 
 function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
   const t = useTranslations("Drivers");
+  const format = useFormatter();
   if (!date) return null;
 
   const today = new Date();
@@ -326,7 +328,7 @@ function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
       title={title}
       className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}
     >
-      {label}: {date}
+      {label}: {formatDate(format, date)}
     </span>
   );
 }

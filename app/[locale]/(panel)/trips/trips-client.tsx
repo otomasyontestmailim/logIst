@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   updateTripStatus,
   type TripFormState,
 } from "./actions";
+import { formatDate } from "@/lib/format-date";
 import type { Database } from "@/lib/supabase/database.types";
 
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
@@ -256,6 +257,7 @@ function TripTable({
   onEdit: (trip: TripRow) => void;
 }) {
   const t = useTranslations("Trips");
+  const format = useFormatter();
 
   const customerMap = new Map(customers.map((c) => [c.id, c.name]));
   const driverMap = new Map(drivers.map((d) => [d.id, d.full_name ?? d.email]));
@@ -299,8 +301,8 @@ function TripTable({
                 <StatusBadge status={trip.status} tripId={trip.id} />
               </td>
               <td className="px-4 py-3 text-xs text-muted-foreground">
-                <div>{trip.load_date}</div>
-                <div>{trip.delivery_date}</div>
+                <div>{formatDate(format, trip.load_date)}</div>
+                <div>{formatDate(format, trip.delivery_date)}</div>
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">
