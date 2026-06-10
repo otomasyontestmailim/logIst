@@ -163,5 +163,15 @@
   "Driver": {
     "title": "My Trips",
     "noTrips": "No assigned trips"
+  },
+  "Errors": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again; if the problem persists, contact your administrator.",
+    "retry": "Try again"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for may have been moved or never existed.",
+    "goHome": "Go to homepage"
   }
 }

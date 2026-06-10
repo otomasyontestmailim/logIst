@@ -163,5 +163,15 @@
   "Driver": {
     "title": "Seferlerim",
     "noTrips": "Atanmış sefer yok"
+  },
+  "Errors": {
+    "title": "Bir şeyler ters gitti",
+    "description": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin; sorun sürerse yöneticinize bildirin.",
+    "retry": "Tekrar dene"
+  },
+  "NotFound": {
+    "title": "Sayfa bulunamadı",
+    "description": "Aradığınız sayfa taşınmış ya da hiç var olmamış olabilir.",
+    "goHome": "Ana sayfaya dön"
   }
 }
