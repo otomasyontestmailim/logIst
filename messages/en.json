@@ -12,6 +12,10 @@
     "back": "Back",
     "search": "Search"
   },
+  "Confirm": {
+    "confirm": "Yes, delete",
+    "cancel": "Cancel"
+  },
   "Auth": {
     "signInTitle": "Sign In",
     "signInSubtitle": "Sign in to access your account",

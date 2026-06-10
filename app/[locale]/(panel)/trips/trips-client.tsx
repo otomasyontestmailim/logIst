@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -14,6 +20,7 @@ import {
   updateTripStatus,
   type TripFormState,
 } from "./actions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatDate } from "@/lib/format-date";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -258,6 +265,20 @@ function TripTable({
 }) {
   const t = useTranslations("Trips");
   const format = useFormatter();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteTrip,
+    initialState,
+  );
+
+  useEffect(() => {
+    if (deleteState.ok && deleteState.message === "deleted") {
+      toast.success(t("deletedToast"));
+    } else if (!deleteState.ok && deleteState.error) {
+      toast.error(t("errorToast", { error: deleteState.error }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deleteState]);
 
   const customerMap = new Map(customers.map((c) => [c.id, c.name]));
   const driverMap = new Map(drivers.map((d) => [d.id, d.full_name ?? d.email]));
@@ -315,13 +336,37 @@ function TripTable({
                   >
                     <Pencil className="size-4" />
                   </Button>
-                  <DeleteTripButton tripId={trip.id} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={deletePending}
+                    onClick={() => setConfirmId(trip.id)}
+                    aria-label={t("deleteConfirm")}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <ConfirmDialog
+        open={confirmId !== null}
+        onOpenChange={(o) => {
+          if (!o) setConfirmId(null);
+        }}
+        title={t("deleteConfirm")}
+        pending={deletePending}
+        onConfirm={() => {
+          if (!confirmId) return;
+          const fd = new FormData();
+          fd.set("trip_id", confirmId);
+          startTransition(() => deleteAction(fd));
+          setConfirmId(null);
+        }}
+      />
     </div>
   );
 }
@@ -380,45 +425,6 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
         <option value="in_transit">{t("statusInTransit")}</option>
         <option value="delivered">{t("statusDelivered")}</option>
       </select>
-    </form>
-  );
-}
-
-const deleteInitial: TripFormState = { ok: false };
-
-function DeleteTripButton({ tripId }: { tripId: string }) {
-  const t = useTranslations("Trips");
-  const [state, formAction, pending] = useActionState(
-    deleteTrip,
-    deleteInitial,
-  );
-
-  useEffect(() => {
-    if (state.ok && state.message === "deleted") {
-      toast.success(t("deletedToast"));
-    } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
-  return (
-    <form
-      action={formAction}
-      onSubmit={(e) => {
-        if (!confirm(t("deleteConfirm"))) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="trip_id" value={tripId} />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={pending}
-        aria-label={t("deleteConfirm")}
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
     </form>
   );
 }

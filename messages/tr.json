@@ -12,6 +12,10 @@
     "back": "Geri",
     "search": "Ara"
   },
+  "Confirm": {
+    "confirm": "Evet, sil",
+    "cancel": "Vazgeç"
+  },
   "Auth": {
     "signInTitle": "Giriş Yap",
     "signInSubtitle": "Hesabınıza erişmek için giriş yapın",

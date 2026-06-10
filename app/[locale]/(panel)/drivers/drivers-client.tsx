@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -13,6 +19,7 @@ import {
   updateDriver,
   type DriverFormState,
 } from "./actions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatDate } from "@/lib/format-date";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -230,6 +237,20 @@ function DriverTable({
   onEdit: (driver: DriverRow) => void;
 }) {
   const t = useTranslations("Drivers");
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteDriver,
+    initialState,
+  );
+
+  useEffect(() => {
+    if (deleteState.ok && deleteState.message === "deleted") {
+      toast.success(t("deletedToast"));
+    } else if (!deleteState.ok && deleteState.error) {
+      toast.error(t("errorToast", { error: deleteState.error }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deleteState]);
 
   if (drivers.length === 0) {
     return (
@@ -292,13 +313,37 @@ function DriverTable({
                   >
                     <Pencil className="size-4" />
                   </Button>
-                  <DeleteDriverButton driverId={d.id} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={deletePending}
+                    onClick={() => setConfirmId(d.id)}
+                    aria-label={t("deleteConfirm")}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <ConfirmDialog
+        open={confirmId !== null}
+        onOpenChange={(o) => {
+          if (!o) setConfirmId(null);
+        }}
+        title={t("deleteConfirm")}
+        pending={deletePending}
+        onConfirm={() => {
+          if (!confirmId) return;
+          const fd = new FormData();
+          fd.set("driver_id", confirmId);
+          startTransition(() => deleteAction(fd));
+          setConfirmId(null);
+        }}
+      />
     </div>
   );
 }
@@ -330,44 +375,5 @@ function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
     >
       {label}: {formatDate(format, date)}
     </span>
-  );
-}
-
-const deleteInitial: DriverFormState = { ok: false };
-
-function DeleteDriverButton({ driverId }: { driverId: string }) {
-  const t = useTranslations("Drivers");
-  const [state, formAction, pending] = useActionState(
-    deleteDriver,
-    deleteInitial,
-  );
-
-  useEffect(() => {
-    if (state.ok && state.message === "deleted") {
-      toast.success(t("deletedToast"));
-    } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
-  return (
-    <form
-      action={formAction}
-      onSubmit={(e) => {
-        if (!confirm(t("deleteConfirm"))) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="driver_id" value={driverId} />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={pending}
-        aria-label={t("deleteConfirm")}
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
-    </form>
   );
 }

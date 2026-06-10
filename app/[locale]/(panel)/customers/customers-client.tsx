@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -13,6 +19,7 @@ import {
   updateCustomer,
   type CustomerFormState,
 } from "./actions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Database } from "@/lib/supabase/database.types";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
@@ -188,6 +195,20 @@ function CustomerTable({
   onEdit: (customer: CustomerRow) => void;
 }) {
   const t = useTranslations("Customers");
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteCustomer,
+    initialState,
+  );
+
+  useEffect(() => {
+    if (deleteState.ok && deleteState.message === "deleted") {
+      toast.success(t("deletedToast"));
+    } else if (!deleteState.ok && deleteState.error) {
+      toast.error(t("errorToast", { error: deleteState.error }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deleteState]);
 
   if (customers.length === 0) {
     return (
@@ -242,52 +263,37 @@ function CustomerTable({
                   >
                     <Pencil className="size-4" />
                   </Button>
-                  <DeleteCustomerButton customerId={c.id} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={deletePending}
+                    onClick={() => setConfirmId(c.id)}
+                    aria-label={t("deleteConfirm")}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <ConfirmDialog
+        open={confirmId !== null}
+        onOpenChange={(o) => {
+          if (!o) setConfirmId(null);
+        }}
+        title={t("deleteConfirm")}
+        pending={deletePending}
+        onConfirm={() => {
+          if (!confirmId) return;
+          const fd = new FormData();
+          fd.set("customer_id", confirmId);
+          startTransition(() => deleteAction(fd));
+          setConfirmId(null);
+        }}
+      />
     </div>
-  );
-}
-
-const deleteInitial: CustomerFormState = { ok: false };
-
-function DeleteCustomerButton({ customerId }: { customerId: string }) {
-  const t = useTranslations("Customers");
-  const [state, formAction, pending] = useActionState(
-    deleteCustomer,
-    deleteInitial,
-  );
-
-  useEffect(() => {
-    if (state.ok && state.message === "deleted") {
-      toast.success(t("deletedToast"));
-    } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
-
-  return (
-    <form
-      action={formAction}
-      onSubmit={(e) => {
-        if (!confirm(t("deleteConfirm"))) e.preventDefault();
-      }}
-    >
-      <input type="hidden" name="customer_id" value={customerId} />
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={pending}
-        aria-label={t("deleteConfirm")}
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
-    </form>
   );
 }
