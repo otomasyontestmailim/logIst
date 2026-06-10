@@ -3,7 +3,10 @@
 > Canlı yol haritası. Bir dilim bitince işaretle. Anlık durum ve "sıradaki görev"
 > için `memory/project_state.md`; kod kuralları için `CONVENTIONS.md`.
 
-Durum: **Faz 0 ✓ · Faz 1 ✓ · sıradaki → Faz 2**
+Durum: **Faz 0 ✓ · Faz 1 ✓ · Faz 2 ✓ · Faz 3 büyük ölçüde ✓ (basit yükleme; jscanify/offline yok) · Faz 4 minimal inbox ✓ · sıradaki → Faz 3 offline kuyruğu / Faz 4 OCR**
+
+> ⚠️ `supabase/migrations/0002_storage_documents.sql` SQL Editor'da **elle
+> uygulanmalı** — uygulanmadan şoför belge yükleme ve gelen kutusu çalışmaz.
 
 ---
 
@@ -27,34 +30,40 @@ Durum: **Faz 0 ✓ · Faz 1 ✓ · sıradaki → Faz 2**
 
 ---
 
-## Faz 2 — Müşteri + Sefer yönetimi ← SIRADAKİ
+## Faz 2 — Müşteri + Sefer yönetimi ✓
 
-1. **Müşteri (customers) CRUD** — sefer müşteriye bağlandığı için önce bu.
-   RLS hazır, admin/dispatcher INSERT'e izinli → **service-role gerekmez**
-   (normal authenticated client yeter).
-   - [ ] Liste sayfası + ekle/düzenle/sil + form
-   - [ ] `messages` çevirileri (Customers)
-2. **Sefer (trips) CRUD**
-   - [ ] Oluştur: şoför + müşteri ata, origin/destination/load_date/delivery_date
-   - [ ] Liste + detay sayfası
-3. **Sefer durum akışı** — `created → loaded → in_transit → delivered`
-   - [ ] Admin/dispatcher tam kontrol; şoför yalnız kendi seferi (RLS var)
-4. **Dashboard gerçek istatistikler** — 0 placeholder yerine canlı sorgular
+1. **Müşteri (customers) CRUD** ✓
+   - [x] Liste sayfası + ekle/düzenle/sil + form
+   - [x] `messages` çevirileri (Customers)
+2. **Sefer (trips) CRUD** ✓
+   - [x] Oluştur + düzenle: şoför + müşteri ata, origin/destination/tarihler
+   - [x] Liste (detay sayfası yerine satır içi düzenleme formu)
+3. **Sefer durum akışı** ✓ — `created → loaded → in_transit → delivered`
+   - [x] Admin/dispatcher tam kontrol; şoför yalnız kendi seferi (RLS var)
+4. **Dashboard gerçek istatistikler** ✓ — canlı count sorguları
    (aktif sefer / bekleyen belge / geciken teslimat / şoför sayısı)
+5. **Kalite iyileştirmeleri (2026-06-11)** ✓
+   - [x] Silme onayı: i18n'li erişilebilir `ConfirmDialog` (browser confirm yerine)
+   - [x] Locale-bilinçli tarih formatı (`lib/format-date.ts`)
+   - [x] Tablolarda arama + sefer durum filtresi
+   - [x] Lokalize `error.tsx` + `not-found` + catch-all route
 
-## Faz 3 — Şoför mobil (PWA) tarama & upload
+## Faz 3 — Şoför mobil (PWA) tarama & upload — büyük ölçüde ✓
 
-1. [ ] Şoför sefer listesi (`/driver` stub'ı → gerçek veri)
-2. [ ] Storage kurulumu: özel bucket + politika (yeni migration) + imzalı URL helper
-3. [ ] Kamera ile tarama: `getUserMedia` + `jscanify` (kenar tespit/kırpma, çok sayfa)
-4. [ ] Belge yükleme: tip seç (cmr/invoice/...) → sefere bağla → `documents` + Storage
-5. [ ] Şoför sefer durumu güncelleme (mobil)
+1. [x] Şoför sefer listesi (`/driver` gerçek veri, mobil kart arayüzü)
+2. [x] Storage kurulumu: özel bucket + politika (`0002_storage_documents.sql`,
+       **elle uygulanmalı**) + imzalı URL helper (`lib/supabase/storage.ts`)
+3. [ ] Kamera ile tarama: `getUserMedia` + `jscanify` (kenar tespit/kırpma, çok
+       sayfa) — MVP'de basit `<input capture>` + canvas sıkıştırma ile çözüldü
+4. [x] Belge yükleme: tip seç (cmr/invoice/...) → sefere bağla → tarayıcıdan
+       doğrudan Storage + `createDocument` action (`documents` satırı)
+5. [x] Şoför sefer durumu güncelleme (mobil, tek tuş ilerletme)
 6. [ ] Offline kuyruğu: IndexedDB + background sync (sınır geçişi; en karmaşık, sona)
 
 ## Faz 4 — Belge gelen kutusu + OCR
 
-1. [ ] Gelen kutusu: belgeleri görüntüle (imzalı URL), filtrele
-2. [ ] Onay/red akışı (`documents.status`)
+1. [x] Gelen kutusu: belgeleri görüntüle (imzalı URL), durum filtresi (minimal)
+2. [x] Onay/red akışı (`documents.status`)
 3. [ ] OCR: Claude Vision → yapılandırılmış JSON → `documents.ocr_data` → insan onayı
 
 ## Faz 5 — CRM derinleştirme + raporlama + uyarılar

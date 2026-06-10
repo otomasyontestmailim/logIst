@@ -76,6 +76,12 @@ message?: string }`. Başarıda `message`, hatada `error` (anahtar/kod) döner;
 - `current_org_id()` ve `current_user_role()` security-definer yardımcıları RLS
   politikalarında kullanılır.
 - Şoför yalnızca kendine atanan seferleri/kendi belgelerini görür (RLS).
+- **Dosya yükleme = tarayıcıdan doğrudan Storage'a** (Server Action'a dosya
+  geçirme — ~1 MB body limiti). Path: `{org_id}/{trip_id}/{uuid}.jpg`; storage
+  RLS politikaları (`0002_storage_documents.sql`) yetkiyi doğrular. Yükleme
+  öncesi `lib/image.ts` ile canvas sıkıştırma.
+- **`documents.file_url` = storage PATH** (URL değil; bucket private).
+  Görüntüleme her zaman `lib/supabase/storage.ts` imzalı URL helper'ı ile.
 
 ## 7. Service-role (admin) client kuralı
 
