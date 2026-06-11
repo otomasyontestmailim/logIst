@@ -32,7 +32,7 @@ export default async function DashboardPage() {
         .from("trips")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", me.organization_id)
-        .neq("status", "delivered"),
+        .neq("status", "completed"),
       supabase
         .from("documents")
         .select("id", { count: "exact", head: true })
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         .from("trips")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", me.organization_id)
-        .neq("status", "delivered")
+        .neq("status", "completed")
         .lt("delivery_date", todayISO),
       supabase
         .from("users")

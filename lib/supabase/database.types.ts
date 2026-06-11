@@ -5,7 +5,16 @@
 // =====================================================================
 
 export type UserRole = "admin" | "dispatcher" | "driver";
-export type TripStatus = "created" | "loaded" | "in_transit" | "delivered";
+export type TripStatus =
+  | "requested"
+  | "driver_approval"
+  | "dispatched"
+  | "loading"
+  | "in_transit"
+  | "delivering"
+  | "delivery_approval"
+  | "completed";
+export type StopType = "pickup" | "delivery";
 export type DocumentType =
   | "cmr"
   | "invoice"
@@ -81,6 +90,9 @@ export type Database = {
           green_card_expiry: string | null;
           plate: string | null;
           trailer_no: string | null;
+          vehicle_model: string | null;
+          vehicle_year: number | null;
+          capacity_ton: number | null;
         };
         Insert: {
           user_id: string;
@@ -91,6 +103,9 @@ export type Database = {
           green_card_expiry?: string | null;
           plate?: string | null;
           trailer_no?: string | null;
+          vehicle_model?: string | null;
+          vehicle_year?: number | null;
+          capacity_ton?: number | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["driver_profiles"]["Insert"]
@@ -134,6 +149,13 @@ export type Database = {
           status: TripStatus;
           load_date: string | null;
           delivery_date: string | null;
+          cargo_type: string | null;
+          loading_type: string | null;
+          tonnage_kg: number | null;
+          body_type: string | null;
+          tracking_no: string | null;
+          distance_km: number | null;
+          notes: string | null;
           created_at: string;
         };
         Insert: {
@@ -146,6 +168,13 @@ export type Database = {
           status?: TripStatus;
           load_date?: string | null;
           delivery_date?: string | null;
+          cargo_type?: string | null;
+          loading_type?: string | null;
+          tonnage_kg?: number | null;
+          body_type?: string | null;
+          tracking_no?: string | null;
+          distance_km?: number | null;
+          notes?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["trips"]["Insert"]>;
@@ -179,6 +208,56 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["documents"]["Insert"]>;
+        Relationships: [];
+      };
+      trip_stops: {
+        Row: {
+          id: string;
+          organization_id: string;
+          trip_id: string;
+          seq: number;
+          stop_type: StopType;
+          address: string | null;
+          planned_at: string | null;
+          actual_at: string | null;
+          lat: number | null;
+          lng: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          trip_id: string;
+          seq?: number;
+          stop_type: StopType;
+          address?: string | null;
+          planned_at?: string | null;
+          actual_at?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["trip_stops"]["Insert"]>;
+        Relationships: [];
+      };
+      driver_locations: {
+        Row: {
+          driver_id: string;
+          organization_id: string;
+          lat: number;
+          lng: number;
+          recorded_at: string;
+        };
+        Insert: {
+          driver_id: string;
+          organization_id: string;
+          lat: number;
+          lng: number;
+          recorded_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["driver_locations"]["Insert"]
+        >;
         Relationships: [];
       };
       audit_logs: {

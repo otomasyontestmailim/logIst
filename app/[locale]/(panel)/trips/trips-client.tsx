@@ -23,6 +23,7 @@ import {
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatDate } from "@/lib/format-date";
+import { ALL_STATUSES, STATUS_CLASSES } from "@/lib/trip-status";
 import type { Database } from "@/lib/supabase/database.types";
 
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
@@ -44,6 +45,7 @@ export function TripsClient({
   drivers: UserRow[];
 }) {
   const t = useTranslations("Trips");
+  const ts = useTranslations("TripStatus");
   const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TripRow | null>(null);
@@ -87,10 +89,11 @@ export function TripsClient({
             className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
           >
             <option value="all">{t("statusAll")}</option>
-            <option value="created">{t("statusCreated")}</option>
-            <option value="loaded">{t("statusLoaded")}</option>
-            <option value="in_transit">{t("statusInTransit")}</option>
-            <option value="delivered">{t("statusDelivered")}</option>
+            {ALL_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {ts(s)}
+              </option>
+            ))}
           </select>
         </div>
         <Button
@@ -140,6 +143,7 @@ function TripForm({
   drivers: UserRow[];
 }) {
   const t = useTranslations("Trips");
+  const ts = useTranslations("TripStatus");
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     trip ? updateTrip : createTrip,
@@ -242,10 +246,11 @@ function TripForm({
               defaultValue={trip.status}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="created">{t("statusCreated")}</option>
-              <option value="loaded">{t("statusLoaded")}</option>
-              <option value="in_transit">{t("statusInTransit")}</option>
-              <option value="delivered">{t("statusDelivered")}</option>
+              {ALL_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {ts(s)}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -418,17 +423,9 @@ function TripTable({
   );
 }
 
-const STATUS_CLASSES: Record<string, string> = {
-  created: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  loaded: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  in_transit:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  delivered:
-    "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-};
-
 function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
   const t = useTranslations("Trips");
+  const ts = useTranslations("TripStatus");
   // Optimistic value — güncelleme beklenirken hemen renklendirir
   const [current, setCurrent] = useState(status);
   // Sunucu revalidation'dan gelen yeni prop'u render sırasında (useEffect olmadan) senkronize et
@@ -465,12 +462,13 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
           const form = e.currentTarget.form;
           if (form) formAction(new FormData(form));
         }}
-        className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[current] ?? STATUS_CLASSES.created}`}
+        className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[current as keyof typeof STATUS_CLASSES] ?? STATUS_CLASSES.requested}`}
       >
-        <option value="created">{t("statusCreated")}</option>
-        <option value="loaded">{t("statusLoaded")}</option>
-        <option value="in_transit">{t("statusInTransit")}</option>
-        <option value="delivered">{t("statusDelivered")}</option>
+        {ALL_STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {ts(s)}
+          </option>
+        ))}
       </select>
     </form>
   );

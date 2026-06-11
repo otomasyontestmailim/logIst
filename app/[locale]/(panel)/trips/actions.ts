@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isTripStatus } from "@/lib/trip-status";
 
 export type TripFormState = {
   ok: boolean;
@@ -45,7 +46,7 @@ export async function createTrip(
     driver_id: driverId,
     load_date: nn(formData.get("load_date")),
     delivery_date: nn(formData.get("delivery_date")),
-    status: "created",
+    status: driverId ? "driver_approval" : "requested",
   });
 
   if (error) {
@@ -99,11 +100,10 @@ export async function updateTrip(
       driver_id: driverId,
       load_date: nn(formData.get("load_date")),
       delivery_date: nn(formData.get("delivery_date")),
-      status: (nn(formData.get("status")) ?? "created") as
-        | "created"
-        | "loaded"
-        | "in_transit"
-        | "delivered",
+      status: (() => {
+        const s = nn(formData.get("status")) ?? "requested";
+        return isTripStatus(s) ? s : "requested";
+      })(),
     })
     .eq("id", tripId);
 
@@ -156,7 +156,9 @@ export async function updateTripStatus(
   const tripId = nn(formData.get("trip_id"));
   const status = nn(formData.get("status"));
   if (!tripId) return { ok: false, error: "id_required" };
-  if (!status) return { ok: false, error: "status_required" };
+  if (!status || !isTripStatus(status)) {
+    return { ok: false, error: "status_required" };
+  }
 
   const admin = createAdminClient();
 
@@ -176,9 +178,7 @@ export async function updateTripStatus(
 
   const { error } = await admin
     .from("trips")
-    .update({
-      status: status as "created" | "loaded" | "in_transit" | "delivered",
-    })
+    .update({ status })
     .eq("id", tripId);
 
   if (error) {

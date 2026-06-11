@@ -17,6 +17,7 @@ import { compressImage } from "@/lib/image";
 import { formatDate } from "@/lib/format-date";
 import { updateTripStatus, type TripFormState } from "../(panel)/trips/actions";
 import { createDocument, type DocumentFormState } from "./actions";
+import { DRIVER_NEXT_STATUS, STATUS_CLASSES } from "@/lib/trip-status";
 import type {
   Database,
   DocumentType,
@@ -40,20 +41,13 @@ const DOCUMENT_TYPES: DocumentType[] = [
   "delivery_note",
 ];
 
-/** Şoförün tek tuşla ilerlettiği durum zinciri. */
-const NEXT_STATUS: Partial<Record<TripStatus, TripStatus>> = {
-  created: "loaded",
-  loaded: "in_transit",
-  in_transit: "delivered",
-};
-
-const STATUS_CLASSES: Record<string, string> = {
-  created: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  loaded: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  in_transit:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  delivered:
-    "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+/** Şoför aksiyon butonu etiketleri — hedef duruma göre. */
+const ACTION_LABEL_KEYS: Partial<Record<TripStatus, string>> = {
+  dispatched: "actionAccept",
+  loading: "actionArrivedLoading",
+  in_transit: "actionLoaded",
+  delivering: "actionArrivedDelivery",
+  delivery_approval: "actionDelivered",
 };
 
 const DOC_STATUS_CLASSES: Record<string, string> = {
@@ -119,7 +113,7 @@ function TripCard({
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
-  const tt = useTranslations("Trips");
+  const tts = useTranslations("TripStatus");
   const format = useFormatter();
 
   const [statusState, statusAction, statusPending] = useActionState(
@@ -136,22 +130,9 @@ function TripCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusState]);
 
-  const next = NEXT_STATUS[trip.status];
-  const nextLabel =
-    next === "loaded"
-      ? t("markLoaded")
-      : next === "in_transit"
-        ? t("markInTransit")
-        : t("markDelivered");
-
-  const statusLabel =
-    trip.status === "created"
-      ? tt("statusCreated")
-      : trip.status === "loaded"
-        ? tt("statusLoaded")
-        : trip.status === "in_transit"
-          ? tt("statusInTransit")
-          : tt("statusDelivered");
+  const next = DRIVER_NEXT_STATUS[trip.status];
+  const nextLabelKey = next ? ACTION_LABEL_KEYS[next] : undefined;
+  const statusLabel = tts(trip.status);
 
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
@@ -162,7 +143,7 @@ function TripCard({
           <span>{trip.destination}</span>
         </div>
         <span
-          className={`rounded px-2 py-1 text-xs font-medium whitespace-nowrap ${STATUS_CLASSES[trip.status] ?? STATUS_CLASSES.created}`}
+          className={`rounded px-2 py-1 text-xs font-medium whitespace-nowrap ${STATUS_CLASSES[trip.status] ?? STATUS_CLASSES.requested}`}
         >
           {statusLabel}
         </span>
@@ -189,7 +170,7 @@ function TripCard({
         </div>
       </div>
 
-      {next && (
+      {next && nextLabelKey && (
         <Button
           className="w-full"
           size="lg"
@@ -201,7 +182,7 @@ function TripCard({
             startTransition(() => statusAction(fd));
           }}
         >
-          {statusPending ? t("saving") : nextLabel}
+          {statusPending ? t("saving") : t(nextLabelKey)}
         </Button>
       )}
 
