@@ -166,6 +166,70 @@ export async function deleteTrip(
   return { ok: true, message: "deleted" };
 }
 
+/** Durakları toplu kaydeder: mevcutları siler, formdan gelen listeyi ekler. */
+export async function saveTripStops(
+  _prev: TripFormState,
+  formData: FormData,
+): Promise<TripFormState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) return { ok: false, error: "unauthorized" };
+  if (me.role !== "admin" && me.role !== "dispatcher") {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const tripId = nn(formData.get("trip_id"));
+  const raw = nn(formData.get("stops"));
+  if (!tripId) return { ok: false, error: "id_required" };
+
+  type StopInput = {
+    stop_type: "pickup" | "delivery";
+    address: string;
+    planned_at: string;
+  };
+  let stops: StopInput[] = [];
+  try {
+    stops = raw ? (JSON.parse(raw) as StopInput[]) : [];
+  } catch {
+    return { ok: false, error: "invalid_stops" };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("trips")
+    .select("organization_id")
+    .eq("id", tripId)
+    .single();
+  if (!target || target.organization_id !== me.organization_id) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const { error: delError } = await admin
+    .from("trip_stops")
+    .delete()
+    .eq("trip_id", tripId);
+  if (delError) return { ok: false, error: delError.message };
+
+  if (stops.length > 0) {
+    const rows = stops
+      .filter((s) => s.stop_type === "pickup" || s.stop_type === "delivery")
+      .map((s, i) => ({
+        organization_id: me.organization_id!,
+        trip_id: tripId,
+        seq: i + 1,
+        stop_type: s.stop_type,
+        address: s.address?.trim() || null,
+        planned_at: s.planned_at?.trim() || null,
+      }));
+    const { error } = await admin.from("trip_stops").insert(rows);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/[locale]/trips", "page");
+  revalidatePath("/[locale]/driver", "page");
+  return { ok: true, message: "stops_saved" };
+}
+
 export async function updateTripStatus(
   _prev: TripFormState,
   formData: FormData,

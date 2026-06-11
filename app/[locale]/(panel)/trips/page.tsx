@@ -5,6 +5,7 @@ import { TripsClient } from "./trips-client";
 import type { Database } from "@/lib/supabase/database.types";
 
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
+type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 type UserRow = Pick<
   Database["public"]["Tables"]["users"]["Row"],
@@ -18,11 +19,12 @@ export default async function TripsPage() {
   let trips: TripRow[] = [];
   let customers: CustomerRow[] = [];
   let drivers: UserRow[] = [];
+  let stops: StopRow[] = [];
 
   if (me?.organization_id) {
     const supabase = await createClient();
 
-    const [tripsRes, customersRes, driversRes] = await Promise.all([
+    const [tripsRes, customersRes, driversRes, stopsRes] = await Promise.all([
       supabase
         .from("trips")
         .select("*")
@@ -39,11 +41,17 @@ export default async function TripsPage() {
         .eq("organization_id", me.organization_id)
         .eq("role", "driver")
         .order("full_name"),
+      supabase
+        .from("trip_stops")
+        .select("*")
+        .eq("organization_id", me.organization_id)
+        .order("seq"),
     ]);
 
     trips = tripsRes.data ?? [];
     customers = customersRes.data ?? [];
     drivers = driversRes.data ?? [];
+    stops = stopsRes.data ?? [];
   }
 
   return (
@@ -51,7 +59,12 @@ export default async function TripsPage() {
       <h1 className="text-2xl font-bold">{t("title")}</h1>
       <p className="text-muted-foreground">{t("subtitle")}</p>
       <div className="mt-4">
-        <TripsClient trips={trips} customers={customers} drivers={drivers} />
+        <TripsClient
+          trips={trips}
+          customers={customers}
+          drivers={drivers}
+          stops={stops}
+        />
       </div>
     </main>
   );

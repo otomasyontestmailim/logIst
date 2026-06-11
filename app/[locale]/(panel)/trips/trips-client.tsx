@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import {
   createTrip,
   deleteTrip,
+  saveTripStops,
   updateTrip,
   updateTripStatus,
   type TripFormState,
@@ -27,6 +28,8 @@ import { ALL_STATUSES, STATUS_CLASSES } from "@/lib/trip-status";
 import type { Database } from "@/lib/supabase/database.types";
 
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
+type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
+type StopType = Database["public"]["Tables"]["trip_stops"]["Row"]["stop_type"];
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 type UserRow = Pick<
   Database["public"]["Tables"]["users"]["Row"],
@@ -41,10 +44,12 @@ export function TripsClient({
   trips,
   customers,
   drivers,
+  stops,
 }: {
   trips: TripRow[];
   customers: CustomerRow[];
   drivers: UserRow[];
+  stops: StopRow[];
 }) {
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
@@ -110,16 +115,25 @@ export function TripsClient({
       </div>
 
       {(open || editing) && (
-        <TripForm
-          key={editing?.id ?? "new"}
-          trip={editing}
-          onDone={() => {
-            setOpen(false);
-            setEditing(null);
-          }}
-          customers={customers}
-          drivers={drivers}
-        />
+        <>
+          <TripForm
+            key={editing?.id ?? "new"}
+            trip={editing}
+            onDone={() => {
+              setOpen(false);
+              setEditing(null);
+            }}
+            customers={customers}
+            drivers={drivers}
+          />
+          {editing && (
+            <StopsEditor
+              key={`stops-${editing.id}`}
+              tripId={editing.id}
+              stops={stops.filter((s) => s.trip_id === editing.id)}
+            />
+          )}
+        </>
       )}
 
       <TripTable
@@ -358,6 +372,115 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? undefined}
       />
+    </div>
+  );
+}
+
+type EditableStop = {
+  stop_type: StopType;
+  address: string;
+  planned_at: string; // datetime-local biçimi
+};
+
+function StopsEditor({ tripId, stops }: { tripId: string; stops: StopRow[] }) {
+  const t = useTranslations("Stops");
+  const [rows, setRows] = useState<EditableStop[]>(() =>
+    [...stops]
+      .sort((a, b) => a.seq - b.seq)
+      .map((s) => ({
+        stop_type: s.stop_type,
+        address: s.address ?? "",
+        planned_at: s.planned_at ? s.planned_at.slice(0, 16) : "",
+      })),
+  );
+  const [state, formAction, pending] = useActionState(
+    saveTripStops,
+    initialState,
+  );
+
+  useEffect(() => {
+    if (state.ok && state.message === "stops_saved") {
+      toast.success(t("savedToast"));
+    } else if (!state.ok && state.error) {
+      toast.error(t("errorToast", { error: state.error }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  function update(i: number, patch: Partial<EditableStop>) {
+    setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  }
+
+  return (
+    <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <h2 className="mb-4 text-lg font-semibold">{t("title")}</h2>
+      <div className="space-y-3">
+        {rows.map((row, i) => (
+          <div
+            key={i}
+            className="grid items-end gap-2 sm:grid-cols-[8rem_1fr_14rem_2.5rem]"
+          >
+            <select
+              value={row.stop_type}
+              onChange={(e) =>
+                update(i, { stop_type: e.target.value as StopType })
+              }
+              aria-label={t("type")}
+              className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <option value="pickup">{t("pickup")}</option>
+              <option value="delivery">{t("delivery")}</option>
+            </select>
+            <Input
+              value={row.address}
+              onChange={(e) => update(i, { address: e.target.value })}
+              placeholder={t("address")}
+            />
+            <Input
+              type="datetime-local"
+              value={row.planned_at}
+              onChange={(e) => update(i, { planned_at: e.target.value })}
+              aria-label={t("plannedAt")}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setRows((prev) => prev.filter((_, j) => j !== i))}
+              aria-label={t("remove")}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            setRows((prev) => [
+              ...prev,
+              { stop_type: "pickup", address: "", planned_at: "" },
+            ])
+          }
+        >
+          <Plus className="size-4" />
+          {t("addStop")}
+        </Button>
+        <Button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            const fd = new FormData();
+            fd.set("trip_id", tripId);
+            fd.set("stops", JSON.stringify(rows));
+            startTransition(() => formAction(fd));
+          }}
+        >
+          {pending ? t("saving") : t("save")}
+        </Button>
+      </div>
     </div>
   );
 }

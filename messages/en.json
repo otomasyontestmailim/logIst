@@ -167,6 +167,22 @@
     "parcel": "Parcel",
     "other": "Other"
   },
+  "Stops": {
+    "title": "Stops",
+    "type": "Stop type",
+    "pickup": "Pickup",
+    "delivery": "Delivery",
+    "pickupN": "Pickup {n}",
+    "deliveryN": "Delivery {n}",
+    "address": "Address",
+    "plannedAt": "Planned date",
+    "addStop": "Add Stop",
+    "remove": "Remove stop",
+    "save": "Save Stops",
+    "saving": "Saving...",
+    "savedToast": "Stops saved.",
+    "errorToast": "Operation failed: {error}"
+  },
   "TripStatus": {
     "requested": "Transport Request",
     "driver_approval": "Awaiting Driver Approval",

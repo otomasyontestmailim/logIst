@@ -167,6 +167,22 @@
     "parcel": "Koli",
     "other": "Diğer"
   },
+  "Stops": {
+    "title": "Duraklar",
+    "type": "Durak tipi",
+    "pickup": "Yükleme",
+    "delivery": "Teslim",
+    "pickupN": "{n}. Yükleme",
+    "deliveryN": "{n}. Teslim",
+    "address": "Adres",
+    "plannedAt": "Planlanan tarih",
+    "addStop": "Durak Ekle",
+    "remove": "Durağı sil",
+    "save": "Durakları Kaydet",
+    "saving": "Kaydediliyor...",
+    "savedToast": "Duraklar kaydedildi.",
+    "errorToast": "İşlem başarısız: {error}"
+  },
   "TripStatus": {
     "requested": "Taşıma Talebi",
     "driver_approval": "Sürücü Onayında",
