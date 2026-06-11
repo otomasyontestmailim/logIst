@@ -16,6 +16,13 @@ function nn(v: FormDataEntryValue | null): string | null {
   return s === "" ? null : s;
 }
 
+function num(v: FormDataEntryValue | null): number | null {
+  const s = nn(v);
+  if (s === null) return null;
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * Yeni şoför oluşturur: auth.users + public.users (role=driver) + driver_profiles.
  * Yalnızca admin/dispatcher çağırabilir; şoför çağıranın firmasına bağlanır.
@@ -79,6 +86,9 @@ export async function createDriver(
     adr_expiry: nn(formData.get("adr_expiry")),
     psikoteknik_expiry: nn(formData.get("psikoteknik_expiry")),
     green_card_expiry: nn(formData.get("green_card_expiry")),
+    vehicle_model: nn(formData.get("vehicle_model")),
+    vehicle_year: num(formData.get("vehicle_year")),
+    capacity_ton: num(formData.get("capacity_ton")),
   });
   if (profErr) {
     return { ok: false, error: profErr.message };
@@ -140,6 +150,9 @@ export async function updateDriver(
     adr_expiry: nn(formData.get("adr_expiry")),
     psikoteknik_expiry: nn(formData.get("psikoteknik_expiry")),
     green_card_expiry: nn(formData.get("green_card_expiry")),
+    vehicle_model: nn(formData.get("vehicle_model")),
+    vehicle_year: num(formData.get("vehicle_year")),
+    capacity_ton: num(formData.get("capacity_ton")),
   });
   if (profErr) return { ok: false, error: profErr.message };
 

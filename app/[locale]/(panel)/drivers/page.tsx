@@ -33,9 +33,28 @@ export default async function DriversPage() {
   }
 
   const profileByUser = new Map(profiles.map((p) => [p.user_id, p]));
+
+  // Karne sayaçları: teslim edilen sefer sayısı + toplam km (distance_km)
+  const stats = new Map<string, { tripCount: number; totalKm: number }>();
+  if (ids.length > 0) {
+    const { data: tripRows } = await supabase
+      .from("trips")
+      .select("driver_id, status, distance_km")
+      .in("driver_id", ids)
+      .in("status", ["delivery_approval", "completed"]);
+    for (const tr of tripRows ?? []) {
+      if (!tr.driver_id) continue;
+      const s = stats.get(tr.driver_id) ?? { tripCount: 0, totalKm: 0 };
+      s.tripCount += 1;
+      s.totalKm += Number(tr.distance_km ?? 0);
+      stats.set(tr.driver_id, s);
+    }
+  }
+
   const drivers: DriverRow[] = (users ?? []).map((u) => ({
     ...u,
     profile: profileByUser.get(u.id) ?? null,
+    stats: stats.get(u.id) ?? { tripCount: 0, totalKm: 0 },
   }));
 
   return (

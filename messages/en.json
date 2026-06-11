@@ -94,7 +94,15 @@
     "colActions": "",
     "expired": "Expired",
     "expiringSoon": "Expiring soon",
-    "noProfile": "—"
+    "noProfile": "—",
+    "scorecard": "Driver Scorecard",
+    "close": "Close",
+    "tripCount": "Completed Trips",
+    "totalKm": "Total Distance (km)",
+    "vehicleInfo": "Vehicle Info",
+    "vehicleModel": "Model",
+    "vehicleYear": "Model Year",
+    "capacityTon": "Capacity (TON)"
   },
   "Customers": {
     "title": "Customers",

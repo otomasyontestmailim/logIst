@@ -94,7 +94,15 @@
     "colActions": "",
     "expired": "Süresi doldu",
     "expiringSoon": "Yakında dolacak",
-    "noProfile": "—"
+    "noProfile": "—",
+    "scorecard": "Şoför Karnesi",
+    "close": "Kapat",
+    "tripCount": "Gerçekleşen Taşıma Sayısı",
+    "totalKm": "Gerçekleşen Toplam Kilometre (km)",
+    "vehicleInfo": "Araç Bilgileri",
+    "vehicleModel": "Model",
+    "vehicleYear": "Model Yılı",
+    "capacityTon": "Kapasite (TON)"
   },
   "Customers": {
     "title": "Müşteriler",

@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { IdCard, Pencil, Plus, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,10 @@ type UserRow = Pick<
 >;
 type ProfileRow = Database["public"]["Tables"]["driver_profiles"]["Row"];
 
-export type DriverRow = UserRow & { profile: ProfileRow | null };
+export type DriverRow = UserRow & {
+  profile: ProfileRow | null;
+  stats: { tripCount: number; totalKm: number };
+};
 
 const initialState: DriverFormState = { ok: false };
 
@@ -39,6 +42,7 @@ export function DriversClient({ drivers }: { drivers: DriverRow[] }) {
   const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DriverRow | null>(null);
+  const [viewing, setViewing] = useState<DriverRow | null>(null);
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -83,10 +87,15 @@ export function DriversClient({ drivers }: { drivers: DriverRow[] }) {
         />
       )}
 
+      {viewing && (
+        <DriverScorecard driver={viewing} onClose={() => setViewing(null)} />
+      )}
+
       <DriverTable
         drivers={filtered}
         emptyText={drivers.length > 0 ? tc("noResults") : t("empty")}
         onEdit={(d) => setEditing(d)}
+        onView={(d) => setViewing((v) => (v?.id === d.id ? null : d))}
       />
     </div>
   );
@@ -189,6 +198,23 @@ function DriverForm({
           type="date"
           defaultValue={p?.green_card_expiry}
         />
+        <Field
+          name="vehicle_model"
+          label={t("vehicleModel")}
+          defaultValue={p?.vehicle_model}
+        />
+        <Field
+          name="vehicle_year"
+          label={t("vehicleYear")}
+          type="number"
+          defaultValue={p?.vehicle_year?.toString()}
+        />
+        <Field
+          name="capacity_ton"
+          label={t("capacityTon")}
+          type="number"
+          defaultValue={p?.capacity_ton?.toString()}
+        />
         {!driver && (
           <div className="space-y-1.5">
             <Label htmlFor="password">{t("password")}</Label>
@@ -253,14 +279,87 @@ function Field({
   );
 }
 
+/** soforBilgileri.png tarzı şoför karnesi: sayaçlar + araç kartı. */
+function DriverScorecard({
+  driver,
+  onClose,
+}: {
+  driver: DriverRow;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Drivers");
+  const format = useFormatter();
+  const p = driver.profile;
+
+  return (
+    <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <div className="mb-4 flex items-start justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold">{driver.full_name}</h2>
+          {driver.phone && (
+            <p className="text-sm text-muted-foreground">GSM: {driver.phone}</p>
+          )}
+        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+          {t("close")}
+        </Button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 text-sm">
+          <ScoreRow
+            label={t("tripCount")}
+            value={format.number(driver.stats.tripCount)}
+          />
+          <ScoreRow
+            label={t("totalKm")}
+            value={format.number(Math.round(driver.stats.totalKm))}
+          />
+        </div>
+        <div className="rounded-md border p-4 text-sm">
+          <div className="mb-2 flex items-center gap-2 font-medium">
+            <Truck className="size-4" />
+            {t("vehicleInfo")}
+          </div>
+          <div className="space-y-1.5">
+            <ScoreRow label={t("plate")} value={p?.plate ?? "—"} />
+            <ScoreRow
+              label={t("vehicleModel")}
+              value={p?.vehicle_model ?? "—"}
+            />
+            <ScoreRow
+              label={t("vehicleYear")}
+              value={p?.vehicle_year?.toString() ?? "—"}
+            />
+            <ScoreRow
+              label={t("capacityTon")}
+              value={p?.capacity_ton != null ? `${p.capacity_ton} TON` : "—"}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoreRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
+}
+
 function DriverTable({
   drivers,
   emptyText,
   onEdit,
+  onView,
 }: {
   drivers: DriverRow[];
   emptyText: string;
   onEdit: (driver: DriverRow) => void;
+  onView: (driver: DriverRow) => void;
 }) {
   const t = useTranslations("Drivers");
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -330,6 +429,15 @@ function DriverTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onView(d)}
+                    aria-label={t("scorecard")}
+                  >
+                    <IdCard className="size-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
