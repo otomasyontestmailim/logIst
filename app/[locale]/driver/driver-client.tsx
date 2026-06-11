@@ -16,7 +16,12 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image";
 import { formatDate } from "@/lib/format-date";
 import { updateTripStatus, type TripFormState } from "../(panel)/trips/actions";
-import { createDocument, rejectTrip, type DocumentFormState } from "./actions";
+import {
+  createDocument,
+  rejectTrip,
+  reportLocation,
+  type DocumentFormState,
+} from "./actions";
 import { DRIVER_NEXT_STATUS, STATUS_CLASSES } from "@/lib/trip-status";
 import type {
   Database,
@@ -68,6 +73,24 @@ export function DriverClient({
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
+
+  // PWA ön planda konum bildirimi: sayfa açıkken ~90 sn'de bir gönder.
+  // İzin reddi/hata sessizce tolere edilir (toast spam yok).
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    const send = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          void reportLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {},
+        { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
+      );
+    };
+    send();
+    const id = setInterval(send, 90_000);
+    return () => clearInterval(id);
+  }, []);
 
   if (trips.length === 0) {
     return (

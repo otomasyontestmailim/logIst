@@ -29,6 +29,36 @@ function nn(v: FormDataEntryValue | null): string | null {
 }
 
 /**
+ * Şoför PWA'sı açıkken periyodik konum bildirimi. Şoför başına tek satır
+ * (upsert). RLS politikası driver_id = auth.uid() koşulunu zorlar.
+ */
+export async function reportLocation(
+  lat: number,
+  lng: number,
+): Promise<{ ok: boolean }> {
+  const me = await getCurrentUser();
+  if (
+    !me ||
+    !me.organization_id ||
+    me.role !== "driver" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng)
+  ) {
+    return { ok: false };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("driver_locations").upsert({
+    driver_id: me.id,
+    organization_id: me.organization_id,
+    lat,
+    lng,
+    recorded_at: new Date().toISOString(),
+  });
+  return { ok: !error };
+}
+
+/**
  * Şoför kendisine atanan seferi reddeder: durum taşıma talebine döner,
  * şoför ataması kaldırılır. Yalnızca "Sürücü Onayında" aşamasında geçerli.
  */
