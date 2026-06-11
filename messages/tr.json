@@ -223,6 +223,8 @@
     "actionLoaded": "Yükümü Yükledim",
     "actionArrivedDelivery": "Teslimat Yerine Vardım",
     "actionDelivered": "Teslim Ettim",
+    "actionReject": "Reddet",
+    "rejectedToast": "Sefer reddedildi.",
     "statusUpdated": "Sefer durumu güncellendi.",
     "errorToast": "İşlem başarısız: {error}",
     "documentsTitle": "Belgeler",

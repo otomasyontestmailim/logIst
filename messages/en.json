@@ -223,6 +223,8 @@
     "actionLoaded": "Picked Up the Load",
     "actionArrivedDelivery": "Arrived at Delivery Point",
     "actionDelivered": "Delivered",
+    "actionReject": "Reject",
+    "rejectedToast": "Trip rejected.",
     "statusUpdated": "Trip status updated.",
     "errorToast": "Operation failed: {error}",
     "documentsTitle": "Documents",

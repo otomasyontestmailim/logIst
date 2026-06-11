@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image";
 import { formatDate } from "@/lib/format-date";
 import { updateTripStatus, type TripFormState } from "../(panel)/trips/actions";
-import { createDocument, type DocumentFormState } from "./actions";
+import { createDocument, rejectTrip, type DocumentFormState } from "./actions";
 import { DRIVER_NEXT_STATUS, STATUS_CLASSES } from "@/lib/trip-status";
 import type {
   Database,
@@ -120,6 +120,10 @@ function TripCard({
     updateTripStatus,
     tripInitial,
   );
+  const [rejectState, rejectAction, rejectPending] = useActionState(
+    rejectTrip,
+    docInitial,
+  );
 
   useEffect(() => {
     if (statusState.ok && statusState.message === "updated") {
@@ -129,6 +133,15 @@ function TripCard({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusState]);
+
+  useEffect(() => {
+    if (rejectState.ok && rejectState.message === "rejected") {
+      toast.success(t("rejectedToast"));
+    } else if (!rejectState.ok && rejectState.error) {
+      toast.error(t("errorToast", { error: rejectState.error }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rejectState]);
 
   const next = DRIVER_NEXT_STATUS[trip.status];
   const nextLabelKey = next ? ACTION_LABEL_KEYS[next] : undefined;
@@ -171,19 +184,35 @@ function TripCard({
       </div>
 
       {next && nextLabelKey && (
-        <Button
-          className="w-full"
-          size="lg"
-          disabled={statusPending}
-          onClick={() => {
-            const fd = new FormData();
-            fd.set("trip_id", trip.id);
-            fd.set("status", next);
-            startTransition(() => statusAction(fd));
-          }}
-        >
-          {statusPending ? t("saving") : t(nextLabelKey)}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="flex-1"
+            size="lg"
+            disabled={statusPending || rejectPending}
+            onClick={() => {
+              const fd = new FormData();
+              fd.set("trip_id", trip.id);
+              fd.set("status", next);
+              startTransition(() => statusAction(fd));
+            }}
+          >
+            {statusPending ? t("saving") : t(nextLabelKey)}
+          </Button>
+          {trip.status === "driver_approval" && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={statusPending || rejectPending}
+              onClick={() => {
+                const fd = new FormData();
+                fd.set("trip_id", trip.id);
+                startTransition(() => rejectAction(fd));
+              }}
+            >
+              {rejectPending ? t("saving") : t("actionReject")}
+            </Button>
+          )}
+        </div>
       )}
 
       <DocumentSection

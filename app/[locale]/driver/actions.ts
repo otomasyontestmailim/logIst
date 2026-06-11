@@ -29,6 +29,50 @@ function nn(v: FormDataEntryValue | null): string | null {
 }
 
 /**
+ * Şoför kendisine atanan seferi reddeder: durum taşıma talebine döner,
+ * şoför ataması kaldırılır. Yalnızca "Sürücü Onayında" aşamasında geçerli.
+ */
+export async function rejectTrip(
+  _prev: DocumentFormState,
+  formData: FormData,
+): Promise<DocumentFormState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id || me.role !== "driver") {
+    return { ok: false, error: "unauthorized" };
+  }
+
+  const tripId = nn(formData.get("trip_id"));
+  if (!tripId) return { ok: false, error: "id_required" };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("trips")
+    .select("organization_id, driver_id, status")
+    .eq("id", tripId)
+    .single();
+  if (
+    !target ||
+    target.organization_id !== me.organization_id ||
+    target.driver_id !== me.id
+  ) {
+    return { ok: false, error: "not_found" };
+  }
+  if (target.status !== "driver_approval") {
+    return { ok: false, error: "invalid_transition" };
+  }
+
+  const { error } = await admin
+    .from("trips")
+    .update({ status: "requested", driver_id: null })
+    .eq("id", tripId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/[locale]/driver", "page");
+  revalidatePath("/[locale]/trips", "page");
+  return { ok: true, message: "rejected" };
+}
+
+/**
  * Storage'a yüklenmiş dosya için documents satırı oluşturur.
  * Dosya tarayıcıdan DOĞRUDAN Storage'a yüklenir (Server Action body limiti
  * nedeniyle); bu action yalnızca DB kaydını ekler. RLS-scoped istemci

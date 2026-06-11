@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isTripStatus } from "@/lib/trip-status";
+import { canTransition, isTripStatus } from "@/lib/trip-status";
 
 export type TripFormState = {
   ok: boolean;
@@ -250,16 +250,23 @@ export async function updateTripStatus(
 
   const { data: target } = await admin
     .from("trips")
-    .select("organization_id, driver_id")
+    .select("organization_id, driver_id, status")
     .eq("id", tripId)
     .single();
   if (!target || target.organization_id !== me.organization_id) {
     return { ok: false, error: "not_found" };
   }
 
-  // Driver can only update their own trip status
-  if (me.role === "driver" && target.driver_id !== me.id) {
-    return { ok: false, error: "forbidden" };
+  // Driver can only update their own trip status, and only along the
+  // defined flow (accept → loading → in_transit → delivering → approval).
+  // Admin/dispatcher panelden serbest düzeltme yapabilir.
+  if (me.role === "driver") {
+    if (target.driver_id !== me.id) {
+      return { ok: false, error: "forbidden" };
+    }
+    if (!canTransition("driver", target.status, status)) {
+      return { ok: false, error: "invalid_transition" };
+    }
   }
 
   const { error } = await admin
