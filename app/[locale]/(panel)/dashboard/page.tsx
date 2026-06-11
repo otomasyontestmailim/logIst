@@ -4,7 +4,12 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
 import { PIPELINE_STATUSES } from "@/lib/trip-status";
-import type { TripStatus } from "@/lib/supabase/database.types";
+import type { Database, TripStatus } from "@/lib/supabase/database.types";
+import { DashboardMap, type DriverInfo } from "./dashboard-map";
+
+type LocationRow = Database["public"]["Tables"]["driver_locations"]["Row"];
+type TripRow = Database["public"]["Tables"]["trips"]["Row"];
+type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
 
 const STAT_KEYS = [
   "activeTrips",
@@ -36,6 +41,11 @@ export default async function DashboardPage() {
     delivery_approval: 0,
     completed: 0,
   };
+
+  let locations: LocationRow[] = [];
+  let mapDrivers: DriverInfo[] = [];
+  let activeTrips: TripRow[] = [];
+  let tripStops: StopRow[] = [];
 
   if (me?.organization_id) {
     const supabase = await createClient();
@@ -80,6 +90,44 @@ export default async function DashboardPage() {
     PIPELINE_STATUSES.forEach((status, i) => {
       pipeline[status] = pipelineRes[i]?.count ?? 0;
     });
+
+    // Harita verileri: son konumlar + şoför bilgileri + aktif seferler + duraklar
+    const [locRes, usersRes, profilesRes, tripsRes, stopsRes] =
+      await Promise.all([
+        supabase
+          .from("driver_locations")
+          .select("*")
+          .eq("organization_id", me.organization_id),
+        supabase
+          .from("users")
+          .select("id, full_name, phone")
+          .eq("organization_id", me.organization_id)
+          .eq("role", "driver"),
+        supabase.from("driver_profiles").select("user_id, plate"),
+        supabase
+          .from("trips")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .neq("status", "completed"),
+        supabase
+          .from("trip_stops")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .order("seq"),
+      ]);
+
+    const plateMap = new Map(
+      (profilesRes.data ?? []).map((p) => [p.user_id, p.plate]),
+    );
+    locations = locRes.data ?? [];
+    mapDrivers = (usersRes.data ?? []).map((u) => ({
+      id: u.id,
+      full_name: u.full_name,
+      phone: u.phone,
+      plate: plateMap.get(u.id) ?? null,
+    }));
+    activeTrips = tripsRes.data ?? [];
+    tripStops = stopsRes.data ?? [];
   }
 
   return (
@@ -101,6 +149,13 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      <DashboardMap
+        locations={locations}
+        drivers={mapDrivers}
+        trips={activeTrips}
+        stops={tripStops}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {STAT_KEYS.map((key) => (

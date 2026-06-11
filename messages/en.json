@@ -52,7 +52,13 @@
     "activeTrips": "Active Trips",
     "pendingDocuments": "Pending Documents",
     "lateDeliveries": "Late Deliveries",
-    "drivers": "Drivers"
+    "drivers": "Drivers",
+    "tripInfo": "Load Details",
+    "noTripSelected": "Select a driver on the map.",
+    "noActiveTrip": "No active trip.",
+    "lastSeen": "Last seen",
+    "driver": "Driver",
+    "plate": "Plate"
   },
   "Drivers": {
     "title": "Drivers",
