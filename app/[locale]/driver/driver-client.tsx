@@ -9,7 +9,9 @@ import {
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ArrowRight, Camera } from "lucide-react";
+import { ArrowRight, Camera, ChevronDown, ImagePlus } from "lucide-react";
+import { MapView } from "@/components/map/map-view";
+import { StopsTimeline } from "@/components/stops-timeline";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -61,15 +63,19 @@ const DOC_STATUS_CLASSES: Record<string, string> = {
   rejected: "bg-destructive/15 text-destructive",
 };
 
+type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
+
 export function DriverClient({
   trips,
   documents,
   customers,
+  stops,
   organizationId,
 }: {
   trips: TripRow[];
   documents: DocumentRow[];
   customers: CustomerName[];
+  stops: StopRow[];
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
@@ -114,6 +120,7 @@ export function DriverClient({
               : null
           }
           documents={documents.filter((d) => d.trip_id === trip.id)}
+          stops={stops.filter((s) => s.trip_id === trip.id)}
           organizationId={organizationId}
         />
       ))}
@@ -128,14 +135,17 @@ function TripCard({
   trip,
   customerName,
   documents,
+  stops,
   organizationId,
 }: {
   trip: TripRow;
   customerName: string | null;
   documents: DocumentRow[];
+  stops: StopRow[];
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
+  const tt = useTranslations("Trips");
   const tts = useTranslations("TripStatus");
   const format = useFormatter();
 
@@ -184,6 +194,20 @@ function TripCard({
           {statusLabel}
         </span>
       </div>
+
+      {stops.some((s) => s.lat != null && s.lng != null) && (
+        <MapView
+          markers={stops
+            .filter((s) => s.lat != null && s.lng != null)
+            .map((s, i) => ({
+              id: s.id,
+              lat: Number(s.lat),
+              lng: Number(s.lng),
+              label: s.address ?? `${i + 1}`,
+            }))}
+          className="z-0 h-44 w-full rounded-lg border"
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
         {customerName && (
@@ -238,11 +262,65 @@ function TripCard({
         </div>
       )}
 
-      <DocumentSection
-        trip={trip}
-        documents={documents}
-        organizationId={organizationId}
-      />
+      {(trip.cargo_type ||
+        trip.tonnage_kg != null ||
+        trip.notes ||
+        stops.length > 0) && (
+        <details className="group rounded-lg border">
+          <summary className="flex cursor-pointer items-center justify-between p-3 text-sm font-semibold select-none">
+            {t("detailsTitle")}
+            <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="space-y-3 border-t p-3 text-sm">
+            {trip.cargo_type && (
+              <DetailRow label={tt("cargoType")} value={trip.cargo_type} />
+            )}
+            {trip.loading_type && (
+              <DetailRow label={tt("loadingType")} value={trip.loading_type} />
+            )}
+            {trip.tonnage_kg != null && (
+              <DetailRow
+                label={tt("tonnageKg")}
+                value={format.number(Number(trip.tonnage_kg))}
+              />
+            )}
+            {trip.tracking_no && (
+              <DetailRow label={tt("trackingNo")} value={trip.tracking_no} />
+            )}
+            {trip.notes && (
+              <p className="text-muted-foreground">{trip.notes}</p>
+            )}
+            {stops.length > 0 && (
+              <div className="border-t pt-3">
+                <StopsTimeline stops={stops} />
+              </div>
+            )}
+          </div>
+        </details>
+      )}
+
+      <details className="group rounded-lg border" open>
+        <summary className="flex cursor-pointer items-center justify-between p-3 text-sm font-semibold select-none">
+          {t("documentsTitle")}
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="border-t p-3">
+          <DocumentSection
+            trip={trip}
+            documents={documents}
+            organizationId={organizationId}
+          />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value}</span>
     </div>
   );
 }
@@ -306,9 +384,7 @@ function DocumentSection({
   const busy = uploading || docPending;
 
   return (
-    <div className="space-y-3 border-t pt-3">
-      <h3 className="text-sm font-semibold">{t("documentsTitle")}</h3>
-
+    <div className="space-y-3">
       {documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noDocuments")}</p>
       ) : (
@@ -355,17 +431,20 @@ function DocumentSection({
           className="hidden"
           onChange={handleFile}
         />
-        <Button
+        {/* SoforFatura ekranındaki gibi fotoğraf ekleme kutusu */}
+        <button
           type="button"
-          variant="outline"
-          className="w-full"
-          size="lg"
           disabled={busy}
           onClick={() => fileRef.current?.click()}
+          className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-6 text-sm text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
         >
-          <Camera className="size-4" />
-          {busy ? t("uploading") : t("uploadDocument")}
-        </Button>
+          {busy ? (
+            <Camera className="size-6 animate-pulse" />
+          ) : (
+            <ImagePlus className="size-6" />
+          )}
+          {busy ? t("uploading") : t("addPhoto")}
+        </button>
       </div>
     </div>
   );

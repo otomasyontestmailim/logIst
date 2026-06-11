@@ -11,6 +11,7 @@ type DocumentRow = Pick<
   Database["public"]["Tables"]["documents"]["Row"],
   "id" | "trip_id" | "type" | "status" | "created_at"
 >;
+type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
 type CustomerName = Pick<
   Database["public"]["Tables"]["customers"]["Row"],
   "id" | "name"
@@ -29,6 +30,7 @@ export default async function DriverPage() {
   let trips: TripRow[] = [];
   let documents: DocumentRow[] = [];
   let customers: CustomerName[] = [];
+  let stops: StopRow[] = [];
 
   if (user?.organization_id) {
     const supabase = await createClient();
@@ -47,7 +49,7 @@ export default async function DriverPage() {
         ...new Set(trips.map((trip) => trip.customer_id).filter(Boolean)),
       ] as string[];
 
-      const [docsRes, customersRes] = await Promise.all([
+      const [docsRes, customersRes, stopsRes] = await Promise.all([
         supabase
           .from("documents")
           .select("id, trip_id, type, status, created_at")
@@ -56,10 +58,16 @@ export default async function DriverPage() {
         customerIds.length > 0
           ? supabase.from("customers").select("id, name").in("id", customerIds)
           : Promise.resolve({ data: [] as CustomerName[] }),
+        supabase
+          .from("trip_stops")
+          .select("*")
+          .in("trip_id", tripIds)
+          .order("seq"),
       ]);
 
       documents = (docsRes.data as DocumentRow[]) ?? [];
       customers = (customersRes.data as CustomerName[]) ?? [];
+      stops = (stopsRes.data as StopRow[]) ?? [];
     }
   }
 
@@ -73,6 +81,7 @@ export default async function DriverPage() {
         trips={trips}
         documents={documents}
         customers={customers}
+        stops={stops}
         organizationId={user?.organization_id ?? ""}
       />
     </main>

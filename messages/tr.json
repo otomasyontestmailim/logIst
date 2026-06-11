@@ -245,6 +245,8 @@
     "noDocuments": "Henüz belge yok.",
     "selectType": "Belge tipi",
     "uploadDocument": "Belge Çek / Yükle",
+    "addPhoto": "Belge Fotoğrafı Ekle",
+    "detailsTitle": "Detay ve Açıklamalar",
     "uploading": "Yükleniyor...",
     "uploadSuccess": "Belge yüklendi.",
     "uploadError": "Yükleme başarısız: {error}"

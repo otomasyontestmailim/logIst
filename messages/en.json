@@ -245,6 +245,8 @@
     "noDocuments": "No documents yet.",
     "selectType": "Document type",
     "uploadDocument": "Scan / Upload Document",
+    "addPhoto": "Add Document Photo",
+    "detailsTitle": "Details & Notes",
     "uploading": "Uploading...",
     "uploadSuccess": "Document uploaded.",
     "uploadError": "Upload failed: {error}"
