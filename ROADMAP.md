@@ -3,10 +3,30 @@
 > Canlı yol haritası. Bir dilim bitince işaretle. Anlık durum ve "sıradaki görev"
 > için `memory/project_state.md`; kod kuralları için `CONVENTIONS.md`.
 
-Durum: **Faz 0 ✓ · Faz 1 ✓ · Faz 2 ✓ · Faz 3 büyük ölçüde ✓ (basit yükleme; jscanify/offline yok) · Faz 4 minimal inbox ✓ · sıradaki → Faz 3 offline kuyruğu / Faz 4 OCR**
+Durum: **Faz 0 ✓ · Faz 1 ✓ · Faz 2 ✓ · Faz 3 büyük ölçüde ✓ (basit yükleme; jscanify/offline yok) · Faz 4 minimal inbox ✓ · Faz 2.5 (TIRPORT tarzı taşıma yönetimi) ✓ · sıradaki → Faz 3 offline kuyruğu / Faz 4 OCR**
 
-> ⚠️ `supabase/migrations/0002_storage_documents.sql` SQL Editor'da **elle
-> uygulanmalı** — uygulanmadan şoför belge yükleme ve gelen kutusu çalışmaz.
+> ⚠️ `supabase/migrations/0002_storage_documents.sql` ve
+> `0003_pipeline_stops_locations.sql` SQL Editor'da **sırayla elle
+> uygulanmalı** — 0002'siz belge yükleme, 0003'süz yeni pipeline/harita/konum
+> özellikleri ÇALIŞMAZ (kod yeni enum değerlerini kullanıyor).
+
+---
+
+## Faz 2.5 — TIRPORT tarzı taşıma yönetimi ✓ (2026-06-11)
+
+- [x] 7 aşamalı sefer pipeline'ı (`requested → driver_approval → dispatched →
+    loading → in_transit → delivering → delivery_approval → completed`),
+      eski 4 durum migration'da map'lendi; geçiş kuralları `lib/trip-status.ts`
+- [x] Yük bilgileri: yük türü, yükleme tipi, tonaj, kasa tipi, takip no, mesafe, not
+- [x] Çoklu durak (`trip_stops`) + durak editörü + `StopsTimeline` bileşeni
+- [x] Şoför kabul/red akışı (`rejectTrip`), şoför geçiş doğrulaması (canTransition)
+- [x] Dashboard pipeline sayaç barı (tıklanabilir → `/trips?status=`)
+- [x] Harita dashboard'u: Leaflet + OSM, şoför konum marker'ları, Yük Bilgileri paneli
+- [x] Canlı konum: PWA ön planda 90 sn'de bir `reportLocation` upsert (`driver_locations`)
+- [x] Şoför karnesi: taşıma sayısı + toplam km + araç bilgileri (model/yıl/kapasite)
+- [x] Şoför mobil yeniden tasarım: mini harita, açılır bölümler, foto ekleme kutusu
+- [ ] (İleride) Durak adresleri için geocoding (Nominatim), konum iz geçmişi,
+      performans puanlama (dispatcher 1-5), native arka plan takibi (Expo)
 
 ---
 
