@@ -151,7 +151,21 @@
     "colStatus": "Status",
     "colDates": "Dates",
     "filterStatus": "Filter by status",
-    "statusAll": "All statuses"
+    "statusAll": "All statuses",
+    "cargoType": "Cargo Type",
+    "loadingType": "Loading Type",
+    "selectLoadingType": "Select loading type",
+    "tonnageKg": "Tonnage (kg)",
+    "bodyType": "Body Type",
+    "trackingNo": "Tracking No",
+    "distanceKm": "Distance (km)",
+    "notes": "Details & Notes"
+  },
+  "LoadingTypes": {
+    "palletized": "Palletized",
+    "bulk": "Bulk",
+    "parcel": "Parcel",
+    "other": "Other"
   },
   "TripStatus": {
     "requested": "Transport Request",

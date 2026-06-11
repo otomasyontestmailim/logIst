@@ -35,6 +35,8 @@ type UserRow = Pick<
 
 const initialState: TripFormState = { ok: false };
 
+const LOADING_TYPES = ["palletized", "bulk", "parcel", "other"] as const;
+
 export function TripsClient({
   trips,
   customers,
@@ -144,6 +146,7 @@ function TripForm({
 }) {
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
+  const tlt = useTranslations("LoadingTypes");
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     trip ? updateTrip : createTrip,
@@ -236,6 +239,63 @@ function TripForm({
           type="date"
           defaultValue={trip?.delivery_date}
         />
+
+        <Field
+          name="cargo_type"
+          label={t("cargoType")}
+          defaultValue={trip?.cargo_type}
+        />
+
+        <div className="space-y-1.5">
+          <Label htmlFor="loading_type">{t("loadingType")}</Label>
+          <select
+            id="loading_type"
+            name="loading_type"
+            defaultValue={trip?.loading_type ?? ""}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">{t("selectLoadingType")}</option>
+            {LOADING_TYPES.map((lt) => (
+              <option key={lt} value={lt}>
+                {tlt(lt)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <Field
+          name="tonnage_kg"
+          label={t("tonnageKg")}
+          type="number"
+          defaultValue={trip?.tonnage_kg?.toString()}
+        />
+        <Field
+          name="body_type"
+          label={t("bodyType")}
+          defaultValue={trip?.body_type}
+        />
+        <Field
+          name="tracking_no"
+          label={t("trackingNo")}
+          defaultValue={trip?.tracking_no}
+        />
+        <Field
+          name="distance_km"
+          label={t("distanceKm")}
+          type="number"
+          defaultValue={trip?.distance_km?.toString()}
+        />
+
+        <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+          <Label htmlFor="notes">{t("notes")}</Label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows={2}
+            defaultValue={trip?.notes ?? undefined}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+        </div>
 
         {trip && (
           <div className="space-y-1.5">

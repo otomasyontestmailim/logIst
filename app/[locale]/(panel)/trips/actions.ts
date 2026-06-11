@@ -16,6 +16,26 @@ function nn(v: FormDataEntryValue | null): string | null {
   return s === "" ? null : s;
 }
 
+function num(v: FormDataEntryValue | null): number | null {
+  const s = nn(v);
+  if (s === null) return null;
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Formdan yük bilgisi alanlarını toplar (create + update ortak). */
+function cargoFields(formData: FormData) {
+  return {
+    cargo_type: nn(formData.get("cargo_type")),
+    loading_type: nn(formData.get("loading_type")),
+    tonnage_kg: num(formData.get("tonnage_kg")),
+    body_type: nn(formData.get("body_type")),
+    tracking_no: nn(formData.get("tracking_no")),
+    distance_km: num(formData.get("distance_km")),
+    notes: nn(formData.get("notes")),
+  };
+}
+
 export async function createTrip(
   _prev: TripFormState,
   formData: FormData,
@@ -47,6 +67,7 @@ export async function createTrip(
     load_date: nn(formData.get("load_date")),
     delivery_date: nn(formData.get("delivery_date")),
     status: driverId ? "driver_approval" : "requested",
+    ...cargoFields(formData),
   });
 
   if (error) {
@@ -100,6 +121,7 @@ export async function updateTrip(
       driver_id: driverId,
       load_date: nn(formData.get("load_date")),
       delivery_date: nn(formData.get("delivery_date")),
+      ...cargoFields(formData),
       status: (() => {
         const s = nn(formData.get("status")) ?? "requested";
         return isTripStatus(s) ? s : "requested";

@@ -151,7 +151,21 @@
     "colStatus": "Durum",
     "colDates": "Tarihler",
     "filterStatus": "Duruma göre filtrele",
-    "statusAll": "Tüm durumlar"
+    "statusAll": "Tüm durumlar",
+    "cargoType": "Yük Türü",
+    "loadingType": "Yükleme Tipi",
+    "selectLoadingType": "Yükleme tipi seçin",
+    "tonnageKg": "Tonaj (kg)",
+    "bodyType": "Kasa Tipi",
+    "trackingNo": "Takip No",
+    "distanceKm": "Mesafe (km)",
+    "notes": "Detay ve Açıklamalar"
+  },
+  "LoadingTypes": {
+    "palletized": "Paletli",
+    "bulk": "Dökme",
+    "parcel": "Koli",
+    "other": "Diğer"
   },
   "TripStatus": {
     "requested": "Taşıma Talebi",
