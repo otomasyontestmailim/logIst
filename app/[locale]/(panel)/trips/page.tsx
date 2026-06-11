@@ -12,8 +12,13 @@ type UserRow = Pick<
   "id" | "full_name" | "email"
 >;
 
-export default async function TripsPage() {
+export default async function TripsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const t = await getTranslations("Trips");
+  const { status } = await searchParams;
   const me = await getCurrentUser();
 
   let trips: TripRow[] = [];
@@ -64,6 +69,7 @@ export default async function TripsPage() {
           customers={customers}
           drivers={drivers}
           stops={stops}
+          initialStatus={status}
         />
       </div>
     </main>

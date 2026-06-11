@@ -45,11 +45,13 @@ export function TripsClient({
   customers,
   drivers,
   stops,
+  initialStatus,
 }: {
   trips: TripRow[];
   customers: CustomerRow[];
   drivers: UserRow[];
   stops: StopRow[];
+  initialStatus?: string;
 }) {
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
@@ -57,7 +59,7 @@ export function TripsClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TripRow | null>(null);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatus ?? "all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
