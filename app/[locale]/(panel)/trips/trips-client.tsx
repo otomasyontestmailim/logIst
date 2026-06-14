@@ -645,7 +645,10 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
           const next = e.currentTarget.value;
           setCurrent(next);
           const form = e.currentTarget.form;
-          if (form) formAction(new FormData(form));
+          if (form) {
+            const data = new FormData(form);
+            startTransition(() => formAction(data));
+          }
         }}
         className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[current as keyof typeof STATUS_CLASSES] ?? STATUS_CLASSES.requested}`}
       >

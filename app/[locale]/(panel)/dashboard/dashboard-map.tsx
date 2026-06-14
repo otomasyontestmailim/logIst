@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { MapView, type MapMarker } from "@/components/map/map-view";
 import { StopsTimeline } from "@/components/stops-timeline";
 import { STATUS_CLASSES } from "@/lib/trip-status";
@@ -32,6 +32,7 @@ export function DashboardMap({
   const tt = useTranslations("Trips");
   const tts = useTranslations("TripStatus");
   const format = useFormatter();
+  const now = useNow({ updateInterval: 60000 });
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
 
   const driverMap = useMemo(
@@ -46,7 +47,7 @@ export function DashboardMap({
       lat: Number(loc.lat),
       lng: Number(loc.lng),
       label: d?.full_name ?? "—",
-      sublabel: `${t("lastSeen")}: ${format.relativeTime(new Date(loc.recorded_at))}`,
+      sublabel: `${t("lastSeen")}: ${format.relativeTime(new Date(loc.recorded_at), now)}`,
     };
   });
 
