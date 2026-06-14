@@ -43,3 +43,6 @@ next-env.d.ts
 
 # MCP server config (contains DB credentials)
 .mcp.json
+
+# impeccable: yeniden üretilebilir critique anlık görüntüleri
+.impeccable/critique/

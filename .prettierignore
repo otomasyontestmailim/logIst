@@ -4,3 +4,5 @@ out
 build
 *.lock
 package-lock.json
+.claude
+.impeccable
