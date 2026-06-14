@@ -49,6 +49,7 @@
   "Dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
+    "pipelineTitle": "Trip pipeline",
     "activeTrips": "Active Trips",
     "pendingDocuments": "Pending Documents",
     "lateDeliveries": "Late Deliveries",
@@ -58,7 +59,13 @@
     "noActiveTrip": "No active trip.",
     "lastSeen": "Last seen",
     "driver": "Driver",
-    "plate": "Plate"
+    "plate": "Plate",
+    "phone": "Phone",
+    "setupTitle": "Bring your dashboard to life",
+    "setupDesc": "Your trip pipeline and live driver locations will appear here. To get started:",
+    "setupDrivers": "Add a driver",
+    "setupCustomers": "Add a customer",
+    "setupTrips": "Create your first trip"
   },
   "Drivers": {
     "title": "Drivers",
@@ -166,6 +173,8 @@
     "colDates": "Dates",
     "filterStatus": "Filter by status",
     "statusAll": "All statuses",
+    "lateFilterActive": "Showing late deliveries",
+    "clearFilter": "Clear filter",
     "cargoType": "Cargo Type",
     "loadingType": "Loading Type",
     "selectLoadingType": "Select loading type",

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { Link } from "@/i18n/navigation";
 import { TripsClient } from "./trips-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -15,10 +16,11 @@ type UserRow = Pick<
 export default async function TripsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; late?: string }>;
 }) {
   const t = await getTranslations("Trips");
-  const { status } = await searchParams;
+  const { status, late } = await searchParams;
+  const lateMode = late === "1";
   const me = await getCurrentUser();
 
   let trips: TripRow[] = [];
@@ -29,12 +31,21 @@ export default async function TripsPage({
   if (me?.organization_id) {
     const supabase = await createClient();
 
+    // Geciken teslimat görünümü: tamamlanmamış + teslim tarihi bugünden önce.
+    let tripsQuery = supabase
+      .from("trips")
+      .select("*")
+      .eq("organization_id", me.organization_id)
+      .order("created_at", { ascending: false });
+    if (lateMode) {
+      const todayISO = new Date().toISOString().slice(0, 10);
+      tripsQuery = tripsQuery
+        .neq("status", "completed")
+        .lt("delivery_date", todayISO);
+    }
+
     const [tripsRes, customersRes, driversRes, stopsRes] = await Promise.all([
-      supabase
-        .from("trips")
-        .select("*")
-        .eq("organization_id", me.organization_id)
-        .order("created_at", { ascending: false }),
+      tripsQuery,
       supabase
         .from("customers")
         .select("*")
@@ -63,6 +74,19 @@ export default async function TripsPage({
     <main className="flex flex-1 flex-col gap-2 p-8">
       <h1 className="text-2xl font-bold">{t("title")}</h1>
       <p className="text-muted-foreground">{t("subtitle")}</p>
+
+      {lateMode && (
+        <div className="status-chip status-wait mt-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium">
+          <span>
+            {t("lateFilterActive")}
+            {trips.length > 0 ? ` (${trips.length})` : ""}
+          </span>
+          <Link href="/trips" className="shrink-0 underline underline-offset-2">
+            {t("clearFilter")}
+          </Link>
+        </div>
+      )}
+
       <div className="mt-4">
         <TripsClient
           trips={trips}

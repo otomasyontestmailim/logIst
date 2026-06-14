@@ -49,6 +49,7 @@
   "Dashboard": {
     "title": "Panel",
     "welcome": "Hoş geldiniz",
+    "pipelineTitle": "Sefer hattı",
     "activeTrips": "Aktif Sefer",
     "pendingDocuments": "Bekleyen Belge",
     "lateDeliveries": "Geciken Teslimat",
@@ -58,7 +59,13 @@
     "noActiveTrip": "Aktif sefer yok.",
     "lastSeen": "Son görülme",
     "driver": "Sürücü",
-    "plate": "Plaka"
+    "plate": "Plaka",
+    "phone": "GSM",
+    "setupTitle": "Panelini canlandır",
+    "setupDesc": "Seferlerin akışı ve canlı şoför konumları burada görünecek. Başlamak için:",
+    "setupDrivers": "Şoför ekle",
+    "setupCustomers": "Müşteri ekle",
+    "setupTrips": "İlk seferini oluştur"
   },
   "Drivers": {
     "title": "Şoförler",
@@ -166,6 +173,8 @@
     "colDates": "Tarihler",
     "filterStatus": "Duruma göre filtrele",
     "statusAll": "Tüm durumlar",
+    "lateFilterActive": "Geciken teslimatlar gösteriliyor",
+    "clearFilter": "Filtreyi temizle",
     "cargoType": "Yük Türü",
     "loadingType": "Yükleme Tipi",
     "selectLoadingType": "Yükleme tipi seçin",

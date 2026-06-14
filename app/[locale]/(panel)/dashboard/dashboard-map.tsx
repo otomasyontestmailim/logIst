@@ -71,7 +71,7 @@ export function DashboardMap({
         ) : (
           <div className="space-y-3 text-sm">
             <InfoRow label={t("driver")} value={driver.full_name} />
-            <InfoRow label="GSM" value={driver.phone} />
+            <InfoRow label={t("phone")} value={driver.phone} />
             <InfoRow label={t("plate")} value={driver.plate} />
             {!trip ? (
               <p className="text-muted-foreground">{t("noActiveTrip")}</p>
