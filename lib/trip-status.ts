@@ -57,20 +57,22 @@ export function isTripStatus(v: string): v is TripStatus {
   return (ALL_STATUSES as string[]).includes(v);
 }
 
-/** Durum rozet renkleri — panel + şoför ekranında ortak. */
-export const STATUS_CLASSES: Record<TripStatus, string> = {
-  requested:
-    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  driver_approval:
-    "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300",
-  dispatched: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
-  loading: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  in_transit:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  delivering:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
-  delivery_approval:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
-  completed:
-    "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+/** Durum → anlamsal ton sınıfı (globals.css'te tanımlı). Tek palet, marka
+ *  token'larından türetilmiş; rainbow değil. Ton = gereken dikkat türü:
+ *  idle (boşta) · wait (el-değişimi bekliyor) · active (hareket) · done. */
+export const STATUS_TONE: Record<TripStatus, string> = {
+  requested: "status-idle",
+  driver_approval: "status-wait", // şoför kabulü bekliyor
+  dispatched: "status-active",
+  loading: "status-active",
+  in_transit: "status-active",
+  delivering: "status-active",
+  delivery_approval: "status-wait", // ofis onayı bekliyor
+  completed: "status-done",
 };
+
+/** Durum rozet sınıfları — panel + şoför ekranında ortak. `status-chip` tint
+ *  zemin + koyu metin verir; ton sınıfı hue'yu seçer. */
+export const STATUS_CLASSES = Object.fromEntries(
+  ALL_STATUSES.map((s) => [s, `status-chip ${STATUS_TONE[s]}`]),
+) as Record<TripStatus, string>;

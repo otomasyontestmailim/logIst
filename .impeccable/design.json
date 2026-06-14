@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-14T00:00:00Z",
+  "title": "Design System: Lojistik CRM",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Petrol Teal",
+        "canonical": "oklch(0.52 0.07 195)",
+        "tonalRamp": [
+          "oklch(0.22 0.04 195)",
+          "oklch(0.32 0.055 195)",
+          "oklch(0.40 0.065 195)",
+          "oklch(0.45 0.075 195)",
+          "oklch(0.52 0.07 195)",
+          "oklch(0.64 0.06 195)",
+          "oklch(0.80 0.04 195)",
+          "oklch(0.95 0.015 195)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Cool Surface",
+        "canonical": "oklch(0.985 0.004 195)",
+        "tonalRamp": [
+          "oklch(0.20 0.01 195)",
+          "oklch(0.35 0.01 195)",
+          "oklch(0.50 0.012 195)",
+          "oklch(0.65 0.01 195)",
+          "oklch(0.80 0.008 195)",
+          "oklch(0.90 0.006 195)",
+          "oklch(0.96 0.004 195)",
+          "oklch(0.99 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Sayfa başlığı (h1); sabit rem."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Plaka, takip no, kg, km, koordinat — tabular veri."
+      }
+    },
+    "shadows": [
+      {
+        "name": "resting-card",
+        "value": "0 1px 2px oklch(0.20 0.01 195 / 0.05)",
+        "purpose": "Kartı zeminden ayırır, yüzdürmez."
+      },
+      {
+        "name": "floating",
+        "value": "0 8px 24px oklch(0.20 0.01 195 / 0.12)",
+        "purpose": "Dropdown, popover, dialog."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Durum geçişleri (ease-out); 150ms."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Birincil eylem: Kaydet, Ekle, sefer kabul.",
+      "html": "<button class=\"ds-btn-primary\">Kaydet</button>",
+      "css": ".ds-btn-primary { background: oklch(0.52 0.07 195); color: oklch(0.99 0 0); padding: 8px 16px; border: none; border-radius: 8px; font-family: Geist, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 150ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: oklch(0.45 0.075 195); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.52 0.07 195); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "İkincil eylem; nav, satır içi aksiyon.",
+      "html": "<button class=\"ds-btn-ghost\">İptal</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: oklch(0.20 0.01 195); padding: 8px 16px; border: none; border-radius: 8px; font-family: Geist, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 150ms; } .ds-btn-ghost:hover { background: oklch(0.985 0.004 195); }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "Sefer/belge durumu; düşük-yoğunluk tint + renkli metin.",
+      "html": "<span class=\"ds-chip ds-chip-transit\">Yolda</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-family: Geist, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-chip-transit { background: oklch(0.52 0.07 195 / 0.12); color: oklch(0.40 0.065 195); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Form alanı; focus'ta petrol-teal ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Ara...\" />",
+      "css": ".ds-input { background: oklch(0.99 0 0); color: oklch(0.20 0.01 195); padding: 8px 12px; border: 1px solid oklch(0.92 0.005 195); border-radius: 8px; font-family: Geist, system-ui, sans-serif; font-size: 0.875rem; } .ds-input::placeholder { color: oklch(0.55 0.012 195); } .ds-input:focus-visible { outline: none; border-color: oklch(0.52 0.07 195); box-shadow: 0 0 0 2px oklch(0.52 0.07 195 / 0.4); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "İçerik konteyneri; düz + 1px border, hafif resting gölge.",
+      "html": "<div class=\"ds-card\">Aktif Sefer<br><strong>12</strong></div>",
+      "css": ".ds-card { background: oklch(0.99 0 0); color: oklch(0.20 0.01 195); border: 1px solid oklch(0.92 0.005 195); border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px oklch(0.20 0.01 195 / 0.05); font-family: Geist, system-ui, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Sevk Kulesi (The Dispatch Tower)",
+    "overview": "Kontrol kulesi paneli: dispatcher bir bakışta neyin nerede/geciktiğini görür; şoför yolda tek elle zayıf internette güvenle ilerler. Petrol-teal yalnız eylem ve durumu taşır, dekorasyon yapmaz. Tüketici/oyunlaştırılmış havayı ve eski ağır ERP'yi açıkça reddeder.",
+    "keyCharacteristics": [
+      "Sakin, sessizce yetkin; araç gözden kaybolur.",
+      "Tek vurgu rengi (petrol-teal), yalnız eylem + durum.",
+      "Soğuk-nötr, neredeyse beyaz zemin; tinted ama gürültüsüz.",
+      "Durum-zengin ve offline-dayanıklı.",
+      "Tek dil, iki yüzey (panel + şoför PWA)."
+    ],
+    "rules": [
+      {
+        "name": "The One Voice Rule",
+        "body": "Petrol-teal herhangi bir ekranın ≤%10'unda görünür; nadirliği gücüdür.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tinted Neutral Rule",
+        "body": "Nötrler hue 195'e ≤0.012 chroma çeker; sıcağa kayma yasak.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed Scale Rule",
+        "body": "Başlıklar sabit rem ölçek; fluid clamp yasak.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Yüzeyler dinlenirken düz; gölge yalnız duruma yanıt.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do petrol-teal'i yalnız eylem/durumda kullan (≤%10).",
+      "Do nötrleri hue 195'e hafif çek.",
+      "Do her bileşeni yedi durumla gönder (default→error).",
+      "Do yükleniyor için skeleton, spinner değil.",
+      "Do boş durumları öğretici yaz.",
+      "Do şoför PWA'da offline/yeniden-deneme durumları tasarla.",
+      "Do plaka/takip/kg/km'yi Geist Mono ile hizala."
+    ],
+    "donts": [
+      "Don't tüketici/oyunlaştırılmış havaya kay (aşırı renk, emoji, rozet).",
+      "Don't eski ağır ERP'ye düş (kalabalık gri tablolar).",
+      "Don't mor→mavi gradient, gradient metin, kart içinde kart, ikon-kutusu başlık, eyebrow kullan.",
+      "Don't tam-doygunluk renkli rozet kullan (özellikle pasif).",
+      "Don't fluid clamp başlık kullan.",
+      "Don't dekoratif gölge/glassmorphism ekle.",
+      "Don't nötrleri sıcağa (cream/sand) çek."
+    ]
+  }
+}
