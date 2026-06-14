@@ -10,6 +10,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
+    // İstek başına sabit referans zaman: relativeTime/useNow'un sunucu↔istemci
+    // tutarlılığını sağlar ve ENVIRONMENT_FALLBACK uyarısını kaynağında keser.
+    now: new Date(),
     messages: (await import(`../messages/${locale}.json`)).default,
   };
 });

@@ -65,7 +65,9 @@
     "setupDesc": "Je rittenpijplijn en live chauffeurslocaties verschijnen hier. Om te beginnen:",
     "setupDrivers": "Chauffeur toevoegen",
     "setupCustomers": "Klant toevoegen",
-    "setupTrips": "Maak je eerste rit"
+    "setupTrips": "Maak je eerste rit",
+    "mapEmptyTitle": "Wachten op live locatie",
+    "mapEmptyDesc": "Locatie verschijnt hier zodra de chauffeursapp open is."
   },
   "Drivers": {
     "title": "Chauffeurs",

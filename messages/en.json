@@ -65,7 +65,9 @@
     "setupDesc": "Your trip pipeline and live driver locations will appear here. To get started:",
     "setupDrivers": "Add a driver",
     "setupCustomers": "Add a customer",
-    "setupTrips": "Create your first trip"
+    "setupTrips": "Create your first trip",
+    "mapEmptyTitle": "Waiting for live location",
+    "mapEmptyDesc": "Location appears here once the driver app is open."
   },
   "Drivers": {
     "title": "Drivers",

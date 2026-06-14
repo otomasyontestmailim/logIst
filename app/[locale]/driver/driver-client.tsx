@@ -90,7 +90,7 @@ export function DriverClient({
           void reportLocation(pos.coords.latitude, pos.coords.longitude);
         },
         () => {},
-        { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
+        { enableHighAccuracy: true, maximumAge: 30_000, timeout: 20_000 },
       );
     };
     send();

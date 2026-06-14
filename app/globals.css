@@ -187,3 +187,53 @@
     background-color: var(--tone-fg);
   }
 }
+
+/* Harita: canlı konum işareti (petrol-teal nabız) */
+.driver-pin {
+  position: relative;
+}
+.driver-pin__dot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid var(--primary-foreground);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.driver-pin__dot--static {
+  box-shadow: none;
+}
+.driver-pin__pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--primary);
+  transform: translate(-50%, -50%);
+  animation: driver-pin-pulse 2s ease-out infinite;
+}
+@keyframes driver-pin-pulse {
+  0% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .driver-pin__pulse {
+    animation: none;
+  }
+}

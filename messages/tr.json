@@ -65,7 +65,9 @@
     "setupDesc": "Seferlerin akışı ve canlı şoför konumları burada görünecek. Başlamak için:",
     "setupDrivers": "Şoför ekle",
     "setupCustomers": "Müşteri ekle",
-    "setupTrips": "İlk seferini oluştur"
+    "setupTrips": "İlk seferini oluştur",
+    "mapEmptyTitle": "Canlı konum bekleniyor",
+    "mapEmptyDesc": "Şoför uygulaması açıldığında konum burada görünür."
   },
   "Drivers": {
     "title": "Şoförler",

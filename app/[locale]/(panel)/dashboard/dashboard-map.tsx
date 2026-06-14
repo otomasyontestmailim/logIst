@@ -63,6 +63,8 @@ export function DashboardMap({
       <MapView
         markers={markers}
         onSelect={setSelectedDriver}
+        emptyTitle={t("mapEmptyTitle")}
+        emptyDesc={t("mapEmptyDesc")}
         className="z-0 h-[28rem] w-full rounded-lg border"
       />
       <aside className="rounded-lg border bg-card p-4 shadow-sm">
