@@ -1,6 +1,7 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
+// Yalnız tip — derlemede silinir, çalışma anında modül yüklenmez.
+import type AnthropicSDK from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 import type { DocumentType } from "@/lib/supabase/database.types";
@@ -66,6 +67,9 @@ export async function extractDocumentFields(
 ): Promise<OcrData | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
 
+  // SDK'yı yalnız OCR gerçekten çalışınca yükle (hot path'ten ve diğer
+  // action modüllerinin grafiğinden uzak tut).
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic();
   const message = await client.messages.create({
     // Maliyet-odaklı OCR: Haiku görüntü + yapılandırılmış çıktı destekler,
@@ -93,10 +97,10 @@ export async function extractDocumentFields(
     ],
     // Yapılandırılmış çıktı: yanıt tam olarak şemaya uyan JSON olur.
     output_config: { format: { type: "json_schema", schema: OCR_SCHEMA } },
-  } as Anthropic.MessageCreateParamsNonStreaming);
+  } as AnthropicSDK.MessageCreateParamsNonStreaming);
 
   const text = message.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .filter((b): b is AnthropicSDK.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("");
 
