@@ -13,6 +13,7 @@ type DocumentRow = Pick<
   | "type"
   | "file_url"
   | "status"
+  | "ocr_data"
   | "created_at"
 >;
 type TripInfo = Pick<
@@ -36,7 +37,9 @@ export default async function DocumentsPage() {
     const [docsRes, tripsRes, usersRes] = await Promise.all([
       supabase
         .from("documents")
-        .select("id, trip_id, uploaded_by, type, file_url, status, created_at")
+        .select(
+          "id, trip_id, uploaded_by, type, file_url, status, ocr_data, created_at",
+        )
         .eq("organization_id", me.organization_id)
         .order("created_at", { ascending: false }),
       supabase
@@ -78,6 +81,10 @@ export default async function DocumentsPage() {
           ? (userMap.get(doc.uploaded_by) ?? "—")
           : "—",
         signedUrl: signedUrls.get(doc.file_url) ?? null,
+        ocrData:
+          doc.ocr_data && typeof doc.ocr_data === "object"
+            ? (doc.ocr_data as Record<string, string>)
+            : null,
       };
     });
   }

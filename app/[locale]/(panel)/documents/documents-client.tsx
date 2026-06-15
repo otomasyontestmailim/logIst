@@ -1,13 +1,23 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import {
+  Fragment,
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Check, ExternalLink, X } from "lucide-react";
+import { Check, ExternalLink, ScanText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format-date";
 import { useErrorText } from "@/lib/use-error-text";
-import { setDocumentStatus, type DocumentInboxFormState } from "./actions";
+import {
+  extractDocument,
+  setDocumentStatus,
+  type DocumentInboxFormState,
+} from "./actions";
 import type {
   DocumentStatus,
   DocumentType,
@@ -21,6 +31,7 @@ export type DocumentItem = {
   tripLabel: string;
   driverName: string;
   signedUrl: string | null;
+  ocrData: Record<string, string> | null;
 };
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -35,12 +46,18 @@ export function DocumentsClient({ items }: { items: DocumentItem[] }) {
   const t = useTranslations("Documents");
   const tds = useTranslations("DocumentStatus");
   const tdt = useTranslations("DocumentTypes");
+  const tof = useTranslations("OcrFields");
   const format = useFormatter();
   const errText = useErrorText();
 
   const [statusFilter, setStatusFilter] = useState("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(
     setDocumentStatus,
+    initialState,
+  );
+  const [ocrState, ocrAction, ocrPending] = useActionState(
+    extractDocument,
     initialState,
   );
 
@@ -54,6 +71,21 @@ export function DocumentsClient({ items }: { items: DocumentItem[] }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+
+  useEffect(() => {
+    if (ocrState.ok && ocrState.message === "ocr_done") {
+      toast.success(t("ocrDoneToast"));
+    } else if (!ocrState.ok && ocrState.error) {
+      toast.error(t("errorToast", { error: errText(ocrState.error) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ocrState]);
+
+  function runOcr(documentId: string) {
+    const fd = new FormData();
+    fd.set("document_id", documentId);
+    startTransition(() => ocrAction(fd));
+  }
 
   const filtered =
     statusFilter === "all"
@@ -102,66 +134,130 @@ export function DocumentsClient({ items }: { items: DocumentItem[] }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {filtered.map((doc) => (
-              <tr key={doc.id} className="align-top">
-                <td className="px-4 py-3 font-medium">{tdt(doc.type)}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {doc.tripLabel}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {doc.driverName}
-                </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  {formatDate(format, doc.createdAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[doc.status] ?? STATUS_CLASSES.pending}`}
-                  >
-                    {tds(doc.status)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-1">
-                    {doc.signedUrl && (
-                      <a
-                        href={doc.signedUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={t("view")}
-                        className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+            {filtered.map((doc) => {
+              const hasOcr =
+                doc.ocrData &&
+                Object.values(doc.ocrData).some((v) => v && v.trim() !== "");
+              const expanded = expandedId === doc.id;
+              return (
+                <Fragment key={doc.id}>
+                  <tr className="align-top">
+                    <td className="px-4 py-3 font-medium">{tdt(doc.type)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {doc.tripLabel}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {doc.driverName}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {formatDate(format, doc.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[doc.status] ?? STATUS_CLASSES.pending}`}
                       >
-                        <ExternalLink className="size-4" />
-                      </a>
-                    )}
-                    {doc.status === "pending" && (
-                      <>
+                        {tds(doc.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-1">
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          disabled={pending}
-                          onClick={() => setStatus(doc.id, "approved")}
-                          aria-label={t("approve")}
+                          aria-label={hasOcr ? t("ocrView") : t("ocrRun")}
+                          title={hasOcr ? t("ocrView") : t("ocrRun")}
+                          disabled={ocrPending}
+                          onClick={() => {
+                            if (hasOcr) {
+                              setExpandedId(expanded ? null : doc.id);
+                            } else {
+                              runOcr(doc.id);
+                            }
+                          }}
                         >
-                          <Check className="size-4 text-green-600" />
+                          <ScanText
+                            className={`size-4 ${hasOcr ? "text-primary" : "text-muted-foreground"}`}
+                          />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={pending}
-                          onClick={() => setStatus(doc.id, "rejected")}
-                          aria-label={t("reject")}
-                        >
-                          <X className="size-4 text-destructive" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                        {doc.signedUrl && (
+                          <a
+                            href={doc.signedUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={t("view")}
+                            className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+                          >
+                            <ExternalLink className="size-4" />
+                          </a>
+                        )}
+                        {doc.status === "pending" && (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={pending}
+                              onClick={() => setStatus(doc.id, "approved")}
+                              aria-label={t("approve")}
+                            >
+                              <Check className="size-4 text-green-600" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={pending}
+                              onClick={() => setStatus(doc.id, "rejected")}
+                              aria-label={t("reject")}
+                            >
+                              <X className="size-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                  {expanded && hasOcr && (
+                    <tr className="bg-muted/30">
+                      <td colSpan={6} className="px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <h3 className="text-xs font-semibold text-muted-foreground">
+                            {t("ocrTitle")}
+                          </h3>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={ocrPending}
+                            onClick={() => runOcr(doc.id)}
+                          >
+                            {t("ocrRerun")}
+                          </Button>
+                        </div>
+                        <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+                          {Object.entries(doc.ocrData!)
+                            .filter(([, v]) => v && v.trim() !== "")
+                            .map(([key, value]) => (
+                              <div
+                                key={key}
+                                className="flex justify-between gap-2 border-b border-border/50 py-1 text-sm"
+                              >
+                                <dt className="text-muted-foreground">
+                                  {tof.has(key) ? tof(key) : key}
+                                </dt>
+                                <dd className="text-right font-medium">
+                                  {value}
+                                </dd>
+                              </div>
+                            ))}
+                        </dl>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>

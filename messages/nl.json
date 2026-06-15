@@ -245,7 +245,12 @@
     "rejectedToast": "Document afgewezen.",
     "errorToast": "Bewerking mislukt: {error}",
     "filterStatus": "Filter op status",
-    "statusAll": "Alle statussen"
+    "statusAll": "Alle statussen",
+    "ocrRun": "OCR uitvoeren",
+    "ocrView": "OCR-velden bekijken",
+    "ocrTitle": "Velden uit OCR (controleer)",
+    "ocrRerun": "Opnieuw uitvoeren",
+    "ocrDoneToast": "OCR voltooid."
   },
   "Driver": {
     "title": "Mijn ritten",
@@ -326,6 +331,22 @@
     "status_required": "Kies een geldige status.",
     "invalid_transition": "Deze statusovergang is ongeldig.",
     "invalid_stops": "Stopgegevens zijn ongeldig.",
-    "auth_create_failed": "Kon gebruiker niet aanmaken."
+    "auth_create_failed": "Kon gebruiker niet aanmaken.",
+    "ocr_not_configured": "OCR is niet geconfigureerd (geen API-sleutel).",
+    "ocr_failed": "OCR mislukt."
+  },
+  "OcrFields": {
+    "sender": "Afzender",
+    "receiver": "Ontvanger",
+    "sender_address": "Adres afzender",
+    "receiver_address": "Adres ontvanger",
+    "document_number": "Documentnr.",
+    "document_date": "Documentdatum",
+    "total_amount": "Totaalbedrag",
+    "currency": "Valuta",
+    "gross_weight": "Brutogewicht",
+    "package_count": "Aantal colli",
+    "plate": "Kenteken",
+    "summary": "Samenvatting"
   }
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { runOcrForDocument } from "@/lib/ocr";
 
 export type DocumentInboxFormState = {
   ok: boolean;
@@ -65,4 +66,45 @@ export async function setDocumentStatus(
   revalidatePath("/[locale]/documents", "page");
   revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: status };
+}
+
+/** Belge için OCR'yi (yeniden) çalıştırır. Yalnızca admin/dispatcher, kendi firması. */
+export async function extractDocument(
+  _prev: DocumentInboxFormState,
+  formData: FormData,
+): Promise<DocumentInboxFormState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) {
+    return { ok: false, error: "unauthorized" };
+  }
+  if (me.role !== "admin" && me.role !== "dispatcher") {
+    return { ok: false, error: "forbidden" };
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return { ok: false, error: "ocr_not_configured" };
+  }
+
+  const documentId = nn(formData.get("document_id"));
+  if (!documentId) return { ok: false, error: "id_required" };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("documents")
+    .select("organization_id")
+    .eq("id", documentId)
+    .single();
+  if (!target || target.organization_id !== me.organization_id) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const ok = await runOcrForDocument(documentId);
+  if (!ok) return { ok: false, error: "ocr_failed" };
+
+  await logAudit(me, {
+    action: "document.ocr",
+    entity: "documents",
+    entityId: documentId,
+  });
+  revalidatePath("/[locale]/documents", "page");
+  return { ok: true, message: "ocr_done" };
 }

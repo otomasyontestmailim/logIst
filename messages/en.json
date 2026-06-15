@@ -245,7 +245,12 @@
     "rejectedToast": "Document rejected.",
     "errorToast": "Operation failed: {error}",
     "filterStatus": "Filter by status",
-    "statusAll": "All statuses"
+    "statusAll": "All statuses",
+    "ocrRun": "Run OCR",
+    "ocrView": "View OCR fields",
+    "ocrTitle": "Fields extracted by OCR (please review)",
+    "ocrRerun": "Re-run",
+    "ocrDoneToast": "OCR completed."
   },
   "Driver": {
     "title": "My Trips",
@@ -326,6 +331,22 @@
     "status_required": "Select a valid status.",
     "invalid_transition": "This status transition is invalid.",
     "invalid_stops": "Stop data is invalid.",
-    "auth_create_failed": "Could not create user."
+    "auth_create_failed": "Could not create user.",
+    "ocr_not_configured": "OCR is not configured (no API key).",
+    "ocr_failed": "OCR failed."
+  },
+  "OcrFields": {
+    "sender": "Sender",
+    "receiver": "Receiver",
+    "sender_address": "Sender address",
+    "receiver_address": "Receiver address",
+    "document_number": "Document no",
+    "document_date": "Document date",
+    "total_amount": "Total amount",
+    "currency": "Currency",
+    "gross_weight": "Gross weight",
+    "package_count": "Package count",
+    "plate": "Plate",
+    "summary": "Summary"
   }
 }

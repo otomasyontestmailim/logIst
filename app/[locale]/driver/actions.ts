@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { runOcrForDocument } from "@/lib/ocr";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 import type { DocumentType } from "@/lib/supabase/database.types";
 
@@ -140,27 +142,35 @@ export async function createDocument(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("documents").insert({
-    organization_id: me.organization_id,
-    trip_id: tripId,
-    uploaded_by: me.id,
-    type: type as DocumentType,
-    file_url: filePath,
-    captured_at: new Date().toISOString(),
-  });
+  const { data: inserted, error } = await supabase
+    .from("documents")
+    .insert({
+      organization_id: me.organization_id,
+      trip_id: tripId,
+      uploaded_by: me.id,
+      type: type as DocumentType,
+      file_url: filePath,
+      captured_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !inserted) {
     // DB kaydı başarısızsa yüklenen dosyayı yetim bırakma (best-effort)
     const admin = createAdminClient();
     await admin.storage.from(DOCUMENTS_BUCKET).remove([filePath]);
-    return { ok: false, error: error.message };
+    return { ok: false, error: error?.message ?? "insert_failed" };
   }
 
   await logAudit(me, {
     action: `document.upload.${type}`,
     entity: "documents",
-    entityId: tripId,
+    entityId: inserted.id,
   });
+
+  // OCR'yi yanıt döndükten sonra arka planda çalıştır — şoför yüklemesi beklemez.
+  after(() => runOcrForDocument(inserted.id));
+
   revalidatePath("/[locale]/driver", "page");
   revalidatePath("/[locale]/documents", "page");
   return { ok: true, message: "created" };
