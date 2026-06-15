@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import type { CurrentUser } from "@/lib/auth";
 
 /**
@@ -15,7 +15,8 @@ export async function logAudit(
 ): Promise<void> {
   if (!me.organization_id) return;
   try {
-    const admin = createAdminClient();
+    const admin = adminClientOrNull();
+    if (!admin) return;
     await admin.from("audit_logs").insert({
       organization_id: me.organization_id,
       user_id: me.id,

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 
 export type CustomerFormState = {
@@ -31,7 +31,8 @@ export async function createCustomer(
   const name = nn(formData.get("name"));
   if (!name) return { ok: false, error: "name_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
   const { data: inserted, error } = await admin
     .from("customers")
     .insert({
@@ -79,7 +80,8 @@ export async function updateCustomer(
   if (!customerId) return { ok: false, error: "id_required" };
   if (!name) return { ok: false, error: "name_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("customers")
@@ -129,7 +131,8 @@ export async function deleteCustomer(
   const customerId = nn(formData.get("customer_id"));
   if (!customerId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("customers")

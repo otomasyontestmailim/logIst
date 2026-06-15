@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { runOcrForDocument } from "@/lib/ocr";
 
@@ -37,7 +37,8 @@ export async function setDocumentStatus(
     return { ok: false, error: "status_required" };
   }
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   // Çapraz-tenant güncellemeyi engelle
   const { data: target } = await admin
@@ -87,7 +88,8 @@ export async function extractDocument(
   const documentId = nn(formData.get("document_id"));
   if (!documentId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
   const { data: target } = await admin
     .from("documents")
     .select("organization_id")

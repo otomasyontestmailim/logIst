@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull, createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { runOcrForDocument } from "@/lib/ocr";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
@@ -77,7 +77,8 @@ export async function rejectTrip(
   const tripId = nn(formData.get("trip_id"));
   if (!tripId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
   const { data: target } = await admin
     .from("trips")
     .select("organization_id, driver_id, status")

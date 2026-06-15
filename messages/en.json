@@ -333,7 +333,8 @@
     "invalid_stops": "Stop data is invalid.",
     "auth_create_failed": "Could not create user.",
     "ocr_not_configured": "OCR is not configured (no API key).",
-    "ocr_failed": "OCR failed."
+    "ocr_failed": "OCR failed.",
+    "server_misconfigured": "Server is misconfigured. Please contact your administrator."
   },
   "OcrFields": {
     "sender": "Sender",

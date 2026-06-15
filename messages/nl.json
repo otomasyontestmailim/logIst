@@ -333,7 +333,8 @@
     "invalid_stops": "Stopgegevens zijn ongeldig.",
     "auth_create_failed": "Kon gebruiker niet aanmaken.",
     "ocr_not_configured": "OCR is niet geconfigureerd (geen API-sleutel).",
-    "ocr_failed": "OCR mislukt."
+    "ocr_failed": "OCR mislukt.",
+    "server_misconfigured": "Server is verkeerd geconfigureerd. Neem contact op met uw beheerder."
   },
   "OcrFields": {
     "sender": "Afzender",

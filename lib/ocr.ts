@@ -2,7 +2,7 @@ import "server-only";
 
 // Yalnız tip — derlemede silinir, çalışma anında modül yüklenmez.
 import type AnthropicSDK from "@anthropic-ai/sdk";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 import type { DocumentType } from "@/lib/supabase/database.types";
 
@@ -118,7 +118,8 @@ export async function extractDocumentFields(
 export async function runOcrForDocument(documentId: string): Promise<boolean> {
   if (!process.env.ANTHROPIC_API_KEY) return false;
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return false;
   const { data: doc } = await admin
     .from("documents")
     .select("id, type, file_url")

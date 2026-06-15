@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { canTransition, isTripStatus } from "@/lib/trip-status";
 
@@ -54,7 +54,8 @@ export async function createTrip(
   if (!origin) return { ok: false, error: "origin_required" };
   if (!destination) return { ok: false, error: "destination_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const customerId = nn(formData.get("customer_id"));
   const driverId = nn(formData.get("driver_id"));
@@ -108,7 +109,8 @@ export async function updateTrip(
   if (!origin) return { ok: false, error: "origin_required" };
   if (!destination) return { ok: false, error: "destination_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("trips")
@@ -163,7 +165,8 @@ export async function deleteTrip(
   const tripId = nn(formData.get("trip_id"));
   if (!tripId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("trips")
@@ -213,7 +216,8 @@ export async function saveTripStops(
     return { ok: false, error: "invalid_stops" };
   }
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("trips")
@@ -271,7 +275,8 @@ export async function updateTripStatus(
     return { ok: false, error: "status_required" };
   }
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: target } = await admin
     .from("trips")

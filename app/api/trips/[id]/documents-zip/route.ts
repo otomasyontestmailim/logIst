@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 
 /** Bir seferin tüm belgelerini tek ZIP olarak indirir (admin/dispatcher). */
@@ -17,7 +17,10 @@ export async function GET(
   }
 
   const { id: tripId } = await params;
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) {
+    return new Response("server_misconfigured", { status: 503 });
+  }
 
   // Sefer çağıranın firmasında mı?
   const { data: trip } = await admin

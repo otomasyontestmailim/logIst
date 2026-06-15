@@ -333,7 +333,8 @@
     "invalid_stops": "Durak bilgisi geçersiz.",
     "auth_create_failed": "Kullanıcı oluşturulamadı.",
     "ocr_not_configured": "OCR yapılandırılmamış (API anahtarı yok).",
-    "ocr_failed": "OCR başarısız oldu."
+    "ocr_failed": "OCR başarısız oldu.",
+    "server_misconfigured": "Sunucu yapılandırması eksik. Yöneticinize bildirin."
   },
   "OcrFields": {
     "sender": "Gönderen",

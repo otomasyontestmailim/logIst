@@ -19,3 +19,13 @@ export function createAdminClient() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
+
+/**
+ * createAdminClient'in fırlatmayan sürümü: servis anahtarı yoksa `null` döner.
+ * Mutasyon action'larında, eksik yapılandırmada 500/çökme yerine kullanıcıya
+ * temiz bir hata toast'u göstermek için kullanılır.
+ */
+export function adminClientOrNull() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  return createAdminClient();
+}

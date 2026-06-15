@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 
 export type DriverFormState = {
@@ -48,7 +48,8 @@ export async function createDriver(
   const password =
     nn(formData.get("password")) ?? crypto.randomUUID().slice(0, 16) + "Aa1!";
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   // 1) auth.users
   const { data: created, error: authErr } = await admin.auth.admin.createUser({
@@ -121,7 +122,8 @@ export async function updateDriver(
   const driverId = nn(formData.get("driver_id"));
   if (!driverId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   // Çapraz-tenant güncellemeyi engelle + hedef gerçekten şoför mü?
   const { data: target } = await admin
@@ -183,7 +185,8 @@ export async function deleteDriver(
   const driverId = nn(formData.get("driver_id"));
   if (!driverId) return { ok: false, error: "id_required" };
 
-  const admin = createAdminClient();
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
 
   // Çapraz-tenant silmeyi engelle: şoför çağıranın firmasında mı?
   const { data: target } = await admin
