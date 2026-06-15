@@ -12,7 +12,8 @@
     "back": "Terug",
     "search": "Zoeken",
     "searchPlaceholder": "Zoeken...",
-    "noResults": "Geen records komen overeen met uw zoekopdracht."
+    "noResults": "Geen records komen overeen met uw zoekopdracht.",
+    "exportCsv": "Exporteren (CSV)"
   },
   "Confirm": {
     "confirm": "Ja, verwijderen",
@@ -44,7 +45,10 @@
     "drivers": "Chauffeurs",
     "customers": "Klanten",
     "trips": "Ritten",
-    "documents": "Documenten"
+    "documents": "Documenten",
+    "audit": "Auditlogboek",
+    "openMenu": "Menu openen",
+    "closeMenu": "Menu sluiten"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -67,7 +71,11 @@
     "setupCustomers": "Klant toevoegen",
     "setupTrips": "Maak je eerste rit",
     "mapEmptyTitle": "Wachten op live locatie",
-    "mapEmptyDesc": "Locatie verschijnt hier zodra de chauffeursapp open is."
+    "mapEmptyDesc": "Locatie verschijnt hier zodra de chauffeursapp open is.",
+    "expiringDocs": "Verlopende documenten",
+    "expiringDocsTitle": "Verlopende documenten",
+    "expiringIn": "nog {days} dagen",
+    "expiredAgo": "{days} dagen verlopen"
   },
   "Drivers": {
     "title": "Chauffeurs",
@@ -140,7 +148,9 @@
     "colName": "Bedrijf",
     "colType": "Type",
     "colLocation": "Locatie",
-    "colContact": "Contact"
+    "colContact": "Contact",
+    "colTrips": "Ritten",
+    "tripCount": "{count} ritten"
   },
   "Trips": {
     "title": "Ritten",
@@ -184,7 +194,8 @@
     "bodyType": "Carrosserietype",
     "trackingNo": "Volgnummer",
     "distanceKm": "Afstand (km)",
-    "notes": "Details & notities"
+    "notes": "Details & notities",
+    "downloadDocsZip": "Documenten downloaden (ZIP)"
   },
   "LoadingTypes": {
     "palletized": "Gepalletiseerd",
@@ -285,5 +296,36 @@
     "title": "Pagina niet gevonden",
     "description": "De pagina die u zoekt is mogelijk verplaatst of heeft nooit bestaan.",
     "goHome": "Naar de startpagina"
+  },
+  "DocLabels": {
+    "src": "SRC",
+    "adr": "ADR",
+    "psikoteknik": "Psychotechnisch",
+    "greenCard": "Groene kaart"
+  },
+  "Audit": {
+    "title": "Auditlogboek",
+    "subtitle": "Alle activiteit binnen de organisatie.",
+    "colDate": "Datum",
+    "colUser": "Gebruiker",
+    "colAction": "Actie",
+    "colEntity": "Entiteit",
+    "empty": "Nog geen auditrecords."
+  },
+  "ValidationErrors": {
+    "unauthorized": "U bent niet bevoegd.",
+    "forbidden": "U heeft geen toestemming voor deze actie.",
+    "email_required": "E-mail is verplicht.",
+    "name_required": "Naam is verplicht.",
+    "origin_required": "Vertrekpunt is verplicht.",
+    "destination_required": "Bestemming is verplicht.",
+    "id_required": "Record niet gevonden.",
+    "not_found": "Record niet gevonden.",
+    "type_required": "Documenttype is verplicht.",
+    "file_required": "Bestand is verplicht.",
+    "status_required": "Kies een geldige status.",
+    "invalid_transition": "Deze statusovergang is ongeldig.",
+    "invalid_stops": "Stopgegevens zijn ongeldig.",
+    "auth_create_failed": "Kon gebruiker niet aanmaken."
   }
 }

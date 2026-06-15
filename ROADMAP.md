@@ -15,7 +15,7 @@ Durum: **Faz 0 ✓ · Faz 1 ✓ · Faz 2 ✓ · Faz 3 büyük ölçüde ✓ (bas
 ## Faz 2.5 — TIRPORT tarzı taşıma yönetimi ✓ (2026-06-11)
 
 - [x] 7 aşamalı sefer pipeline'ı (`requested → driver_approval → dispatched →
-    loading → in_transit → delivering → delivery_approval → completed`),
+loading → in_transit → delivering → delivery_approval → completed`),
       eski 4 durum migration'da map'lendi; geçiş kuralları `lib/trip-status.ts`
 - [x] Yük bilgileri: yük türü, yükleme tipi, tonaj, kasa tipi, takip no, mesafe, not
 - [x] Çoklu durak (`trip_stops`) + durak editörü + `StopsTimeline` bileşeni
@@ -88,10 +88,23 @@ Durum: **Faz 0 ✓ · Faz 1 ✓ · Faz 2 ✓ · Faz 3 büyük ölçüde ✓ (bas
 
 ## Faz 5 — CRM derinleştirme + raporlama + uyarılar
 
-1. [ ] Belge süresi uyarıları (dashboard/uyarı listesi + ops. e-posta hatırlatma)
-2. [ ] Raporlar (sefer/şoför/müşteri bazlı) + PDF/ZIP dışa aktarma
-3. [ ] Audit log görünümü (`audit_logs` paneli)
+1. [x] Belge süresi uyarıları — dashboard uyarı listesi + KPI (`lib/expiry.ts`),
+       dolmuş/≤30g rozet renkleri. (Ops. e-posta hatırlatma hâlâ açık.)
+2. [~] Raporlar + dışa aktarma — CSV (sefer/şoför/müşteri, `lib/export/csv.ts` +
+   `app/api/export/*`) ve sefer bazlı belge ZIP (`app/api/trips/[id]/
+documents-zip`, jszip) ✓. PDF rapor hâlâ açık.
+3. [x] Audit log — `lib/audit.ts` (service-role yazım) tüm mutasyonlarda +
+       admin-only panel (`/audit`). Yazma RLS'i baypas ettiği için ek migration
+       gerekmedi; `audit_logs_select` zaten admin-only.
 4. [ ] Süper admin: firma (tenant) açma + abonelik yönetimi (platform sahibi rolü)
+
+### UX cila (2026-06-15)
+
+- [x] Server hata kodları → yerelleştirilmiş mesaj (`lib/use-error-text.ts` +
+      `ValidationErrors` namespace, tüm form toast'larında)
+- [x] Mobil panel navigasyonu (hamburger + drawer, `app-shell.tsx`)
+- [x] Müşteri → geçmiş seferler (`/trips?customer=`), müşteri listesinde sefer sayısı
+- [ ] Zod şema validation + inline alan hataları; liste pagination (sona kaldı)
 
 ---
 

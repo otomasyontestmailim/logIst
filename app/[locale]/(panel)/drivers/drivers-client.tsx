@@ -22,6 +22,8 @@ import {
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatDate } from "@/lib/format-date";
+import { expiryStatus } from "@/lib/expiry";
+import { useErrorText } from "@/lib/use-error-text";
 import type { Database } from "@/lib/supabase/database.types";
 
 type UserRow = Pick<
@@ -109,6 +111,7 @@ function DriverForm({
   onDone: () => void;
 }) {
   const t = useTranslations("Drivers");
+  const errText = useErrorText();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     driver ? updateDriver : createDriver,
@@ -126,7 +129,7 @@ function DriverForm({
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -362,6 +365,7 @@ function DriverTable({
   onView: (driver: DriverRow) => void;
 }) {
   const t = useTranslations("Drivers");
+  const errText = useErrorText();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteDriver,
@@ -372,7 +376,7 @@ function DriverTable({
     if (deleteState.ok && deleteState.message === "deleted") {
       toast.success(t("deletedToast"));
     } else if (!deleteState.ok && deleteState.error) {
-      toast.error(t("errorToast", { error: deleteState.error }));
+      toast.error(t("errorToast", { error: errText(deleteState.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteState]);
@@ -487,17 +491,14 @@ function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
   const format = useFormatter();
   if (!date) return null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(date);
-  const days = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  const status = expiryStatus(date);
 
   let cls = "bg-muted text-muted-foreground";
   let title = "";
-  if (days < 0) {
+  if (status === "expired") {
     cls = "bg-destructive/15 text-destructive";
     title = t("expired");
-  } else if (days <= 30) {
+  } else if (status === "expiring") {
     cls = "bg-amber-500/15 text-amber-700 dark:text-amber-400";
     title = t("expiringSoon");
   }

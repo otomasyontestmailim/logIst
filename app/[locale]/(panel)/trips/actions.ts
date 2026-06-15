@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
 import { canTransition, isTripStatus } from "@/lib/trip-status";
 
 export type TripFormState = {
@@ -58,22 +59,31 @@ export async function createTrip(
   const customerId = nn(formData.get("customer_id"));
   const driverId = nn(formData.get("driver_id"));
 
-  const { error } = await admin.from("trips").insert({
-    organization_id: me.organization_id,
-    origin,
-    destination,
-    customer_id: customerId,
-    driver_id: driverId,
-    load_date: nn(formData.get("load_date")),
-    delivery_date: nn(formData.get("delivery_date")),
-    status: driverId ? "driver_approval" : "requested",
-    ...cargoFields(formData),
-  });
+  const { data: inserted, error } = await admin
+    .from("trips")
+    .insert({
+      organization_id: me.organization_id,
+      origin,
+      destination,
+      customer_id: customerId,
+      driver_id: driverId,
+      load_date: nn(formData.get("load_date")),
+      delivery_date: nn(formData.get("delivery_date")),
+      status: driverId ? "driver_approval" : "requested",
+      ...cargoFields(formData),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: "trip.create",
+    entity: "trips",
+    entityId: inserted?.id,
+  });
   revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "created" };
 }
@@ -133,6 +143,11 @@ export async function updateTrip(
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: "trip.update",
+    entity: "trips",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "updated" };
 }
@@ -162,6 +177,11 @@ export async function deleteTrip(
   const { error } = await admin.from("trips").delete().eq("id", tripId);
   if (error) return { ok: false, error: error.message };
 
+  await logAudit(me, {
+    action: "trip.delete",
+    entity: "trips",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "deleted" };
 }
@@ -225,6 +245,11 @@ export async function saveTripStops(
     if (error) return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: "trip.stops_save",
+    entity: "trips",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/trips", "page");
   revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: "stops_saved" };
@@ -278,6 +303,11 @@ export async function updateTripStatus(
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: `trip.status.${status}`,
+    entity: "trips",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/trips", "page");
   revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: "updated" };

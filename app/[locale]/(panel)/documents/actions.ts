@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
 
 export type DocumentInboxFormState = {
   ok: boolean;
@@ -56,6 +57,11 @@ export async function setDocumentStatus(
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: `document.${status}`,
+    entity: "documents",
+    entityId: documentId,
+  });
   revalidatePath("/[locale]/documents", "page");
   revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: status };

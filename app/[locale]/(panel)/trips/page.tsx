@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
+import { ExportButton } from "@/components/export-button";
 import { TripsClient } from "./trips-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -16,10 +17,11 @@ type UserRow = Pick<
 export default async function TripsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; late?: string }>;
+  searchParams: Promise<{ status?: string; late?: string; customer?: string }>;
 }) {
   const t = await getTranslations("Trips");
-  const { status, late } = await searchParams;
+  const tc = await getTranslations("Common");
+  const { status, late, customer } = await searchParams;
   const lateMode = late === "1";
   const me = await getCurrentUser();
 
@@ -42,6 +44,9 @@ export default async function TripsPage({
       tripsQuery = tripsQuery
         .neq("status", "completed")
         .lt("delivery_date", todayISO);
+    }
+    if (customer) {
+      tripsQuery = tripsQuery.eq("customer_id", customer);
     }
 
     const [tripsRes, customersRes, driversRes, stopsRes] = await Promise.all([
@@ -70,10 +75,22 @@ export default async function TripsPage({
     stops = stopsRes.data ?? [];
   }
 
+  const exportParams = new URLSearchParams();
+  if (status) exportParams.set("status", status);
+  if (lateMode) exportParams.set("late", "1");
+  if (customer) exportParams.set("customer", customer);
+  const exportQs = exportParams.toString();
+  const exportHref = `/api/export/trips${exportQs ? `?${exportQs}` : ""}`;
+
   return (
     <main className="flex flex-1 flex-col gap-2 p-8">
-      <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="text-muted-foreground">{t("subtitle")}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
+        </div>
+        <ExportButton href={exportHref} label={tc("exportCsv")} />
+      </div>
 
       {lateMode && (
         <div className="status-chip status-wait mt-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium">

@@ -41,6 +41,7 @@ export default async function PanelLayout({
     <AppShell
       appName={t("name")}
       userLabel={user!.full_name ?? user!.authEmail ?? ""}
+      role={user!.role}
     >
       {children}
     </AppShell>

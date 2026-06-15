@@ -11,6 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,13 +22,20 @@ import {
   type CustomerFormState,
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useErrorText } from "@/lib/use-error-text";
 import type { Database } from "@/lib/supabase/database.types";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
 const initialState: CustomerFormState = { ok: false };
 
-export function CustomersClient({ customers }: { customers: CustomerRow[] }) {
+export function CustomersClient({
+  customers,
+  tripCounts,
+}: {
+  customers: CustomerRow[];
+  tripCounts: Record<string, number>;
+}) {
   const t = useTranslations("Customers");
   const tc = useTranslations("Common");
   const [open, setOpen] = useState(false);
@@ -78,6 +86,7 @@ export function CustomersClient({ customers }: { customers: CustomerRow[] }) {
 
       <CustomerTable
         customers={filtered}
+        tripCounts={tripCounts}
         emptyText={customers.length > 0 ? tc("noResults") : t("empty")}
         onEdit={(c) => setEditing(c)}
       />
@@ -93,6 +102,7 @@ function CustomerForm({
   onDone: () => void;
 }) {
   const t = useTranslations("Customers");
+  const errText = useErrorText();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     customer ? updateCustomer : createCustomer,
@@ -110,7 +120,7 @@ function CustomerForm({
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -213,14 +223,17 @@ function Field({
 
 function CustomerTable({
   customers,
+  tripCounts,
   emptyText,
   onEdit,
 }: {
   customers: CustomerRow[];
+  tripCounts: Record<string, number>;
   emptyText: string;
   onEdit: (customer: CustomerRow) => void;
 }) {
   const t = useTranslations("Customers");
+  const errText = useErrorText();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteCustomer,
@@ -231,7 +244,7 @@ function CustomerTable({
     if (deleteState.ok && deleteState.message === "deleted") {
       toast.success(t("deletedToast"));
     } else if (!deleteState.ok && deleteState.error) {
-      toast.error(t("errorToast", { error: deleteState.error }));
+      toast.error(t("errorToast", { error: errText(deleteState.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteState]);
@@ -253,6 +266,7 @@ function CustomerTable({
             <th className="px-4 py-3 font-medium">{t("colType")}</th>
             <th className="px-4 py-3 font-medium">{t("colLocation")}</th>
             <th className="px-4 py-3 font-medium">{t("colContact")}</th>
+            <th className="px-4 py-3 font-medium">{t("colTrips")}</th>
             <th className="px-4 py-3" />
           </tr>
         </thead>
@@ -277,6 +291,18 @@ function CustomerTable({
               </td>
               <td className="px-4 py-3 text-sm text-muted-foreground">
                 {c.contact}
+              </td>
+              <td className="px-4 py-3 text-sm">
+                {tripCounts[c.id] ? (
+                  <Link
+                    href={`/trips?customer=${c.id}`}
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {t("tripCount", { count: tripCounts[c.id] })}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">

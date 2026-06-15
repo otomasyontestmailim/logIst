@@ -12,7 +12,8 @@
     "back": "Geri",
     "search": "Ara",
     "searchPlaceholder": "Ara...",
-    "noResults": "Aramanızla eşleşen kayıt bulunamadı."
+    "noResults": "Aramanızla eşleşen kayıt bulunamadı.",
+    "exportCsv": "Dışa aktar (CSV)"
   },
   "Confirm": {
     "confirm": "Evet, sil",
@@ -44,7 +45,10 @@
     "drivers": "Şoförler",
     "customers": "Müşteriler",
     "trips": "Seferler",
-    "documents": "Belgeler"
+    "documents": "Belgeler",
+    "audit": "Denetim Kaydı",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat"
   },
   "Dashboard": {
     "title": "Panel",
@@ -67,7 +71,11 @@
     "setupCustomers": "Müşteri ekle",
     "setupTrips": "İlk seferini oluştur",
     "mapEmptyTitle": "Canlı konum bekleniyor",
-    "mapEmptyDesc": "Şoför uygulaması açıldığında konum burada görünür."
+    "mapEmptyDesc": "Şoför uygulaması açıldığında konum burada görünür.",
+    "expiringDocs": "Yaklaşan belge sonları",
+    "expiringDocsTitle": "Yaklaşan belge sonları",
+    "expiringIn": "{days} gün kaldı",
+    "expiredAgo": "{days} gün geçti"
   },
   "Drivers": {
     "title": "Şoförler",
@@ -140,7 +148,9 @@
     "colName": "Firma",
     "colType": "Tür",
     "colLocation": "Yer",
-    "colContact": "İletişim"
+    "colContact": "İletişim",
+    "colTrips": "Sefer",
+    "tripCount": "{count} sefer"
   },
   "Trips": {
     "title": "Seferler",
@@ -184,7 +194,8 @@
     "bodyType": "Kasa Tipi",
     "trackingNo": "Takip No",
     "distanceKm": "Mesafe (km)",
-    "notes": "Detay ve Açıklamalar"
+    "notes": "Detay ve Açıklamalar",
+    "downloadDocsZip": "Belgeleri indir (ZIP)"
   },
   "LoadingTypes": {
     "palletized": "Paletli",
@@ -285,5 +296,36 @@
     "title": "Sayfa bulunamadı",
     "description": "Aradığınız sayfa taşınmış ya da hiç var olmamış olabilir.",
     "goHome": "Ana sayfaya dön"
+  },
+  "DocLabels": {
+    "src": "SRC",
+    "adr": "ADR",
+    "psikoteknik": "Psikoteknik",
+    "greenCard": "Yeşil Kart"
+  },
+  "Audit": {
+    "title": "Denetim Kaydı",
+    "subtitle": "Firma genelindeki tüm işlem geçmişi.",
+    "colDate": "Tarih",
+    "colUser": "Kullanıcı",
+    "colAction": "İşlem",
+    "colEntity": "Varlık",
+    "empty": "Henüz denetim kaydı yok."
+  },
+  "ValidationErrors": {
+    "unauthorized": "Yetkiniz yok.",
+    "forbidden": "Bu işlem için izniniz yok.",
+    "email_required": "E-posta gerekli.",
+    "name_required": "Ad gerekli.",
+    "origin_required": "Çıkış yeri gerekli.",
+    "destination_required": "Varış yeri gerekli.",
+    "id_required": "Kayıt bulunamadı.",
+    "not_found": "Kayıt bulunamadı.",
+    "type_required": "Belge tipi gerekli.",
+    "file_required": "Dosya gerekli.",
+    "status_required": "Geçerli bir durum seçin.",
+    "invalid_transition": "Bu durum geçişi geçersiz.",
+    "invalid_stops": "Durak bilgisi geçersiz.",
+    "auth_create_failed": "Kullanıcı oluşturulamadı."
   }
 }

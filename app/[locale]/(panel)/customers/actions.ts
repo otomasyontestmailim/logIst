@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
 
 export type CustomerFormState = {
   ok: boolean;
@@ -31,23 +32,32 @@ export async function createCustomer(
   if (!name) return { ok: false, error: "name_required" };
 
   const admin = createAdminClient();
-  const { error } = await admin.from("customers").insert({
-    organization_id: me.organization_id,
-    name,
-    type: (nn(formData.get("type")) ?? "both") as
-      | "both"
-      | "shipper"
-      | "consignee",
-    country: nn(formData.get("country")),
-    city: nn(formData.get("city")),
-    address: nn(formData.get("address")),
-    contact: nn(formData.get("contact")),
-  });
+  const { data: inserted, error } = await admin
+    .from("customers")
+    .insert({
+      organization_id: me.organization_id,
+      name,
+      type: (nn(formData.get("type")) ?? "both") as
+        | "both"
+        | "shipper"
+        | "consignee",
+      country: nn(formData.get("country")),
+      city: nn(formData.get("city")),
+      address: nn(formData.get("address")),
+      contact: nn(formData.get("contact")),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: "customer.create",
+    entity: "customers",
+    entityId: inserted?.id,
+  });
   revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "created" };
 }
@@ -99,6 +109,11 @@ export async function updateCustomer(
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: "customer.update",
+    entity: "customers",
+    entityId: customerId,
+  });
   revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "updated" };
 }
@@ -128,6 +143,11 @@ export async function deleteCustomer(
   const { error } = await admin.from("customers").delete().eq("id", customerId);
   if (error) return { ok: false, error: error.message };
 
+  await logAudit(me, {
+    action: "customer.delete",
+    entity: "customers",
+    entityId: customerId,
+  });
   revalidatePath("/[locale]/customers", "page");
   return { ok: true, message: "deleted" };
 }

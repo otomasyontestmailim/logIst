@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 import type { DocumentType } from "@/lib/supabase/database.types";
 
@@ -97,6 +98,11 @@ export async function rejectTrip(
     .eq("id", tripId);
   if (error) return { ok: false, error: error.message };
 
+  await logAudit(me, {
+    action: "trip.driver_reject",
+    entity: "trips",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/driver", "page");
   revalidatePath("/[locale]/trips", "page");
   return { ok: true, message: "rejected" };
@@ -150,6 +156,11 @@ export async function createDocument(
     return { ok: false, error: error.message };
   }
 
+  await logAudit(me, {
+    action: `document.upload.${type}`,
+    entity: "documents",
+    entityId: tripId,
+  });
   revalidatePath("/[locale]/driver", "page");
   revalidatePath("/[locale]/documents", "page");
   return { ok: true, message: "created" };

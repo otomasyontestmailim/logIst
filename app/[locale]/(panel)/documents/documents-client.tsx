@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Check, ExternalLink, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format-date";
+import { useErrorText } from "@/lib/use-error-text";
 import { setDocumentStatus, type DocumentInboxFormState } from "./actions";
 import type {
   DocumentStatus,
@@ -35,6 +36,7 @@ export function DocumentsClient({ items }: { items: DocumentItem[] }) {
   const tds = useTranslations("DocumentStatus");
   const tdt = useTranslations("DocumentTypes");
   const format = useFormatter();
+  const errText = useErrorText();
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [state, formAction, pending] = useActionState(
@@ -48,7 +50,7 @@ export function DocumentsClient({ items }: { items: DocumentItem[] }) {
     } else if (state.ok && state.message === "rejected") {
       toast.success(t("rejectedToast"));
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);

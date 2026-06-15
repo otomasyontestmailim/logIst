@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { ExportButton } from "@/components/export-button";
 import type { Database } from "@/lib/supabase/database.types";
 import { DriversClient, type DriverRow } from "./drivers-client";
 
@@ -11,6 +12,7 @@ type ProfileRow = Database["public"]["Tables"]["driver_profiles"]["Row"];
 
 export default async function DriversPage() {
   const t = await getTranslations("Drivers");
+  const tc = await getTranslations("Common");
   const supabase = await createClient();
 
   // RLS, listeyi otomatik olarak giriş yapan admin'in firmasıyla sınırlar.
@@ -64,6 +66,7 @@ export default async function DriversPage() {
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
+        <ExportButton href="/api/export/drivers" label={tc("exportCsv")} />
       </div>
       <DriversClient drivers={drivers} />
     </main>

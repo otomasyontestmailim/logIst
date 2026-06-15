@@ -12,7 +12,8 @@
     "back": "Back",
     "search": "Search",
     "searchPlaceholder": "Search...",
-    "noResults": "No records match your search."
+    "noResults": "No records match your search.",
+    "exportCsv": "Export (CSV)"
   },
   "Confirm": {
     "confirm": "Yes, delete",
@@ -44,7 +45,10 @@
     "drivers": "Drivers",
     "customers": "Customers",
     "trips": "Trips",
-    "documents": "Documents"
+    "documents": "Documents",
+    "audit": "Audit Log",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -67,7 +71,11 @@
     "setupCustomers": "Add a customer",
     "setupTrips": "Create your first trip",
     "mapEmptyTitle": "Waiting for live location",
-    "mapEmptyDesc": "Location appears here once the driver app is open."
+    "mapEmptyDesc": "Location appears here once the driver app is open.",
+    "expiringDocs": "Expiring documents",
+    "expiringDocsTitle": "Expiring documents",
+    "expiringIn": "{days} days left",
+    "expiredAgo": "{days} days overdue"
   },
   "Drivers": {
     "title": "Drivers",
@@ -140,7 +148,9 @@
     "colName": "Company",
     "colType": "Type",
     "colLocation": "Location",
-    "colContact": "Contact"
+    "colContact": "Contact",
+    "colTrips": "Trips",
+    "tripCount": "{count} trips"
   },
   "Trips": {
     "title": "Trips",
@@ -184,7 +194,8 @@
     "bodyType": "Body Type",
     "trackingNo": "Tracking No",
     "distanceKm": "Distance (km)",
-    "notes": "Details & Notes"
+    "notes": "Details & Notes",
+    "downloadDocsZip": "Download documents (ZIP)"
   },
   "LoadingTypes": {
     "palletized": "Palletized",
@@ -285,5 +296,36 @@
     "title": "Page not found",
     "description": "The page you are looking for may have been moved or never existed.",
     "goHome": "Go to homepage"
+  },
+  "DocLabels": {
+    "src": "SRC",
+    "adr": "ADR",
+    "psikoteknik": "Psychotechnical",
+    "greenCard": "Green Card"
+  },
+  "Audit": {
+    "title": "Audit Log",
+    "subtitle": "All activity across the organization.",
+    "colDate": "Date",
+    "colUser": "User",
+    "colAction": "Action",
+    "colEntity": "Entity",
+    "empty": "No audit records yet."
+  },
+  "ValidationErrors": {
+    "unauthorized": "You are not authorized.",
+    "forbidden": "You don't have permission for this action.",
+    "email_required": "E-mail is required.",
+    "name_required": "Name is required.",
+    "origin_required": "Origin is required.",
+    "destination_required": "Destination is required.",
+    "id_required": "Record not found.",
+    "not_found": "Record not found.",
+    "type_required": "Document type is required.",
+    "file_required": "File is required.",
+    "status_required": "Select a valid status.",
+    "invalid_transition": "This status transition is invalid.",
+    "invalid_stops": "Stop data is invalid.",
+    "auth_create_failed": "Could not create user."
   }
 }

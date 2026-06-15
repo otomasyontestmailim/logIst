@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { PIPELINE_STATUSES, STATUS_TONE } from "@/lib/trip-status";
+import { daysUntil, expiryStatus, type ExpiryStatus } from "@/lib/expiry";
 import type { Database, TripStatus } from "@/lib/supabase/database.types";
 import { DashboardMap, type DriverInfo } from "./dashboard-map";
 
@@ -14,8 +15,35 @@ type TripRow = Database["public"]["Tables"]["trips"]["Row"];
 type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
 
 // Başlık yanındaki özet KPI'lar — gecikme en kritik, en başta.
-const KPI_KEYS = ["lateDeliveries", "pendingDocuments", "drivers"] as const;
+const KPI_KEYS = [
+  "lateDeliveries",
+  "expiringDocs",
+  "pendingDocuments",
+  "drivers",
+] as const;
 type KpiKey = (typeof KPI_KEYS)[number];
+
+// >0 olduğunda uyarı tonuyla vurgulanan ve tıklanınca ilgili listeye giden KPI'lar.
+const KPI_ALERT_HREF: Partial<Record<KpiKey, string>> = {
+  lateDeliveries: "/trips?late=1",
+  expiringDocs: "/drivers",
+};
+
+// Şoför belge geçerlilik alanları → i18n etiket anahtarı (DocLabels namespace).
+const EXPIRY_FIELDS = [
+  { col: "src_expiry", key: "src" },
+  { col: "adr_expiry", key: "adr" },
+  { col: "psikoteknik_expiry", key: "psikoteknik" },
+  { col: "green_card_expiry", key: "greenCard" },
+] as const;
+
+type ExpiringDoc = {
+  driverName: string;
+  docKey: string;
+  date: string;
+  days: number;
+  status: Exclude<ExpiryStatus, "ok">;
+};
 
 export default function DashboardPage() {
   // Veri çekimi alt bileşene taşındı; kabuk anında çizilir, içerik streamlenir.
@@ -35,9 +63,11 @@ async function DashboardContent() {
 
   const kpis: Record<KpiKey, number> = {
     lateDeliveries: 0,
+    expiringDocs: 0,
     pendingDocuments: 0,
     drivers: 0,
   };
+  const expiringDocs: ExpiringDoc[] = [];
   const pipeline: Record<TripStatus, number> = {
     requested: 0,
     driver_approval: 0,
@@ -110,6 +140,47 @@ async function DashboardContent() {
       pipeline[status] = pipelineRes[i]?.count ?? 0;
     });
 
+    // Belge süresi uyarıları: dolmuş/30 gün içinde dolacak şoför belgeleri.
+    // RLS, admin/dispatcher'a yalnız kendi org'undaki profilleri döndürür.
+    const [profilesRes, driverNamesRes] = await Promise.all([
+      supabase
+        .from("driver_profiles")
+        .select(
+          "user_id, src_expiry, adr_expiry, psikoteknik_expiry, green_card_expiry",
+        ),
+      supabase
+        .from("users")
+        .select("id, full_name, email")
+        .eq("organization_id", me.organization_id)
+        .eq("role", "driver"),
+    ]);
+
+    const nameMap = new Map(
+      (driverNamesRes.data ?? []).map((u) => [
+        u.id,
+        u.full_name ?? u.email ?? "—",
+      ]),
+    );
+
+    for (const p of profilesRes.data ?? []) {
+      for (const f of EXPIRY_FIELDS) {
+        const date = p[f.col];
+        const status = expiryStatus(date);
+        if (status === "expired" || status === "expiring") {
+          expiringDocs.push({
+            driverName: nameMap.get(p.user_id) ?? "—",
+            docKey: f.key,
+            date: date!,
+            days: daysUntil(date)!,
+            status,
+          });
+        }
+      }
+    }
+    // En acil (en küçük/negatif gün) en üstte.
+    expiringDocs.sort((a, b) => a.days - b.days);
+    kpis.expiringDocs = expiringDocs.length;
+
     // İlk çalıştırma: hiç sefer yoksa harita/pipeline verisi çekmeye gerek yok.
     if (tripsTotal > 0) {
       const [locRes, usersRes, profilesRes, tripsRes, stopsRes] =
@@ -168,7 +239,8 @@ async function DashboardContent() {
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <dl className="flex flex-wrap items-end gap-x-8 gap-y-3">
           {KPI_KEYS.map((key) => {
-            const alert = key === "lateDeliveries" && kpis[key] > 0;
+            const href = KPI_ALERT_HREF[key];
+            const alert = !!href && kpis[key] > 0;
             const body = (
               <>
                 <dt className="text-xs text-muted-foreground">{t(key)}</dt>
@@ -182,11 +254,11 @@ async function DashboardContent() {
                 </dd>
               </>
             );
-            // Geciken teslimat varsa tek tıkla filtreli listeye git.
+            // Uyarı tonlu KPI'lar tek tıkla ilgili filtreli listeye gider.
             return alert ? (
               <Link
                 key={key}
-                href="/trips?late=1"
+                href={href}
                 className="group flex flex-col gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {body}
@@ -241,6 +313,9 @@ async function DashboardContent() {
         </div>
       </section>
 
+      {/* Belge süresi uyarıları: yalnız dolmuş/yaklaşan varsa görünür */}
+      {expiringDocs.length > 0 && <ExpiringDocsSection items={expiringDocs} />}
+
       <DashboardMap
         locations={locations}
         drivers={mapDrivers}
@@ -248,6 +323,51 @@ async function DashboardContent() {
         stops={tripStops}
       />
     </>
+  );
+}
+
+async function ExpiringDocsSection({ items }: { items: ExpiringDoc[] }) {
+  const t = await getTranslations("Dashboard");
+  const td = await getTranslations("DocLabels");
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-sm font-medium text-muted-foreground">
+        {t("expiringDocsTitle")}
+      </h2>
+      <ul className="divide-y rounded-lg border bg-card">
+        {items.map((it, i) => {
+          const expired = it.status === "expired";
+          return (
+            <li
+              key={`${it.driverName}-${it.docKey}-${i}`}
+              className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "size-1.5 shrink-0 rounded-full",
+                    expired ? "bg-destructive" : "bg-warning",
+                  )}
+                />
+                <span className="font-medium">{it.driverName}</span>
+                <span className="text-muted-foreground">{td(it.docKey)}</span>
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 text-xs font-medium tabular-nums",
+                  expired ? "text-destructive" : "text-warning",
+                )}
+              >
+                {expired
+                  ? t("expiredAgo", { days: Math.abs(it.days) })
+                  : t("expiringIn", { days: it.days })}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

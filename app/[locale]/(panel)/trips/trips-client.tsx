@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ import {
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatDate } from "@/lib/format-date";
+import { useErrorText } from "@/lib/use-error-text";
 import { ALL_STATUSES, STATUS_CLASSES } from "@/lib/trip-status";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -163,6 +164,7 @@ function TripForm({
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
   const tlt = useTranslations("LoadingTypes");
+  const errText = useErrorText();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     trip ? updateTrip : createTrip,
@@ -180,7 +182,7 @@ function TripForm({
       formRef.current?.reset();
       onDone();
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -386,6 +388,7 @@ type EditableStop = {
 
 function StopsEditor({ tripId, stops }: { tripId: string; stops: StopRow[] }) {
   const t = useTranslations("Stops");
+  const errText = useErrorText();
   const [rows, setRows] = useState<EditableStop[]>(() =>
     [...stops]
       .sort((a, b) => a.seq - b.seq)
@@ -404,7 +407,7 @@ function StopsEditor({ tripId, stops }: { tripId: string; stops: StopRow[] }) {
     if (state.ok && state.message === "stops_saved") {
       toast.success(t("savedToast"));
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
@@ -502,6 +505,7 @@ function TripTable({
 }) {
   const t = useTranslations("Trips");
   const format = useFormatter();
+  const errText = useErrorText();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteTrip,
@@ -512,7 +516,7 @@ function TripTable({
     if (deleteState.ok && deleteState.message === "deleted") {
       toast.success(t("deletedToast"));
     } else if (!deleteState.ok && deleteState.error) {
-      toast.error(t("errorToast", { error: deleteState.error }));
+      toast.error(t("errorToast", { error: errText(deleteState.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteState]);
@@ -564,6 +568,14 @@ function TripTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex justify-end gap-1">
+                  <a
+                    href={`/api/trips/${trip.id}/documents-zip`}
+                    aria-label={t("downloadDocsZip")}
+                    title={t("downloadDocsZip")}
+                    className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted"
+                  >
+                    <Archive className="size-4" />
+                  </a>
                   <Button
                     type="button"
                     variant="ghost"
@@ -611,6 +623,7 @@ function TripTable({
 function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
+  const errText = useErrorText();
   // Optimistic value — güncelleme beklenirken hemen renklendirir
   const [current, setCurrent] = useState(status);
   // Sunucu revalidation'dan gelen yeni prop'u render sırasında (useEffect olmadan) senkronize et
@@ -629,7 +642,7 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
     if (state.ok && state.message === "updated") {
       toast.success(t("statusUpdated"));
     } else if (!state.ok && state.error) {
-      toast.error(t("errorToast", { error: state.error }));
+      toast.error(t("errorToast", { error: errText(state.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);

@@ -1,6 +1,16 @@
 "use client";
 
-import { LayoutDashboard, Truck, Users, Package, FileText } from "lucide-react";
+import { useState } from "react";
+import {
+  LayoutDashboard,
+  Truck,
+  Users,
+  Package,
+  FileText,
+  ScrollText,
+  Menu,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -13,55 +23,103 @@ const navItems = [
   { href: "/customers", key: "customers", icon: Users },
   { href: "/trips", key: "trips", icon: Package },
   { href: "/documents", key: "documents", icon: FileText },
+  { href: "/audit", key: "audit", icon: ScrollText, adminOnly: true },
 ] as const;
 
 export function AppShell({
   appName,
   userLabel,
+  role,
   children,
 }: {
   appName: string;
   userLabel: string;
+  role: "admin" | "dispatcher" | "driver" | null;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const items = navItems.filter(
+    (it) => !("adminOnly" in it) || role === "admin",
+  );
+
+  const navLinks = (onNavigate?: () => void) => (
+    <nav className="flex flex-col gap-1 p-2">
+      {items.map(({ href, key, icon: Icon }) => {
+        const active = pathname === href || pathname.startsWith(`${href}/`);
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+              active
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Icon className="size-4" />
+            {t(key)}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
   return (
     <div className="flex min-h-full flex-1">
-      {/* Sidebar */}
+      {/* Masaüstü sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-muted/30 md:flex">
         <div className="flex h-14 items-center border-b px-4 font-semibold">
           {appName}
         </div>
-        <nav className="flex flex-col gap-1 p-2">
-          {navItems.map(({ href, key, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                <Icon className="size-4" />
-                {t(key)}
-              </Link>
-            );
-          })}
-        </nav>
+        {navLinks()}
       </aside>
 
-      {/* Main */}
+      {/* Mobil drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-foreground/40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col border-r bg-background shadow-lg">
+            <div className="flex h-14 items-center justify-between border-b px-4 font-semibold">
+              {appName}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label={t("closeMenu")}
+                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            {navLinks(() => setMobileOpen(false))}
+          </aside>
+        </div>
+      )}
+
+      {/* Ana içerik */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between gap-4 border-b px-4">
-          <span className="truncate text-sm text-muted-foreground">
-            {userLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-label={t("openMenu")}
+              className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+            >
+              <Menu className="size-5" />
+            </button>
+            <span className="truncate text-sm text-muted-foreground">
+              {userLabel}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <LocaleSwitcher />
             <SignOutButton />

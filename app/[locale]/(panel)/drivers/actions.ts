@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAudit } from "@/lib/audit";
 
 export type DriverFormState = {
   ok: boolean;
@@ -94,6 +95,11 @@ export async function createDriver(
     return { ok: false, error: profErr.message };
   }
 
+  await logAudit(me, {
+    action: "driver.create",
+    entity: "users",
+    entityId: uid,
+  });
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "created" };
 }
@@ -156,6 +162,11 @@ export async function updateDriver(
   });
   if (profErr) return { ok: false, error: profErr.message };
 
+  await logAudit(me, {
+    action: "driver.update",
+    entity: "users",
+    entityId: driverId,
+  });
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "updated" };
 }
@@ -187,6 +198,11 @@ export async function deleteDriver(
   const { error } = await admin.auth.admin.deleteUser(driverId);
   if (error) return { ok: false, error: error.message };
 
+  await logAudit(me, {
+    action: "driver.delete",
+    entity: "users",
+    entityId: driverId,
+  });
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "deleted" };
 }
