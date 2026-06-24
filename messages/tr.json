@@ -33,7 +33,8 @@
     "invalidCredentials": "E-posta veya parola hatalı.",
     "genericError": "Bir hata oluştu. Lütfen tekrar deneyin.",
     "noOrgTitle": "Hesabınız bir firmaya bağlı değil",
-    "noOrgDescription": "Giriş başarılı ancak hesabınız henüz bir firmaya ve role atanmamış. Lütfen firma yöneticinizle iletişime geçin."
+    "noOrgDescription": "Giriş başarılı ancak hesabınız henüz bir firmaya ve role atanmamış. Lütfen firma yöneticinizle iletişime geçin.",
+    "serverError": "Giriş yapılamadı: sunucu veya yapılandırma hatası (parola hatası değil). Yöneticinize bildirin."
   },
   "Roles": {
     "admin": "Firma Admini",
@@ -359,6 +360,8 @@
     "colPlan": "Plan",
     "colUsers": "Kullanıcı",
     "colCreated": "Kayıt Tarihi",
-    "noOrgs": "Henüz hiç firma yok."
+    "noOrgs": "Henüz hiç firma yok.",
+    "configErrorTitle": "Sunucu yapılandırması eksik",
+    "configErrorBody": "Service-role anahtarı tanımlı olmadığı için firma listesi yüklenemiyor. Production ortam değişkenlerini kontrol edin:"
   }
 }

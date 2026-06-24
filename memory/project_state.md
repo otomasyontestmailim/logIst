@@ -66,7 +66,7 @@
 
 > Sorun: superadmin ile girince "firmaya bağlı değil" uyarısı (public.users satırı
 > olmadığı için). Çözüm: superadmin'i panel yerine /admin'e yönlendir.
-> **DURUM: commit'siz, push'suz, tarayıcıda test EDİLMEDİ.** Kullanıcı incelemesi bekliyor.
+> **DURUM: doğrulandı + commit `3b80927` + origin/main'e push edildi (2026-06-24).**
 
 - `lib/auth.ts`: `getCurrentUser()` → `is_superadmin` RPC paralel çağrılıyor;
   `CurrentUser.is_superadmin: boolean` eklendi
@@ -83,9 +83,9 @@
 
 ### Superadmin paneli — kalan iş (sıradaki)
 
-- [ ] Tarayıcı testi: superadmin@qratix.com → /admin'e düşüyor mu?
+- [x] Tarayıcı testi: superadmin@qratix.com → /admin'e düşüyor (kullanıcı doğruladı)
 - [ ] "Yeni firma + admin oluştur" formu (service-role action: org INSERT + admin
-      auth.users + public.users role=admin + app_metadata org_id/role)
+      auth.users + public.users role=admin + app_metadata org_id/role) ← SIRADAKİ
 - [ ] /admin'den org detay / üye listesi
 
 ## Önceki Session (2026-06-24, ilk) Değişiklikleri
@@ -114,6 +114,25 @@
 4. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç (radarda)
 
 ---
+
+## Production Deploy / Env (2026-06-24 teşhis)
+
+- **Mimari:** self-hosted Supabase `https://supabase.qratix.com`, Cloudflare tunnel
+  ile yayınlanıyor. Tünel origin'i `localhost:80`; oradaki reverse proxy
+  (Coolify/Traefik) **Host header**'a göre dağıtıyor. `logisticapp.qratix.com` da
+  `localhost:80` → aynı proxy. (Cloudflare panel: Networks → Connectors → Yerel-Sunucu)
+- **logisticapp Coolify ile deploy ediliyor.** Env değişkenleri Coolify panelinden.
+- **Kritik:** `NEXT_PUBLIC_*` (URL + ANON_KEY) **build-time** gömülür → değiştirince
+  **rebuild şart**. `SUPABASE_SERVICE_ROLE_KEY` server-side/runtime.
+  Üçü de local `.env.local` ile **birebir** aynı olmalı. Doğru anon key payload:
+  `iss="supabase", iat=1781308800`.
+- **Yaşanan 2 olay (çözüldü):**
+  1. Prod anon key eski/yanlış → `/auth/v1/token` **401** → sign-in "parola hatalı"
+     maskesi. (curl testi: doğru anon→200, yanlış→401 ile kanıtlandı.)
+  2. `SUPABASE_SERVICE_ROLE_KEY` prod'da YOKTU → `/admin` sayfası `createAdminClient`
+     throw → "Something went wrong". Kullanıcı key'i ekledi + redeploy.
+- **Hardening eklendi:** `/admin` çökme yerine net config mesajı (`adminClientOrNull`);
+  sign-in 400 vs 401/5xx ayrımı; `client.ts` env eksikse net throw.
 
 ## Önemli Teknik Notlar
 

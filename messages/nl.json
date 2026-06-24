@@ -33,7 +33,8 @@
     "invalidCredentials": "Ongeldig e-mailadres of wachtwoord.",
     "genericError": "Er is een fout opgetreden. Probeer het opnieuw.",
     "noOrgTitle": "Uw account is niet gekoppeld aan een bedrijf",
-    "noOrgDescription": "Het inloggen is gelukt, maar uw account is nog niet toegewezen aan een bedrijf en rol. Neem contact op met uw bedrijfsbeheerder."
+    "noOrgDescription": "Het inloggen is gelukt, maar uw account is nog niet toegewezen aan een bedrijf en rol. Neem contact op met uw bedrijfsbeheerder.",
+    "serverError": "Inloggen mislukt: server- of configuratiefout (geen wachtwoordprobleem). Neem contact op met uw beheerder."
   },
   "Roles": {
     "admin": "Bedrijfsbeheerder",
@@ -359,6 +360,8 @@
     "colPlan": "Plan",
     "colUsers": "Gebruikers",
     "colCreated": "Aangemaakt",
-    "noOrgs": "Nog geen organisaties."
+    "noOrgs": "Nog geen organisaties.",
+    "configErrorTitle": "Serverconfiguratie ontbreekt",
+    "configErrorBody": "De organisatielijst kan niet laden omdat de service-role sleutel niet is ingesteld. Controleer de productie-omgevingsvariabelen:"
   }
 }

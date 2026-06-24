@@ -35,7 +35,13 @@ export default function SignInPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error(t("invalidCredentials"));
+      // 400 = gerçekten yanlış e-posta/parola. 401/5xx = anon key veya sunucu
+      // yapılandırma hatası (parola DEĞİL) → maskelemeden ayrı mesaj göster.
+      if (error.status === 400) {
+        toast.error(t("invalidCredentials"));
+      } else {
+        toast.error(t("serverError"));
+      }
       return;
     }
     router.push("/dashboard");

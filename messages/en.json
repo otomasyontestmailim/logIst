@@ -33,7 +33,8 @@
     "invalidCredentials": "Invalid email or password.",
     "genericError": "An error occurred. Please try again.",
     "noOrgTitle": "Your account is not linked to a company",
-    "noOrgDescription": "Sign-in succeeded, but your account has not been assigned to a company and role yet. Please contact your company administrator."
+    "noOrgDescription": "Sign-in succeeded, but your account has not been assigned to a company and role yet. Please contact your company administrator.",
+    "serverError": "Sign-in failed: server or configuration error (not a password issue). Contact your administrator."
   },
   "Roles": {
     "admin": "Company Admin",
@@ -359,6 +360,8 @@
     "colPlan": "Plan",
     "colUsers": "Users",
     "colCreated": "Created",
-    "noOrgs": "No organizations yet."
+    "noOrgs": "No organizations yet.",
+    "configErrorTitle": "Server misconfigured",
+    "configErrorBody": "The organization list cannot load because the service-role key is not set. Check the production environment variables:"
   }
 }

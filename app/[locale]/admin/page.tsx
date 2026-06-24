@@ -1,11 +1,29 @@
 import { getTranslations } from "next-intl/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { Building2, Users, CalendarDays } from "lucide-react";
+import { adminClientOrNull } from "@/lib/supabase/admin";
+import { Building2, Users, CalendarDays, AlertTriangle } from "lucide-react";
 
 export default async function AdminPage() {
   const t = await getTranslations("Admin");
 
-  const admin = createAdminClient();
+  // Service-role anahtarı yoksa sayfayı çökertme — superadmin'e net,
+  // eyleme dönük bir yapılandırma hatası göster (bu sayfa zaten superadmin'e özel).
+  const admin = adminClientOrNull();
+  if (!admin) {
+    return (
+      <div className="mx-auto max-w-lg">
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center">
+          <AlertTriangle className="size-8 text-destructive" />
+          <h1 className="text-lg font-semibold">{t("configErrorTitle")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("configErrorBody")}
+          </p>
+          <code className="rounded bg-muted px-2 py-1 text-xs">
+            SUPABASE_SERVICE_ROLE_KEY
+          </code>
+        </div>
+      </div>
+    );
+  }
 
   const { data: orgs } = await admin
     .from("organizations")
