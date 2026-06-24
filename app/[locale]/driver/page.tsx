@@ -2,6 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { Truck } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { DriverClient } from "./driver-client";
 import type { Database } from "@/lib/supabase/database.types";
@@ -26,6 +27,7 @@ export default async function DriverPage() {
   }
 
   const t = await getTranslations("Driver");
+  const tApp = await getTranslations("App");
 
   let trips: TripRow[] = [];
   let documents: DocumentRow[] = [];
@@ -72,18 +74,28 @@ export default async function DriverPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 p-4 sm:p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
+    <div className="flex min-h-svh flex-col">
+      {/* Sabit marka başlığı — mobil PWA'da uygulama çubuğu hissi */}
+      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-sidebar px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Truck className="size-4" />
+          </div>
+          <span className="text-sm font-semibold">{tApp("name")}</span>
+        </div>
         <SignOutButton />
-      </div>
-      <DriverClient
-        trips={trips}
-        documents={documents}
-        customers={customers}
-        stops={stops}
-        organizationId={user?.organization_id ?? ""}
-      />
-    </main>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 p-4 sm:p-6">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <DriverClient
+          trips={trips}
+          documents={documents}
+          customers={customers}
+          stops={stops}
+          organizationId={user?.organization_id ?? ""}
+        />
+      </main>
+    </div>
   );
 }

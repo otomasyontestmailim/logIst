@@ -46,7 +46,7 @@ loading → in_transit → delivering → delivery_approval → completed`),
 - [x] `createDriver` / `deleteDriver` Server Action'ları (rollback + tenant kontrolü)
 - [x] Şoför listesi + ekle-formu + belge geçerlilik rozetleri (expired/expiring)
 - [x] Bootstrap seed (`0001_bootstrap_admin.sql`)
-- [ ] (Test) İlk admin ile giriş + şoför ekleme akışının uçtan uca doğrulanması
+- [x] (Test) İlk admin ile giriş + şoför ekleme akışının uçtan uca doğrulanması (2026-06-24)
 
 ---
 

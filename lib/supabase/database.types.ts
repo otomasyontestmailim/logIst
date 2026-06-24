@@ -282,6 +282,20 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>;
         Relationships: [];
       };
+      platform_admins: {
+        Row: {
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["platform_admins"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
@@ -291,6 +305,7 @@ export type Database = {
         Args: Record<string, never>;
         Returns: UserRole;
       };
+      is_superadmin: { Args: Record<string, never>; Returns: boolean };
     };
     Enums: {
       user_role: UserRole;

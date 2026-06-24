@@ -58,8 +58,8 @@ const ACTION_LABEL_KEYS: Partial<Record<TripStatus, string>> = {
 };
 
 const DOC_STATUS_CLASSES: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  approved: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  pending: "status-chip status-wait",
+  approved: "status-chip status-done",
   rejected: "bg-destructive/15 text-destructive",
 };
 
@@ -183,7 +183,7 @@ function TripCard({
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 text-base font-semibold">
+        <div className="flex items-center gap-2 text-lg font-semibold">
           <span>{trip.origin}</span>
           <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
           <span>{trip.destination}</span>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ import { toast } from "sonner";
 
 export default function SignInPage() {
   const t = useTranslations("Auth");
+  const tApp = useTranslations("App");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,7 +63,20 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
+    <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-sidebar p-4">
+      {/* Marka alanı */}
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Truck className="size-5" />
+          </div>
+          <span className="text-xl font-bold tracking-tight">
+            {tApp("name")}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">{tApp("tagline")}</p>
+      </div>
+
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{t("signInTitle")}</CardTitle>

@@ -83,11 +83,14 @@ export async function updateCustomer(
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
 
-  const { data: target } = await admin
+  const { data: target, error: lookupError } = await admin
     .from("customers")
     .select("organization_id")
     .eq("id", customerId)
-    .single();
+    .maybeSingle();
+  if (lookupError) {
+    return { ok: false, error: lookupError.message };
+  }
   if (!target || target.organization_id !== me.organization_id) {
     return { ok: false, error: "not_found" };
   }
@@ -134,11 +137,14 @@ export async function deleteCustomer(
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
 
-  const { data: target } = await admin
+  const { data: target, error: lookupError } = await admin
     .from("customers")
     .select("organization_id")
     .eq("id", customerId)
-    .single();
+    .maybeSingle();
+  if (lookupError) {
+    return { ok: false, error: lookupError.message };
+  }
   if (!target || target.organization_id !== me.organization_id) {
     return { ok: false, error: "not_found" };
   }
