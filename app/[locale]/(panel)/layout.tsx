@@ -15,6 +15,10 @@ export default async function PanelLayout({
   if (!user) {
     redirect({ href: "/sign-in", locale });
   }
+  // Superadmin: public.users satırı yok ama platform_admins'te var → /admin
+  if (user!.is_superadmin) {
+    redirect({ href: "/admin", locale });
+  }
   // Auth hesabı var ama public.users satırı yok (firma/rol bağlanmamış):
   // boş ekran yerine açık uyarı göster — RLS hiçbir veri döndürmez,
   // action'lar "unauthorized" döner.

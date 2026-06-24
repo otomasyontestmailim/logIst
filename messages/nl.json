@@ -349,5 +349,16 @@
     "package_count": "Aantal colli",
     "plate": "Kenteken",
     "summary": "Samenvatting"
+  },
+  "Admin": {
+    "title": "Super Admin",
+    "orgsTitle": "Organisaties",
+    "orgsSubtitle": "{count} organisaties geregistreerd",
+    "colName": "Bedrijfsnaam",
+    "colTaxNo": "BTW Nr.",
+    "colPlan": "Plan",
+    "colUsers": "Gebruikers",
+    "colCreated": "Aangemaakt",
+    "noOrgs": "Nog geen organisaties."
   }
 }

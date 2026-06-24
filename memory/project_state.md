@@ -6,15 +6,15 @@
 
 ## Tamamlanan Fazlar
 
-| Faz | Açıklama                                                             | Durum           |
-| --- | -------------------------------------------------------------------- | --------------- |
-| 0   | Next.js + Tailwind + shadcn + Supabase kurulum                       | ✓               |
-| 1   | Şoför yönetimi (CRUD + belge süre rozetleri)                         | ✓               |
-| 2   | Müşteri + Sefer yönetimi                                             | ✓               |
-| 2.5 | TIRPORT pipeline (7 aşama, harita, canlı konum)                      | ✓               |
-| 3   | Şoför mobil (PWA) belge yükleme — basit upload ✓, jscanify/offline ✗ | Kısmi           |
-| 4   | Belge gelen kutusu + onay/red                                        | Kısmi (OCR yok) |
-| 5   | Belge süresi uyarıları, CSV/ZIP dışa aktarma, audit log              | Kısmi           |
+| Faz | Açıklama                                                             | Durum |
+| --- | -------------------------------------------------------------------- | ----- |
+| 0   | Next.js + Tailwind + shadcn + Supabase kurulum                       | ✓     |
+| 1   | Şoför yönetimi (CRUD + belge süre rozetleri)                         | ✓     |
+| 2   | Müşteri + Sefer yönetimi                                             | ✓     |
+| 2.5 | TIRPORT pipeline (7 aşama, harita, canlı konum)                      | ✓     |
+| 3   | Şoför mobil (PWA) belge yükleme — basit upload ✓, jscanify/offline ✗ | Kısmi |
+| 4   | Belge gelen kutusu + onay/red + Claude Vision OCR (`lib/ocr.ts`)     | ✓     |
+| 5   | Belge süresi uyarıları, CSV/ZIP dışa aktarma, audit log              | Kısmi |
 
 ---
 
@@ -22,7 +22,7 @@
 
 - [ ] jscanify / kamera kenar-tespit (Faz 3 tam)
 - [ ] Offline kuyruğu (IndexedDB + background sync)
-- [ ] OCR: Claude Vision → `documents.ocr_data` (Faz 4 tam)
+- [x] OCR: Claude Vision → `documents.ocr_data` — `lib/ocr.ts` + `extractDocument` action ✓
 - [ ] PDF rapor (Faz 5)
 - [ ] Şoför davet/onboarding akışı
 - [ ] E-posta SMTP yapılandırması
@@ -46,7 +46,49 @@
 
 ---
 
-## Son Session (2026-06-24) Değişiklikleri
+## Auth & RLS Test Sonuçları (2026-06-24)
+
+`node scripts/test-auth.mjs` — **10/10 geçti, 3 atlandı**
+
+| #   | Test                                                     | Sonuç      |
+| --- | -------------------------------------------------------- | ---------- |
+| 1   | Admin girişi + role kontrolü + org SELECT                | ✅         |
+| 2   | Şoför girişi + role kontrolü + trips SELECT              | ✅         |
+| 3   | Çapraz tenant RLS (şoför yalnızca kendi org'unu görüyor) | ✅         |
+| 4   | Superadmin (SUPERADMIN_PASSWORD env'de yok)              | ⏭️ atlandı |
+| 5   | Anon erişim: users/trips/documents SELECT → 0 kayıt      | ✅         |
+
+**Bug yok.** RLS doğru çalışıyor. Script: `scripts/test-auth.mjs` (silinmeyecek).
+
+---
+
+## Son Session (2026-06-24, ikinci) — Superadmin paneli
+
+> Sorun: superadmin ile girince "firmaya bağlı değil" uyarısı (public.users satırı
+> olmadığı için). Çözüm: superadmin'i panel yerine /admin'e yönlendir.
+> **DURUM: commit'siz, push'suz, tarayıcıda test EDİLMEDİ.** Kullanıcı incelemesi bekliyor.
+
+- `lib/auth.ts`: `getCurrentUser()` → `is_superadmin` RPC paralel çağrılıyor;
+  `CurrentUser.is_superadmin: boolean` eklendi
+- `app/[locale]/(panel)/layout.tsx`: superadmin ise org/rol uyarısından ÖNCE
+  `/admin`'e redirect
+- `app/[locale]/admin/layout.tsx` (YENİ): yalnız superadmin geçer, değilse
+  /dashboard'a döner; Shield başlık + locale switcher + çıkış
+- `app/[locale]/admin/page.tsx` (YENİ): service-role client (RLS bypass — superadmin
+  current_org_id() NULL) ile TÜM org'ları listeler (ad, vergi no, plan, kullanıcı
+  sayısı, kayıt tarihi). Henüz salt-okunur; yeni firma OLUŞTURMA formu YOK.
+- `messages/{tr,en,nl}.json`: `Admin` namespace (9 anahtar, 3 dil eşit = 314 anahtar)
+- `scripts/test-auth.mjs`: lint düzeltmesi (kullanılmayan `_SERVICE_KEY`, `_adminOrgId`)
+- `npm run check` ✓ + `npm run test` 26/26 ✓
+
+### Superadmin paneli — kalan iş (sıradaki)
+
+- [ ] Tarayıcı testi: superadmin@qratix.com → /admin'e düşüyor mu?
+- [ ] "Yeni firma + admin oluştur" formu (service-role action: org INSERT + admin
+      auth.users + public.users role=admin + app_metadata org_id/role)
+- [ ] /admin'den org detay / üye listesi
+
+## Önceki Session (2026-06-24, ilk) Değişiklikleri
 
 - Faz 1 testi doğrulandı: admin@demolojistik.com → dashboard ✓, sofor@demolojistik.com → /driver ✓
 - `globals.css`: bg/card/popover token `oklch(1 0 0)` → `oklch(0.99 0 0)` (DESIGN.md uyumu)
@@ -66,9 +108,10 @@
 
 ## Sıradaki Öncelikler (Faz seçimi)
 
-1. **Süper admin UI** (`/admin` sayfası → firma listesi + yeni firma oluşturma)
-2. **OCR** (Faz 4 tamamlama: Claude Vision → `ocr_data`)
+1. **Süper admin UI** — liste ✓ (salt-okunur). KALAN: yeni firma+admin oluşturma formu
+2. **jscanify kamera tarama** (Faz 3 tamamlama)
 3. **Offline kuyruğu** (Faz 3 tamamlama — karmaşık, son sıraya)
+4. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç (radarda)
 
 ---
 

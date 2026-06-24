@@ -349,5 +349,16 @@
     "package_count": "Package count",
     "plate": "Plate",
     "summary": "Summary"
+  },
+  "Admin": {
+    "title": "Super Admin",
+    "orgsTitle": "Organizations",
+    "orgsSubtitle": "{count} organizations registered",
+    "colName": "Company Name",
+    "colTaxNo": "Tax No",
+    "colPlan": "Plan",
+    "colUsers": "Users",
+    "colCreated": "Created",
+    "noOrgs": "No organizations yet."
   }
 }

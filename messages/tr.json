@@ -349,5 +349,16 @@
     "package_count": "Koli sayısı",
     "plate": "Plaka",
     "summary": "Özet"
+  },
+  "Admin": {
+    "title": "Süper Admin",
+    "orgsTitle": "Firmalar",
+    "orgsSubtitle": "{count} firma kayıtlı",
+    "colName": "Firma Adı",
+    "colTaxNo": "Vergi No",
+    "colPlan": "Plan",
+    "colUsers": "Kullanıcı",
+    "colCreated": "Kayıt Tarihi",
+    "noOrgs": "Henüz hiç firma yok."
   }
 }

@@ -12,11 +12,13 @@ export type CurrentUser = {
   organization_id: string | null;
   role: "admin" | "dispatcher" | "driver" | null;
   full_name: string | null;
+  is_superadmin: boolean;
 };
 
 /**
  * Oturum açmış kullanıcıyı ve public.users profil satırını döndürür.
- * Oturum yoksa null döner.
+ * Oturum yoksa null döner. is_superadmin: platform_admins tablosundan
+ * security-definer fonksiyon ile kontrol edilir.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
@@ -25,17 +27,21 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("organization_id, role, full_name")
-    .eq("id", user.id)
-    .single<ProfileRow>();
+  const [profileResult, superadminResult] = await Promise.all([
+    supabase
+      .from("users")
+      .select("organization_id, role, full_name")
+      .eq("id", user.id)
+      .single<ProfileRow>(),
+    supabase.rpc("is_superadmin"),
+  ]);
 
   return {
     id: user.id,
     authEmail: user.email ?? null,
-    organization_id: profile?.organization_id ?? null,
-    role: profile?.role ?? null,
-    full_name: profile?.full_name ?? null,
+    organization_id: profileResult.data?.organization_id ?? null,
+    role: profileResult.data?.role ?? null,
+    full_name: profileResult.data?.full_name ?? null,
+    is_superadmin: superadminResult.data === true,
   };
 }
