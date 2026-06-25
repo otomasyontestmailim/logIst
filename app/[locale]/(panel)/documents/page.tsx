@@ -25,23 +25,54 @@ type UserInfo = Pick<
   "id" | "full_name" | "email"
 >;
 
-export default async function DocumentsPage() {
+const VALID_STATUSES = ["pending", "approved", "rejected"] as const;
+const VALID_TYPES = [
+  "cmr",
+  "invoice",
+  "waybill",
+  "weighbridge",
+  "adr",
+  "customs",
+  "delivery_note",
+] as const;
+
+type DocStatus = (typeof VALID_STATUSES)[number];
+type DocType = (typeof VALID_TYPES)[number];
+
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; type?: string }>;
+}) {
   const t = await getTranslations("Documents");
   const me = await getCurrentUser();
+  const params = await searchParams;
+
+  const statusFilter = VALID_STATUSES.includes(params.status as DocStatus)
+    ? (params.status as DocStatus)
+    : null;
+  const typeFilter = VALID_TYPES.includes(params.type as DocType)
+    ? (params.type as DocType)
+    : null;
 
   let items: DocumentItem[] = [];
 
   if (me?.organization_id) {
     const supabase = await createClient();
 
+    let docsQuery = supabase
+      .from("documents")
+      .select(
+        "id, trip_id, uploaded_by, type, file_url, status, ocr_data, created_at",
+      )
+      .eq("organization_id", me.organization_id)
+      .order("created_at", { ascending: false });
+
+    if (statusFilter) docsQuery = docsQuery.eq("status", statusFilter);
+    if (typeFilter) docsQuery = docsQuery.eq("type", typeFilter);
+
     const [docsRes, tripsRes, usersRes] = await Promise.all([
-      supabase
-        .from("documents")
-        .select(
-          "id, trip_id, uploaded_by, type, file_url, status, ocr_data, created_at",
-        )
-        .eq("organization_id", me.organization_id)
-        .order("created_at", { ascending: false }),
+      docsQuery,
       supabase
         .from("trips")
         .select("id, origin, destination, driver_id")
@@ -63,7 +94,6 @@ export default async function DocumentsPage() {
       ]),
     );
 
-    // Tek seferde toplu imzalı URL (1 saat geçerli)
     const signedUrls = await getSignedDocumentUrls(
       docs.map((d) => d.file_url),
       3600,
@@ -94,7 +124,11 @@ export default async function DocumentsPage() {
       <h1 className="text-2xl font-bold">{t("title")}</h1>
       <p className="text-muted-foreground">{t("subtitle")}</p>
       <div className="mt-4">
-        <DocumentsClient items={items} />
+        <DocumentsClient
+          items={items}
+          initialStatus={statusFilter ?? "all"}
+          initialType={typeFilter ?? "all"}
+        />
       </div>
     </main>
   );

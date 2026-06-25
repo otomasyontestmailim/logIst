@@ -8,6 +8,8 @@ import {
   Package,
   FileText,
   ScrollText,
+  Settings,
+  BarChart2,
   Menu,
   X,
 } from "lucide-react";
@@ -23,18 +25,22 @@ const navItems = [
   { href: "/customers", key: "customers", icon: Users },
   { href: "/trips", key: "trips", icon: Package },
   { href: "/documents", key: "documents", icon: FileText },
+  { href: "/reports", key: "reports", icon: BarChart2 },
   { href: "/audit", key: "audit", icon: ScrollText, adminOnly: true },
+  { href: "/settings", key: "settings", icon: Settings },
 ] as const;
 
 export function AppShell({
   appName,
   userLabel,
   role,
+  headerSlot,
   children,
 }: {
   appName: string;
   userLabel: string;
   role: "admin" | "dispatcher" | "driver" | null;
+  headerSlot?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Nav");
@@ -129,6 +135,7 @@ export function AppShell({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {headerSlot}
             <LocaleSwitcher />
             <SignOutButton />
           </div>

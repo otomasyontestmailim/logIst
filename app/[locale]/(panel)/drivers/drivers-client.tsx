@@ -11,6 +11,7 @@ import {
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { IdCard, Pencil, Plus, Trash2, Truck } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -405,7 +406,12 @@ function DriverTable({
           {drivers.map((d) => (
             <tr key={d.id} className="align-top">
               <td className="px-4 py-3 font-medium">
-                {d.full_name ?? t("noProfile")}
+                <Link
+                  href={`/drivers/${d.id}`}
+                  className="text-primary hover:underline underline-offset-2"
+                >
+                  {d.full_name ?? t("noProfile")}
+                </Link>
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 <div>{d.email}</div>

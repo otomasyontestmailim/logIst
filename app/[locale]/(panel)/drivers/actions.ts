@@ -11,6 +11,8 @@ export type DriverFormState = {
   message?: string;
 };
 
+export type InviteDriverState = DriverFormState & { password?: string };
+
 /** Boş string'i null'a çevirir (date/text opsiyonel alanlar için). */
 function nn(v: FormDataEntryValue | null): string | null {
   const s = (v ?? "").toString().trim();
@@ -103,6 +105,67 @@ export async function createDriver(
   });
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "created" };
+}
+
+/**
+ * Yalnızca e-posta + ad ile şoför davet eder; geçici şifreyi döndürür.
+ * createDriver'dan farkı: şifre response'da döner, driver_profiles satırı oluşturulmaz.
+ */
+export async function inviteDriver(
+  _prev: DriverFormState,
+  formData: FormData,
+): Promise<DriverFormState & { password?: string }> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) {
+    return { ok: false, error: "unauthorized" };
+  }
+  if (me.role !== "admin" && me.role !== "dispatcher") {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const email = nn(formData.get("email"));
+  const fullName = nn(formData.get("full_name"));
+  if (!email) return { ok: false, error: "email_required" };
+  if (!fullName) return { ok: false, error: "name_required" };
+
+  const password = crypto.randomUUID().slice(0, 8) + "Aa1!";
+
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
+
+  const { data: created, error: authErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+  if (authErr || !created.user) {
+    return { ok: false, error: authErr?.message ?? "auth_create_failed" };
+  }
+  const uid = created.user.id;
+
+  const { error: userErr } = await admin.from("users").insert({
+    id: uid,
+    organization_id: me.organization_id,
+    role: "driver",
+    full_name: fullName,
+    email,
+  });
+  if (userErr) {
+    await admin.auth.admin.deleteUser(uid);
+    return { ok: false, error: userErr.message };
+  }
+
+  // Boş profil satırı oluştur (sayfa açıldığında profil yoksa hata almamak için)
+  await admin.from("driver_profiles").insert({ user_id: uid });
+
+  await logAudit(me, {
+    action: "driver.invite",
+    entity: "users",
+    entityId: uid,
+  });
+  revalidatePath("/[locale]/drivers", "page");
+  return { ok: true, message: "invited", password };
 }
 
 /**

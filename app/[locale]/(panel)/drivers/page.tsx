@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { ExportButton } from "@/components/export-button";
+import { Link } from "@/i18n/navigation";
 import type { Database } from "@/lib/supabase/database.types";
 import { DriversClient, type DriverRow } from "./drivers-client";
 
@@ -66,7 +67,15 @@ export default async function DriversPage() {
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <ExportButton href="/api/export/drivers" label={tc("exportCsv")} />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/drivers/invite"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            {t("inviteDriver")}
+          </Link>
+          <ExportButton href="/api/export/drivers" label={tc("exportCsv")} />
+        </div>
       </div>
       <DriversClient drivers={drivers} />
     </main>

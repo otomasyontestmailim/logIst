@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { Building2, Users, CalendarDays, AlertTriangle } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { NewOrgForm } from "./new-org-form";
 
 export default async function AdminPage() {
   const t = await getTranslations("Admin");
@@ -44,6 +46,8 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      <NewOrgForm />
+
       <div>
         <h1 className="text-2xl font-bold">{t("orgsTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -68,7 +72,12 @@ export default async function AdminPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="font-medium">{org.name}</span>
+                    <Link
+                      href={`/admin/${org.id}`}
+                      className="font-medium text-primary hover:underline underline-offset-2"
+                    >
+                      {org.name}
+                    </Link>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">

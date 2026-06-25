@@ -3,6 +3,7 @@ import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { SignOutButton } from "@/components/sign-out-button";
+import { NotificationsServer } from "@/components/notifications-server";
 
 export default async function PanelLayout({
   children,
@@ -46,6 +47,11 @@ export default async function PanelLayout({
       appName={t("name")}
       userLabel={user!.full_name ?? user!.authEmail ?? ""}
       role={user!.role}
+      headerSlot={
+        user!.organization_id ? (
+          <NotificationsServer organizationId={user!.organization_id} />
+        ) : undefined
+      }
     >
       {children}
     </AppShell>

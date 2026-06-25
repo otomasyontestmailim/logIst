@@ -273,7 +273,14 @@ function CustomerTable({
         <tbody className="divide-y">
           {customers.map((c) => (
             <tr key={c.id} className="align-top">
-              <td className="px-4 py-3 font-medium">{c.name}</td>
+              <td className="px-4 py-3 font-medium">
+                <Link
+                  href={`/customers/${c.id}`}
+                  className="text-primary hover:underline underline-offset-2"
+                >
+                  {c.name}
+                </Link>
+              </td>
               <td className="px-4 py-3 text-sm text-muted-foreground">
                 {t(
                   `type${c.type.charAt(0).toUpperCase()}${c.type.slice(1)}` as

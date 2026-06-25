@@ -1,6 +1,6 @@
 # Proje Durumu — Lojistik CRM
 
-> Son güncelleme: 2026-06-24 · Session başında oku, sonda güncelle.
+> Son güncelleme: 2026-06-25 · Session başında oku, sonda güncelle.
 
 ---
 
@@ -84,8 +84,7 @@
 ### Superadmin paneli — kalan iş (sıradaki)
 
 - [x] Tarayıcı testi: superadmin@qratix.com → /admin'e düşüyor (kullanıcı doğruladı)
-- [ ] "Yeni firma + admin oluştur" formu (service-role action: org INSERT + admin
-      auth.users + public.users role=admin + app_metadata org_id/role) ← SIRADAKİ
+- [x] "Yeni firma + admin oluştur" formu — `admin/actions.ts` (createOrganization) + `admin/new-org-form.tsx` (useActionState, geçici şifre gösterimi) ✓ 2026-06-25
 - [ ] /admin'den org detay / üye listesi
 
 ## Önceki Session (2026-06-24, ilk) Değişiklikleri
@@ -106,12 +105,69 @@
 
 ---
 
+## Session (2026-06-25) — Detay sayfaları + Ayarlar
+
+Tüm eksik panel sayfaları oluşturuldu:
+
+- `(panel)/drivers/[id]` — şoför detay: profil, belge rozetleri, son 10 sefer, inline düzenle/sil
+- `(panel)/trips/[id]` — sefer detay: pipeline progress, yük bilgisi, duraklar, belgeler, durum ilerletme
+- `(panel)/customers/[id]` — müşteri detay: info, sefer geçmişi, inline düzenle/sil
+- `(panel)/documents/[id]` — belge detay: görüntü, OCR tablo, onayla/reddet, OCR yenile
+- `(panel)/settings` — profil, parola, org ayarları (admin)
+- `admin/[id]` — superadmin org detay: üye listesi, plan askıya al/aktifleştir
+- Sidebar'a "Ayarlar" linki eklendi
+- Liste sayfalarından detay sayfalarına link: şoför adı, müşteri adı, sefer adı, belge tipi
+- 3 dil (tr/en/nl) — 6 yeni namespace, her biri tam çevrilmiş
+- `npm run check` ✓ + `npm run build` ✓
+
+## Session (2026-06-25, ikinci) — Panel geliştirmeleri
+
+Tüm panel ekranları tamamlandıktan sonra aşağıdaki özellikler eklendi:
+
+### Dashboard iyileştirmesi
+
+- 4 belirgin metrik kartı: Aktif Sefer, Bekleyen Belge, Yaklaşan Belge Sonları, Bugün Teslimat
+- Hızlı eylem linkleri: Yeni Sefer, Şoför Davet, Belge Gelen Kutusu
+- Son 5 sefer + Son 5 belge (2 sütun grid, linke tıklanabilir)
+- Sefer hattı (pipeline) ve harita korundu
+- `npm run check` ✓ + `npm run build` ✓
+
+### Bildirim Zili (header)
+
+- `components/notifications-dropdown.tsx` (client) — Bell ikonu, dropdown panel
+- `components/notifications-server.tsx` (server) — Supabase'den: süresi dolan belgeler, bekleyen onaylar, 24s içinde teslimat
+- `components/app-shell.tsx`: `headerSlot?: ReactNode` prop eklendi
+- `app/[locale]/(panel)/layout.tsx`: `NotificationsServer` headerSlot olarak geçildi
+
+### Raporlama sayfası `/reports`
+
+- `app/[locale]/(panel)/reports/page.tsx` — server, searchParams ile tarih filtresi
+- `app/[locale]/(panel)/reports/reports-client.tsx` — client, sefer özeti + şoför tablosu
+- CSV dışa aktar (lib/export/csv.ts kullanır), ZIP placeholder (disabled)
+- Sidebar'a "Raporlar" linki + BarChart2 ikonu eklendi
+
+### Şoför Davet `/drivers/invite`
+
+- `inviteDriver` server action eklendi (`drivers/actions.ts`) — e-posta+ad, geçici şifre döndürür
+- `InviteDriverState` tipi ihraç edildi
+- `app/[locale]/(panel)/drivers/invite/page.tsx` — client form, başarıda şifre + kopyala butonu
+- `/drivers` sayfasına "Şoför Davet Et" butonu eklendi
+
+### Belge Gelen Kutusu filtreleri
+
+- `documents/page.tsx`: server-side `status` + `type` filtreleme (searchParams)
+- `documents/documents-client.tsx`: `initialStatus` + `initialType` prop; `setFilter` → `useRouter` URL günceller
+- Belge tipi filtresi: CMR, Fatura, İrsaliye, Kantar, ADR, Gümrük, Teslim Tutanağı
+
+### i18n
+
+- 3 dil (tr/en/nl) — `Dashboard`, `Nav`, `Drivers`, `Documents`, `Reports`, `Notifications` namespace'leri genişletildi
+
 ## Sıradaki Öncelikler (Faz seçimi)
 
-1. **Süper admin UI** — liste ✓ (salt-okunur). KALAN: yeni firma+admin oluşturma formu
-2. **jscanify kamera tarama** (Faz 3 tamamlama)
-3. **Offline kuyruğu** (Faz 3 tamamlama — karmaşık, son sıraya)
-4. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç (radarda)
+1. **jscanify kamera tarama** (Faz 3 tamamlama)
+2. **Offline kuyruğu** (Faz 3 tamamlama — karmaşık, son sıraya)
+3. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç (radarda)
 
 ---
 
@@ -133,6 +189,19 @@
      throw → "Something went wrong". Kullanıcı key'i ekledi + redeploy.
 - **Hardening eklendi:** `/admin` çökme yerine net config mesajı (`adminClientOrNull`);
   sign-in 400 vs 401/5xx ayrımı; `client.ts` env eksikse net throw.
+- **ÇÖZÜLDÜ (2026-06-24):** kullanıcı `SUPABASE_SERVICE_ROLE_KEY`'i Coolify'a ekleyip
+  redeploy etti. Anon key de düzeldi. Production'da TÜM hesaplar giriş yapıyor
+  (superadmin → /admin liste, admin → /dashboard, şoför → /driver). Commit 8fba83b push'landı.
+
+## Auth modeli (provizyon için kritik)
+
+- `current_org_id()` ve `current_user_role()` org/rolü **`public.users` tablosundan**
+  okur (JWT app_metadata DEĞİL). getCurrentUser de tablodan okur.
+- Yeni firma+admin provizyonu = **org INSERT → auth.users createUser → public.users
+  (role=admin)**. app_metadata şart değil. Pattern: `createDriver` ile birebir
+  (tek fark: org'u da oluşturur, role=admin, driver_profiles yok).
+- Superadmin'in org'u yok → provizyon **service-role** ile yapılmalı (RLS-scoped
+  insert işe yaramaz, yeni tenant çapraz-tenant işlemdir).
 
 ## Önemli Teknik Notlar
 

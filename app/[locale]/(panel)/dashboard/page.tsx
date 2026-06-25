@@ -1,6 +1,14 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, Check, Package, Truck, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  FileText,
+  Package,
+  Plus,
+  Truck,
+  Users,
+} from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
@@ -13,29 +21,15 @@ import { DashboardMap, type DriverInfo } from "./dashboard-map";
 type LocationRow = Database["public"]["Tables"]["driver_locations"]["Row"];
 type TripRow = Database["public"]["Tables"]["trips"]["Row"];
 type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
+type DocStatus = Database["public"]["Tables"]["documents"]["Row"]["status"];
+type DocType = Database["public"]["Tables"]["documents"]["Row"]["type"];
 
-// Başlık yanındaki özet KPI'lar — gecikme en kritik, en başta.
-const KPI_KEYS = [
-  "lateDeliveries",
-  "expiringDocs",
-  "pendingDocuments",
-  "drivers",
-] as const;
-type KpiKey = (typeof KPI_KEYS)[number];
-
-// >0 olduğunda uyarı tonuyla vurgulanan ve tıklanınca ilgili listeye giden KPI'lar.
-const KPI_ALERT_HREF: Partial<Record<KpiKey, string>> = {
-  lateDeliveries: "/trips?late=1",
-  expiringDocs: "/drivers",
-};
-
-// Şoför belge geçerlilik alanları → i18n etiket anahtarı (DocLabels namespace).
 const EXPIRY_FIELDS = [
-  { col: "src_expiry", key: "src" },
-  { col: "adr_expiry", key: "adr" },
-  { col: "psikoteknik_expiry", key: "psikoteknik" },
-  { col: "green_card_expiry", key: "greenCard" },
-] as const;
+  { col: "src_expiry" as const, key: "src" },
+  { col: "adr_expiry" as const, key: "adr" },
+  { col: "psikoteknik_expiry" as const, key: "psikoteknik" },
+  { col: "green_card_expiry" as const, key: "greenCard" },
+];
 
 type ExpiringDoc = {
   driverName: string;
@@ -45,8 +39,23 @@ type ExpiringDoc = {
   status: Exclude<ExpiryStatus, "ok">;
 };
 
+type RecentTrip = {
+  id: string;
+  origin: string;
+  destination: string;
+  status: TripStatus;
+  driverName: string | null;
+};
+
+type RecentDoc = {
+  id: string;
+  type: DocType;
+  status: DocStatus;
+  tripLabel: string;
+  createdAt: string;
+};
+
 export default function DashboardPage() {
-  // Veri çekimi alt bileşene taşındı; kabuk anında çizilir, içerik streamlenir.
   return (
     <main className="flex flex-1 flex-col gap-8 p-8">
       <Suspense fallback={<DashboardSkeleton />}>
@@ -59,14 +68,15 @@ export default function DashboardPage() {
 async function DashboardContent() {
   const t = await getTranslations("Dashboard");
   const ts = await getTranslations("TripStatus");
+  const tdt = await getTranslations("DocumentTypes");
+  const tds = await getTranslations("DocumentStatus");
   const me = await getCurrentUser();
 
-  const kpis: Record<KpiKey, number> = {
-    lateDeliveries: 0,
-    expiringDocs: 0,
-    pendingDocuments: 0,
-    drivers: 0,
-  };
+  let pendingDocCount = 0;
+  let driverCount = 0;
+  let todayDeliveryCount = 0;
+  let tripsTotal = 0;
+  let customersTotal = 0;
   const expiringDocs: ExpiringDoc[] = [];
   const pipeline: Record<TripStatus, number> = {
     requested: 0,
@@ -78,24 +88,26 @@ async function DashboardContent() {
     delivery_approval: 0,
     completed: 0,
   };
-
-  let tripsTotal = 0;
-  let customersTotal = 0;
   let locations: LocationRow[] = [];
   let mapDrivers: DriverInfo[] = [];
   let activeTrips: TripRow[] = [];
   let tripStops: StopRow[] = [];
+  let recentTrips: RecentTrip[] = [];
+  let recentDocs: RecentDoc[] = [];
 
   if (me?.organization_id) {
     const supabase = await createClient();
     const todayISO = new Date().toISOString().slice(0, 10);
+    const nextDay = new Date(todayISO);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const tomorrowISO = nextDay.toISOString().slice(0, 10);
 
     const [
       pendingRes,
-      lateRes,
       driversRes,
       tripsTotalRes,
       customersRes,
+      todayRes,
       ...pipelineRes
     ] = await Promise.all([
       supabase
@@ -103,12 +115,6 @@ async function DashboardContent() {
         .select("id", { count: "exact", head: true })
         .eq("organization_id", me.organization_id)
         .eq("status", "pending"),
-      supabase
-        .from("trips")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", me.organization_id)
-        .neq("status", "completed")
-        .lt("delivery_date", todayISO),
       supabase
         .from("users")
         .select("id", { count: "exact", head: true })
@@ -122,6 +128,13 @@ async function DashboardContent() {
         .from("customers")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", me.organization_id),
+      supabase
+        .from("trips")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", me.organization_id)
+        .neq("status", "completed")
+        .gte("delivery_date", todayISO)
+        .lt("delivery_date", tomorrowISO),
       ...PIPELINE_STATUSES.map((status) =>
         supabase
           .from("trips")
@@ -131,17 +144,16 @@ async function DashboardContent() {
       ),
     ]);
 
-    kpis.pendingDocuments = pendingRes.count ?? 0;
-    kpis.lateDeliveries = lateRes.count ?? 0;
-    kpis.drivers = driversRes.count ?? 0;
+    pendingDocCount = pendingRes.count ?? 0;
+    driverCount = driversRes.count ?? 0;
     tripsTotal = tripsTotalRes.count ?? 0;
     customersTotal = customersRes.count ?? 0;
+    todayDeliveryCount = todayRes.count ?? 0;
     PIPELINE_STATUSES.forEach((status, i) => {
       pipeline[status] = pipelineRes[i]?.count ?? 0;
     });
 
-    // Belge süresi uyarıları: dolmuş/30 gün içinde dolacak şoför belgeleri.
-    // RLS, admin/dispatcher'a yalnız kendi org'undaki profilleri döndürür.
+    // Belge süresi uyarıları
     const [profilesRes, driverNamesRes] = await Promise.all([
       supabase
         .from("driver_profiles")
@@ -177,38 +189,54 @@ async function DashboardContent() {
         }
       }
     }
-    // En acil (en küçük/negatif gün) en üstte.
     expiringDocs.sort((a, b) => a.days - b.days);
-    kpis.expiringDocs = expiringDocs.length;
 
-    // İlk çalıştırma: hiç sefer yoksa harita/pipeline verisi çekmeye gerek yok.
     if (tripsTotal > 0) {
-      const [locRes, usersRes, profilesRes, tripsRes, stopsRes] =
-        await Promise.all([
-          supabase
-            .from("driver_locations")
-            .select("*")
-            .eq("organization_id", me.organization_id),
-          supabase
-            .from("users")
-            .select("id, full_name, phone")
-            .eq("organization_id", me.organization_id)
-            .eq("role", "driver"),
-          supabase.from("driver_profiles").select("user_id, plate"),
-          supabase
-            .from("trips")
-            .select("*")
-            .eq("organization_id", me.organization_id)
-            .neq("status", "completed"),
-          supabase
-            .from("trip_stops")
-            .select("*")
-            .eq("organization_id", me.organization_id)
-            .order("seq"),
-        ]);
+      const [
+        locRes,
+        usersRes,
+        driverProfilesRes,
+        tripsRes,
+        stopsRes,
+        recentTripsRes,
+        recentDocsRes,
+      ] = await Promise.all([
+        supabase
+          .from("driver_locations")
+          .select("*")
+          .eq("organization_id", me.organization_id),
+        supabase
+          .from("users")
+          .select("id, full_name, phone")
+          .eq("organization_id", me.organization_id)
+          .eq("role", "driver"),
+        supabase.from("driver_profiles").select("user_id, plate"),
+        supabase
+          .from("trips")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .neq("status", "completed"),
+        supabase
+          .from("trip_stops")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .order("seq"),
+        supabase
+          .from("trips")
+          .select("id, origin, destination, status, driver_id")
+          .eq("organization_id", me.organization_id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("documents")
+          .select("id, type, status, trip_id, created_at")
+          .eq("organization_id", me.organization_id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
 
       const plateMap = new Map(
-        (profilesRes.data ?? []).map((p) => [p.user_id, p.plate]),
+        (driverProfilesRes.data ?? []).map((p) => [p.user_id, p.plate]),
       );
       locations = locRes.data ?? [];
       mapDrivers = (usersRes.data ?? []).map((u) => ({
@@ -219,60 +247,141 @@ async function DashboardContent() {
       }));
       activeTrips = tripsRes.data ?? [];
       tripStops = stopsRes.data ?? [];
+
+      const driverNameMap = new Map(
+        (usersRes.data ?? []).map((u) => [u.id, u.full_name ?? "—"]),
+      );
+      recentTrips = (recentTripsRes.data ?? []).map((tr) => ({
+        id: tr.id,
+        origin: tr.origin ?? "—",
+        destination: tr.destination ?? "—",
+        status: tr.status as TripStatus,
+        driverName: tr.driver_id
+          ? (driverNameMap.get(tr.driver_id) ?? null)
+          : null,
+      }));
+
+      // Son belgeler için sefer etiketleri
+      const tripLabelMap = new Map(
+        (tripsRes.data ?? []).map((tr) => [
+          tr.id,
+          `${tr.origin} → ${tr.destination}`,
+        ]),
+      );
+      recentDocs = (recentDocsRes.data ?? []).map((doc) => ({
+        id: doc.id,
+        type: doc.type as DocType,
+        status: doc.status as DocStatus,
+        tripLabel: tripLabelMap.get(doc.trip_id) ?? "—",
+        createdAt: doc.created_at,
+      }));
     }
   }
 
-  // İlk çalıştırma boş durumu: paneli öğretip ilk adımlara yönlendir.
   if (tripsTotal === 0) {
     return (
       <SetupEmptyState
-        hasDrivers={kpis.drivers > 0}
+        hasDrivers={driverCount > 0}
         hasCustomers={customersTotal > 0}
       />
     );
   }
 
+  const activeTripsCount = PIPELINE_STATUSES.filter(
+    (s) => s !== "completed",
+  ).reduce((sum, s) => sum + pipeline[s], 0);
+
+  const metricCards = [
+    {
+      key: "activeTrips",
+      label: t("activeTrips"),
+      value: activeTripsCount,
+      href: "/trips",
+      alert: false,
+    },
+    {
+      key: "pendingDocuments",
+      label: t("pendingDocuments"),
+      value: pendingDocCount,
+      href: "/documents?status=pending",
+      alert: pendingDocCount > 0,
+    },
+    {
+      key: "expiringDocs",
+      label: t("expiringDocs"),
+      value: expiringDocs.length,
+      href: "/drivers",
+      alert: expiringDocs.length > 0,
+    },
+    {
+      key: "todayDeliveries",
+      label: t("todayDeliveries"),
+      value: todayDeliveryCount,
+      href: "/trips",
+      alert: false,
+    },
+  ] as const;
+
   return (
     <>
-      {/* Başlık + özet KPI şeridi: gecikme >0 ise uyarı tonunda öne çıkar */}
-      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+      {/* Başlık + hızlı eylemler */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <dl className="flex flex-wrap items-end gap-x-8 gap-y-3">
-          {KPI_KEYS.map((key) => {
-            const href = KPI_ALERT_HREF[key];
-            const alert = !!href && kpis[key] > 0;
-            const body = (
-              <>
-                <dt className="text-xs text-muted-foreground">{t(key)}</dt>
-                <dd
-                  className={cn(
-                    "text-2xl font-semibold tabular-nums leading-none underline-offset-4 group-hover:underline group-focus-visible:underline",
-                    alert && "text-warning",
-                  )}
-                >
-                  {kpis[key]}
-                </dd>
-              </>
-            );
-            // Uyarı tonlu KPI'lar tek tıkla ilgili filtreli listeye gider.
-            return alert ? (
-              <Link
-                key={key}
-                href={href}
-                className="group flex flex-col gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {body}
-              </Link>
-            ) : (
-              <div key={key} className="flex flex-col gap-0.5">
-                {body}
-              </div>
-            );
-          })}
-        </dl>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            {t("quickActions")}
+          </span>
+          <Link
+            href="/trips"
+            className="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-colors hover:bg-accent"
+          >
+            <Plus className="size-3" />
+            {t("quickNewTrip")}
+          </Link>
+          <Link
+            href="/drivers/invite"
+            className="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-colors hover:bg-accent"
+          >
+            <Plus className="size-3" />
+            {t("quickNewDriver")}
+          </Link>
+          <Link
+            href="/documents?status=pending"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            <FileText className="size-3" />
+            {t("quickDocInbox")}
+          </Link>
+        </div>
       </div>
 
-      {/* Kahraman: TIRPORT tarzı sefer hattı — tıklayınca duruma göre filtreli liste */}
+      {/* Metrik kartları */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {metricCards.map(({ key, label, value, href, alert }) => (
+          <Link
+            key={key}
+            href={href}
+            className={cn(
+              "group flex flex-col gap-1 rounded-xl border bg-card p-5 shadow-sm transition-all outline-none hover:border-primary/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              alert && "border-warning/40 bg-warning/5",
+            )}
+          >
+            <span className="text-xs font-medium text-muted-foreground">
+              {label}
+            </span>
+            <span
+              className={cn(
+                "text-3xl font-bold tabular-nums leading-none",
+                alert ? "text-warning" : "text-foreground",
+              )}
+            >
+              {value}
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      {/* Sefer hattı */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-muted-foreground">
           {t("pipelineTitle")}
@@ -313,7 +422,120 @@ async function DashboardContent() {
         </div>
       </section>
 
-      {/* Belge süresi uyarıları: yalnız dolmuş/yaklaşan varsa görünür */}
+      {/* Son aktiviteler */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Son seferler */}
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-muted-foreground">
+              {t("recentTrips")}
+            </h2>
+            <Link
+              href="/trips"
+              className="text-xs text-primary hover:underline underline-offset-2"
+            >
+              Tümü →
+            </Link>
+          </div>
+          <div className="rounded-lg border bg-card">
+            {recentTrips.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">
+                {t("noRecentTrips")}
+              </p>
+            ) : (
+              <ul className="divide-y">
+                {recentTrips.map((tr) => (
+                  <li key={tr.id}>
+                    <Link
+                      href={`/trips/${tr.id}`}
+                      className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">
+                          {tr.origin} → {tr.destination}
+                        </p>
+                        {tr.driverName && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {tr.driverName}
+                          </p>
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded px-2 py-0.5 text-xs font-medium status-chip",
+                          STATUS_TONE[tr.status],
+                        )}
+                      >
+                        {ts(tr.status)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        {/* Son belgeler */}
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-muted-foreground">
+              {t("recentDocuments")}
+            </h2>
+            <Link
+              href="/documents"
+              className="text-xs text-primary hover:underline underline-offset-2"
+            >
+              Tümü →
+            </Link>
+          </div>
+          <div className="rounded-lg border bg-card">
+            {recentDocs.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">
+                {t("noRecentDocs")}
+              </p>
+            ) : (
+              <ul className="divide-y">
+                {recentDocs.map((doc) => {
+                  const statusClass =
+                    doc.status === "approved"
+                      ? "text-green-700 dark:text-green-300"
+                      : doc.status === "rejected"
+                        ? "text-destructive"
+                        : "text-amber-600 dark:text-amber-400";
+                  return (
+                    <li key={doc.id}>
+                      <Link
+                        href={`/documents/${doc.id}`}
+                        className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">
+                            {tdt(doc.type)}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {doc.tripLabel}
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "shrink-0 text-xs font-medium",
+                            statusClass,
+                          )}
+                        >
+                          {tds(doc.status)}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Belge süresi uyarıları */}
       {expiringDocs.length > 0 && <ExpiringDocsSection items={expiringDocs} />}
 
       <DashboardMap
@@ -447,16 +669,18 @@ const SK = "animate-pulse rounded bg-muted motion-reduce:animate-none";
 function DashboardSkeleton() {
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className={cn(SK, "h-8 w-32")} />
-        <div className="flex gap-8">
+        <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex flex-col gap-1.5">
-              <div className={cn(SK, "h-3 w-16")} />
-              <div className={cn(SK, "h-6 w-10")} />
-            </div>
+            <div key={i} className={cn(SK, "h-7 w-28")} />
           ))}
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={cn(SK, "h-20 border bg-muted/40")} />
+        ))}
       </div>
       <div className="flex flex-col gap-3">
         <div className={cn(SK, "h-4 w-24")} />
@@ -465,6 +689,10 @@ function DashboardSkeleton() {
             <div key={i} className={cn(SK, "h-[4.5rem] border bg-muted/40")} />
           ))}
         </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className={cn(SK, "h-48 border bg-muted/40")} />
+        <div className={cn(SK, "h-48 border bg-muted/40")} />
       </div>
       <div className={cn(SK, "h-[28rem] w-full border bg-muted/40")} />
     </>

@@ -11,6 +11,7 @@ import {
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Archive, Pencil, Plus, Trash2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -549,7 +550,14 @@ function TripTable({
         <tbody className="divide-y">
           {trips.map((trip) => (
             <tr key={trip.id} className="align-top">
-              <td className="px-4 py-3 font-medium">{trip.origin}</td>
+              <td className="px-4 py-3 font-medium">
+                <Link
+                  href={`/trips/${trip.id}`}
+                  className="text-primary hover:underline underline-offset-2"
+                >
+                  {trip.origin}
+                </Link>
+              </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {trip.destination}
               </td>
