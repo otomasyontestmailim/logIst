@@ -240,11 +240,46 @@ Tüm panel ekranları tamamlandıktan sonra aşağıdaki özellikler eklendi:
 - driver-client.tsx: `useUploadQueue()` entegrasyonu, `uploadQueued` toast
 - 3 dil `OfflineQueue` namespace eklendi
 
+## Session (2026-06-27) — Expo Mobil Uygulama (`apps/mobile`)
+
+Şoför için Android-önce native uygulama iskelet tamamlandı.
+
+**Yeni dosyalar (`apps/mobile/`):**
+
+- `package.json` — Expo SDK 52, react-native 0.76.7, Supabase JS v2
+- `app.json` — bundle ID: `com.qratix.logisticdriver`, scheme: `logisticcrm`
+- `eas.json` — development / preview (APK) / production (AAB) profilleri
+- `tsconfig.json`, `babel.config.js`, `metro.config.js`
+- `lib/supabase.ts` — AsyncStorage session persist
+- `lib/auth-context.tsx` — AuthProvider: session + appUser (rol+org bilgisi)
+- `lib/types.ts` — Database generic tipi (Supabase JS v2 uyumlu)
+- `lib/trip-status.ts` — STATUS_LABELS, ACTION_LABELS, renk haritaları
+- `lib/offline-queue.ts` — AsyncStorage tabanlı yükleme kuyruğu
+- `app/_layout.tsx` — GestureHandlerRootView + AuthProvider + Stack
+- `app/index.tsx` — auth durumuna göre `/(auth)` veya `/(driver)` yönlendir
+- `app/(auth)/_layout.tsx` + `sign-in.tsx` — e-posta/şifre giriş formu; şoför-dışı rol reddeder
+- `app/(driver)/_layout.tsx` — mavi başlıklı Stack navigator
+- `app/(driver)/index.tsx` — aktif sefer listesi (FlatList, pull-to-refresh, çıkış)
+- `app/(driver)/trip/[id].tsx` — sefer detay + durum ilerletme + belge yükleme (kamera/galeri) + offline kuyruk flush + ePOD imza
+- `components/StatusBadge.tsx` — renkli durum rozeti
+- `components/SignaturePad.tsx` — react-native-signature-canvas tabanlı imza pedi
+
+**Kurulum:** `cd apps/mobile && npm install --legacy-peer-deps` ✓ (911 paket)
+
+**Sıradaki Adımlar (mobil):**
+
+1. `apps/mobile/.env` oluştur (EXPO_PUBLIC_SUPABASE_URL + ANON_KEY)
+2. `npx eas login` → `npx eas build:configure`
+3. `npx expo start --android` ile lokal test
+4. `npx eas build --platform android --profile preview` → APK
+5. Test → `--profile production` → Play Store iç test
+
 ## Sıradaki Öncelikler
 
 1. **Migration 0007–0010** Supabase SQL Editor'dan uygula
 2. **Git push** kullanıcı onayıyla
-3. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç
+3. **Mobil test:** `.env` oluştur → `expo start --android`
+4. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç
 
 ### Build düzeltmeleri (2026-06-26)
 
