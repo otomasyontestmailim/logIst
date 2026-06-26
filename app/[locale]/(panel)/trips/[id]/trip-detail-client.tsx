@@ -1,9 +1,17 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import { toast } from "sonner";
-import { ArrowRight, ChevronRight, FileText, MapPin } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronRight,
+  Copy,
+  Download,
+  FileText,
+  MapPin,
+  PenLine,
+} from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,9 +45,16 @@ export type TripDetailProps = {
     tracking_no: string | null;
     distance_km: number | null;
     notes: string | null;
+    delivery_signature_url: string | null;
+    delivered_at: string | null;
+    tracking_token: string | null;
+    freight_amount: number | null;
+    freight_currency: string | null;
+    invoice_status: string | null;
   };
   driver: { id: string; full_name: string | null; email: string | null } | null;
   customer: { id: string; name: string } | null;
+  org: { id: string; name: string; tax_no: string | null } | null;
   stops: Array<{
     id: string;
     stop_type: string;
@@ -65,6 +80,7 @@ export function TripDetailClient({
   trip,
   driver,
   customer,
+  org,
   stops,
   documents,
   userRole,
@@ -75,9 +91,11 @@ export function TripDetailClient({
   const tdt = useTranslations("DocumentTypes");
   const tds = useTranslations("DocumentStatus");
   const tlt = useTranslations("LoadingTypes");
+  const ti = useTranslations("Invoice");
   const format = useFormatter();
   const errText = useErrorText();
   const router = useRouter();
+  const [trackingCopied, setTrackingCopied] = useState(false);
 
   const currentStatus = trip.status as TripStatus;
 
@@ -247,11 +265,51 @@ export function TripDetailClient({
                   value={trip.distance_km.toString()}
                 />
               )}
+              {trip.freight_amount != null && (
+                <InfoRow
+                  label={ti("freightAmount")}
+                  value={`${trip.freight_amount} ${trip.freight_currency ?? "EUR"}`}
+                />
+              )}
+              {trip.invoice_status && (
+                <InfoRow
+                  label={ti("invoiceStatus")}
+                  value={ti(trip.invoice_status as "draft" | "sent" | "paid")}
+                />
+              )}
             </dl>
             {trip.notes && (
               <p className="mt-2 rounded-md bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
                 {trip.notes}
               </p>
+            )}
+            {trip.freight_amount != null && (
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { generateInvoicePdf } =
+                      await import("@/lib/invoice-pdf");
+                    await generateInvoicePdf({
+                      tripId: trip.id,
+                      origin: trip.origin,
+                      destination: trip.destination,
+                      loadDate: trip.load_date,
+                      deliveryDate: trip.delivery_date,
+                      freightAmount: trip.freight_amount,
+                      freightCurrency: trip.freight_currency,
+                      orgName: org?.name ?? "",
+                      orgTaxNo: org?.tax_no ?? null,
+                      customerName: customer?.name ?? null,
+                    });
+                  }}
+                >
+                  <Download className="mr-1.5 size-4" />
+                  {ti("downloadPdf")}
+                </Button>
+              </div>
             )}
           </section>
 
@@ -401,6 +459,71 @@ export function TripDetailClient({
               <p className="text-sm text-muted-foreground">{t("noCustomer")}</p>
             )}
           </div>
+
+          {/* Tracking link */}
+          {trip.tracking_token && (
+            <div className="rounded-lg border bg-card p-5 space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("trackingLinkTitle")}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t("trackingLinkDesc")}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  const url = `${window.location.origin}/track/${trip.tracking_token}`;
+                  void navigator.clipboard.writeText(url).then(() => {
+                    setTrackingCopied(true);
+                    toast.success(t("trackingLinkCopied"));
+                    setTimeout(() => setTrackingCopied(false), 2000);
+                  });
+                }}
+              >
+                {trackingCopied ? (
+                  t("trackingLinkCopiedShort")
+                ) : (
+                  <>
+                    <Copy className="mr-1.5 size-4" />
+                    {t("copyTrackingLink")}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Delivery signature */}
+          {trip.delivery_signature_url && (
+            <div className="rounded-lg border bg-card p-5 space-y-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <PenLine className="size-4" />
+                {t("signatureTitle")}
+              </h2>
+              {trip.delivered_at && (
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(format, trip.delivered_at)}
+                </p>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={trip.delivery_signature_url}
+                alt={t("signatureAlt")}
+                className="w-full rounded-lg border bg-white object-contain"
+                style={{ maxHeight: 120 }}
+              />
+              <a
+                href={trip.delivery_signature_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-primary hover:underline underline-offset-2"
+              >
+                {t("signatureViewFull")}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </main>

@@ -138,7 +138,12 @@
     "vehicleInfo": "Vehicle Info",
     "vehicleModel": "Model",
     "vehicleYear": "Model Year",
-    "capacityTon": "Capacity (TON)"
+    "capacityTon": "Capacity (TON)",
+    "sendExpiryReminders": "Send Document Expiry Reminder",
+    "expiryReminderSending": "Sending...",
+    "expiryReminderSent": "Expiry reminder sent for {count} document(s).",
+    "expiryReminderNone": "No documents expiring within 30 days.",
+    "expiryReminderError": "Failed to send email: {error}"
   },
   "Customers": {
     "title": "Customers",
@@ -293,11 +298,32 @@
     "noDocuments": "No documents yet.",
     "selectType": "Document type",
     "uploadDocument": "Scan / Upload Document",
-    "addPhoto": "Add Document Photo",
+    "addPhoto": "Pick from Gallery",
+    "scanDocument": "Scan Document",
+    "uploadQueued": "Offline — document will upload when connected.",
     "detailsTitle": "Details & Notes",
     "uploading": "Uploading...",
     "uploadSuccess": "Document uploaded.",
-    "uploadError": "Upload failed: {error}"
+    "uploadError": "Upload failed: {error}",
+    "signatureSaved": "Signature saved — delivery sent for confirmation."
+  },
+  "OfflineQueue": {
+    "pendingTitle": "{count} documents pending upload",
+    "pending": "{count} pending",
+    "syncing": "Syncing…"
+  },
+  "Scanner": {
+    "ariaLabel": "Document scanner",
+    "title": "Scan Document",
+    "titleWithScan": "Scan Document (Edge Detection)",
+    "openCamera": "Open Camera",
+    "opening": "Opening camera…",
+    "cameraError": "Could not open camera.",
+    "capture": "Take photo",
+    "retake": "Retake",
+    "use": "Use This Photo",
+    "retry": "Try Again",
+    "close": "Close"
   },
   "DocumentTypes": {
     "cmr": "CMR",
@@ -346,9 +372,11 @@
     "colCompleted": "Completed",
     "colRate": "Completion %",
     "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
     "exportZip": "Download Documents (ZIP)",
     "zipPlaceholder": "ZIP export coming soon.",
-    "noData": "No trips in this date range."
+    "noData": "No trips in this date range.",
+    "pdfError": "Could not generate PDF. Please try again."
   },
   "Notifications": {
     "title": "Notifications",
@@ -385,7 +413,10 @@
     "org_create_failed": "Could not create organization.",
     "ocr_not_configured": "OCR is not configured (no API key).",
     "ocr_failed": "OCR failed.",
-    "server_misconfigured": "Server is misconfigured. Please contact your administrator."
+    "server_misconfigured": "Server is misconfigured. Please contact your administrator.",
+    "email_invalid": "Please enter a valid email address.",
+    "number_invalid": "Please enter a valid number.",
+    "required": "This field is required."
   },
   "OcrFields": {
     "sender": "Sender",
@@ -436,7 +467,15 @@
     "colStatus": "Status",
     "colDate": "Date",
     "colUploader": "Uploaded by",
-    "viewDocument": "View"
+    "viewDocument": "View",
+    "trackingLinkTitle": "Tracking Link",
+    "trackingLinkDesc": "Share this link with the customer so they can track the shipment.",
+    "copyTrackingLink": "Copy Tracking Link",
+    "trackingLinkCopied": "Link copied to clipboard!",
+    "trackingLinkCopiedShort": "Copied!",
+    "signatureTitle": "Delivery Signature",
+    "signatureAlt": "Recipient signature",
+    "signatureViewFull": "View full size →"
   },
   "CustomerDetail": {
     "back": "← Back to Customers",
@@ -463,7 +502,16 @@
     "approve": "Approve",
     "reject": "Reject",
     "ocrRun": "Run OCR",
-    "ocrRerun": "Re-run OCR"
+    "ocrRerun": "Re-run OCR",
+    "ocrEdit": "Edit",
+    "ocrSavedToast": "OCR fields saved.",
+    "ocrStatus_pending": "OCR: Pending",
+    "ocrStatus_processing": "OCR: Processing…",
+    "ocrStatus_done": "OCR: Done",
+    "ocrStatus_failed": "OCR: Failed",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel"
   },
   "Settings": {
     "title": "Settings",
@@ -525,5 +573,39 @@
     "orgCreatedWarning": "Share this password with the admin. It will only be shown once.",
     "copyPassword": "Copy",
     "copied": "Copied!"
+  },
+  "Signature": {
+    "ariaLabel": "Signature pad",
+    "title": "Delivery Signature",
+    "instruction": "Ask the recipient to sign in the box below",
+    "clear": "Clear",
+    "confirm": "Sign & Deliver",
+    "cancelSign": "Cancel",
+    "signatureSaved": "Signature saved."
+  },
+  "Tracking": {
+    "status": "Status",
+    "origin": "Origin",
+    "destination": "Destination",
+    "estimatedDelivery": "Estimated Delivery",
+    "lastUpdate": "Last Update",
+    "driver": "Driver"
+  },
+  "Invoice": {
+    "freightAmount": "Freight Amount",
+    "currency": "Currency",
+    "invoiceStatus": "Invoice Status",
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "downloadPdf": "Download Invoice PDF"
+  },
+  "PwaInstall": {
+    "ariaLabel": "Install app",
+    "title": "Install app",
+    "description": "Add Logistics CRM to your home screen for faster access.",
+    "iosInstructions": "In Safari, tap share (⬆) → 'Add to Home Screen'.",
+    "installButton": "Install",
+    "dismiss": "Dismiss"
   }
 }

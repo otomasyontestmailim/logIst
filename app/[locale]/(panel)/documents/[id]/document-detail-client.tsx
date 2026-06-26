@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
-import { Check, ScanText, X } from "lucide-react";
+import { Check, Loader2, ScanText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useErrorText } from "@/lib/use-error-text";
 import {
@@ -12,19 +12,31 @@ import {
   extractDocument,
   type DocumentInboxFormState,
 } from "../actions";
-import type { DocumentStatus } from "@/lib/supabase/database.types";
+import type { DocumentStatus, OcrStatus } from "@/lib/supabase/database.types";
 
 const initial: DocumentInboxFormState = { ok: false };
+
+const OCR_STATUS_CLASSES: Record<OcrStatus, string> = {
+  pending: "bg-muted text-muted-foreground",
+  processing:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  done: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  failed: "bg-destructive/15 text-destructive",
+};
 
 export function DocumentActions({
   documentId,
   status,
   hasOcr,
+  ocrStatus,
+  ocrError,
   canApprove,
 }: {
   documentId: string;
   status: DocumentStatus;
   hasOcr: boolean;
+  ocrStatus: OcrStatus;
+  ocrError: string | null;
   canApprove: boolean;
 }) {
   const t = useTranslations("DocumentDetail");
@@ -39,6 +51,8 @@ export function DocumentActions({
     extractDocument,
     initial,
   );
+
+  const isOcrBusy = ocrPending || ocrStatus === "processing";
 
   useEffect(() => {
     if (statusState.ok && statusState.message === "approved") {
@@ -64,47 +78,64 @@ export function DocumentActions({
   }, [ocrState]);
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {canApprove && status !== "approved" && (
-        <form action={statusAction}>
-          <input type="hidden" name="document_id" value={documentId} />
-          <input type="hidden" name="status" value="approved" />
-          <Button type="submit" size="sm" disabled={statusPending}>
-            <Check className="size-4" />
-            {t("approve")}
-          </Button>
-        </form>
-      )}
-      {canApprove && status !== "rejected" && (
-        <form action={statusAction}>
-          <input type="hidden" name="document_id" value={documentId} />
-          <input type="hidden" name="status" value="rejected" />
-          <Button
-            type="submit"
-            size="sm"
-            variant="outline"
-            disabled={statusPending}
-            className="text-destructive hover:bg-destructive/10"
-          >
-            <X className="size-4" />
-            {t("reject")}
-          </Button>
-        </form>
-      )}
-      {canApprove && (
-        <form action={ocrAction}>
-          <input type="hidden" name="document_id" value={documentId} />
-          <Button
-            type="submit"
-            size="sm"
-            variant="outline"
-            disabled={ocrPending}
-          >
-            <ScanText className="size-4" />
-            {hasOcr ? t("ocrRerun") : t("ocrRun")}
-          </Button>
-        </form>
-      )}
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex flex-wrap gap-2">
+        {canApprove && status !== "approved" && (
+          <form action={statusAction}>
+            <input type="hidden" name="document_id" value={documentId} />
+            <input type="hidden" name="status" value="approved" />
+            <Button type="submit" size="sm" disabled={statusPending}>
+              <Check className="size-4" />
+              {t("approve")}
+            </Button>
+          </form>
+        )}
+        {canApprove && status !== "rejected" && (
+          <form action={statusAction}>
+            <input type="hidden" name="document_id" value={documentId} />
+            <input type="hidden" name="status" value="rejected" />
+            <Button
+              type="submit"
+              size="sm"
+              variant="outline"
+              disabled={statusPending}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <X className="size-4" />
+              {t("reject")}
+            </Button>
+          </form>
+        )}
+        {canApprove && (
+          <form action={ocrAction}>
+            <input type="hidden" name="document_id" value={documentId} />
+            <Button
+              type="submit"
+              size="sm"
+              variant="outline"
+              disabled={isOcrBusy}
+            >
+              {isOcrBusy ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ScanText className="size-4" />
+              )}
+              {hasOcr ? t("ocrRerun") : t("ocrRun")}
+            </Button>
+          </form>
+        )}
+      </div>
+
+      {/* OCR durum rozeti */}
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${OCR_STATUS_CLASSES[ocrStatus]}`}
+      >
+        {isOcrBusy && <Loader2 className="size-3 animate-spin" />}
+        {t(`ocrStatus_${ocrStatus}` as Parameters<typeof t>[0])}
+        {ocrStatus === "failed" && ocrError && (
+          <span className="ml-1 opacity-75">— {ocrError}</span>
+        )}
+      </span>
     </div>
   );
 }

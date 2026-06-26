@@ -176,3 +176,58 @@ export async function createDocument(
   revalidatePath("/[locale]/documents", "page");
   return { ok: true, message: "created" };
 }
+
+/**
+ * ePOD: imza Storage'a yüklendikten sonra çağrılır.
+ * Sefer durumunu delivery_approval'a taşır ve imza URL'ini kaydeder.
+ */
+export async function saveDeliverySignature(
+  tripId: string,
+  signatureUrl: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id || me.role !== "driver") {
+    return { ok: false, error: "unauthorized" };
+  }
+
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
+
+  const { data: target } = await admin
+    .from("trips")
+    .select("organization_id, driver_id, status")
+    .eq("id", tripId)
+    .single();
+
+  if (
+    !target ||
+    target.organization_id !== me.organization_id ||
+    target.driver_id !== me.id
+  ) {
+    return { ok: false, error: "not_found" };
+  }
+
+  if (target.status !== "delivering") {
+    return { ok: false, error: "invalid_transition" };
+  }
+
+  const { error } = await admin
+    .from("trips")
+    .update({
+      delivery_signature_url: signatureUrl,
+      delivered_at: new Date().toISOString(),
+      status: "delivery_approval",
+    })
+    .eq("id", tripId);
+
+  if (error) return { ok: false, error: error.message };
+
+  await logAudit(me, {
+    action: "trip.delivery_signed",
+    entity: "trips",
+    entityId: tripId,
+  });
+  revalidatePath("/[locale]/driver", "page");
+  revalidatePath("/[locale]/trips", "page");
+  return { ok: true };
+}

@@ -5,11 +5,13 @@ import { getCurrentUser } from "@/lib/auth";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { canTransition, isTripStatus } from "@/lib/trip-status";
+import { vRequired, hasErrors, type FieldErrors } from "@/lib/validate";
 
 export type TripFormState = {
   ok: boolean;
   error?: string;
   message?: string;
+  fieldErrors?: FieldErrors;
 };
 
 function nn(v: FormDataEntryValue | null): string | null {
@@ -34,6 +36,9 @@ function cargoFields(formData: FormData) {
     tracking_no: nn(formData.get("tracking_no")),
     distance_km: num(formData.get("distance_km")),
     notes: nn(formData.get("notes")),
+    freight_amount: num(formData.get("freight_amount")),
+    freight_currency: nn(formData.get("freight_currency")) ?? "EUR",
+    invoice_status: nn(formData.get("invoice_status")) ?? "draft",
   };
 }
 
@@ -51,8 +56,14 @@ export async function createTrip(
 
   const origin = nn(formData.get("origin"));
   const destination = nn(formData.get("destination"));
-  if (!origin) return { ok: false, error: "origin_required" };
-  if (!destination) return { ok: false, error: "destination_required" };
+
+  const createFieldErrors: FieldErrors = {};
+  const origErr = vRequired(origin, "origin_required");
+  if (origErr) createFieldErrors.origin = origErr;
+  const destErr = vRequired(destination, "destination_required");
+  if (destErr) createFieldErrors.destination = destErr;
+  if (hasErrors(createFieldErrors))
+    return { ok: false, fieldErrors: createFieldErrors };
 
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
@@ -106,8 +117,14 @@ export async function updateTrip(
   const destination = nn(formData.get("destination"));
 
   if (!tripId) return { ok: false, error: "id_required" };
-  if (!origin) return { ok: false, error: "origin_required" };
-  if (!destination) return { ok: false, error: "destination_required" };
+
+  const updateFieldErrors: FieldErrors = {};
+  const updOrigErr = vRequired(origin, "origin_required");
+  if (updOrigErr) updateFieldErrors.origin = updOrigErr;
+  const updDestErr = vRequired(destination, "destination_required");
+  if (updDestErr) updateFieldErrors.destination = updDestErr;
+  if (hasErrors(updateFieldErrors))
+    return { ok: false, fieldErrors: updateFieldErrors };
 
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };

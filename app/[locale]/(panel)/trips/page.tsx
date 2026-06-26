@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
 import { ExportButton } from "@/components/export-button";
+import { Pagination } from "@/components/pagination";
 import { TripsClient } from "./trips-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -14,21 +15,32 @@ type UserRow = Pick<
   "id" | "full_name" | "email"
 >;
 
+const PAGE_SIZE = 20;
+
 export default async function TripsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; late?: string; customer?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    late?: string;
+    customer?: string;
+    page?: string;
+  }>;
 }) {
   const t = await getTranslations("Trips");
   const tc = await getTranslations("Common");
-  const { status, late, customer } = await searchParams;
+  const { status, late, customer, page: pageStr } = await searchParams;
   const lateMode = late === "1";
+  const page = Math.max(1, parseInt(pageStr ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
   const me = await getCurrentUser();
 
   let trips: TripRow[] = [];
   let customers: CustomerRow[] = [];
   let drivers: UserRow[] = [];
   let stops: StopRow[] = [];
+  let total = 0;
 
   if (me?.organization_id) {
     const supabase = await createClient();
@@ -36,9 +48,10 @@ export default async function TripsPage({
     // Geciken teslimat görünümü: tamamlanmamış + teslim tarihi bugünden önce.
     let tripsQuery = supabase
       .from("trips")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("organization_id", me.organization_id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
     if (lateMode) {
       const todayISO = new Date().toISOString().slice(0, 10);
       tripsQuery = tripsQuery
@@ -70,6 +83,7 @@ export default async function TripsPage({
     ]);
 
     trips = tripsRes.data ?? [];
+    total = tripsRes.count ?? 0;
     customers = customersRes.data ?? [];
     drivers = driversRes.data ?? [];
     stops = stopsRes.data ?? [];
@@ -81,6 +95,11 @@ export default async function TripsPage({
   if (customer) exportParams.set("customer", customer);
   const exportQs = exportParams.toString();
   const exportHref = `/api/export/trips${exportQs ? `?${exportQs}` : ""}`;
+
+  const paginationParams: Record<string, string> = {};
+  if (status) paginationParams.status = status;
+  if (lateMode) paginationParams.late = "1";
+  if (customer) paginationParams.customer = customer;
 
   return (
     <main className="flex flex-1 flex-col gap-2 p-8">
@@ -111,6 +130,12 @@ export default async function TripsPage({
           drivers={drivers}
           stops={stops}
           initialStatus={status}
+        />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          baseParams={paginationParams}
         />
       </div>
     </main>

@@ -138,7 +138,12 @@
     "vehicleInfo": "Araç Bilgileri",
     "vehicleModel": "Model",
     "vehicleYear": "Model Yılı",
-    "capacityTon": "Kapasite (TON)"
+    "capacityTon": "Kapasite (TON)",
+    "sendExpiryReminders": "Belge Süresi Uyarısı Gönder",
+    "expiryReminderSending": "Gönderiliyor...",
+    "expiryReminderSent": "{count} belge uyarısı e-postayla gönderildi.",
+    "expiryReminderNone": "30 gün içinde dolacak belge yok.",
+    "expiryReminderError": "E-posta gönderilemedi: {error}"
   },
   "Customers": {
     "title": "Müşteriler",
@@ -293,11 +298,32 @@
     "noDocuments": "Henüz belge yok.",
     "selectType": "Belge tipi",
     "uploadDocument": "Belge Çek / Yükle",
-    "addPhoto": "Belge Fotoğrafı Ekle",
+    "addPhoto": "Galeriden Seç",
+    "scanDocument": "Belge Tara",
+    "uploadQueued": "Çevrimdışısınız — belge bağlantı gelince yüklenecek.",
     "detailsTitle": "Detay ve Açıklamalar",
     "uploading": "Yükleniyor...",
     "uploadSuccess": "Belge yüklendi.",
-    "uploadError": "Yükleme başarısız: {error}"
+    "uploadError": "Yükleme başarısız: {error}",
+    "signatureSaved": "İmza kaydedildi, teslimat onaya gönderildi."
+  },
+  "OfflineQueue": {
+    "pendingTitle": "{count} belge yükleme bekliyor",
+    "pending": "{count} bekliyor",
+    "syncing": "Senkronize ediliyor…"
+  },
+  "Scanner": {
+    "ariaLabel": "Belge tarayıcı",
+    "title": "Belge Tara",
+    "titleWithScan": "Belge Tara (Kenar Tespiti)",
+    "openCamera": "Kamerayı Aç",
+    "opening": "Kamera açılıyor…",
+    "cameraError": "Kamera açılamadı.",
+    "capture": "Fotoğraf çek",
+    "retake": "Tekrar Çek",
+    "use": "Bu Fotoğrafı Kullan",
+    "retry": "Tekrar Dene",
+    "close": "Kapat"
   },
   "DocumentTypes": {
     "cmr": "CMR",
@@ -356,7 +382,10 @@
     "org_create_failed": "Firma oluşturulamadı.",
     "ocr_not_configured": "OCR yapılandırılmamış (API anahtarı yok).",
     "ocr_failed": "OCR başarısız oldu.",
-    "server_misconfigured": "Sunucu yapılandırması eksik. Yöneticinize bildirin."
+    "server_misconfigured": "Sunucu yapılandırması eksik. Yöneticinize bildirin.",
+    "email_invalid": "Geçerli bir e-posta adresi girin.",
+    "number_invalid": "Geçerli bir sayı girin.",
+    "required": "Bu alan gerekli."
   },
   "Reports": {
     "title": "Raporlar",
@@ -375,9 +404,11 @@
     "colCompleted": "Tamamlanan",
     "colRate": "Tamamlama %",
     "exportCsv": "CSV Dışa Aktar",
+    "exportPdf": "PDF Dışa Aktar",
     "exportZip": "Belgeleri İndir (ZIP)",
     "zipPlaceholder": "ZIP dışa aktarımı yakında eklenecek.",
-    "noData": "Bu tarih aralığında sefer yok."
+    "noData": "Bu tarih aralığında sefer yok.",
+    "pdfError": "PDF oluşturulamadı. Lütfen tekrar deneyin."
   },
   "Notifications": {
     "title": "Bildirimler",
@@ -463,7 +494,24 @@
     "approve": "Onayla",
     "reject": "Reddet",
     "ocrRun": "OCR Çalıştır",
-    "ocrRerun": "OCR'yi Yenile"
+    "ocrRerun": "OCR'yi Yenile",
+    "ocrEdit": "Düzenle",
+    "ocrSavedToast": "OCR alanları kaydedildi.",
+    "ocrStatus_pending": "OCR: Bekliyor",
+    "ocrStatus_processing": "OCR: İşleniyor…",
+    "ocrStatus_done": "OCR: Tamamlandı",
+    "ocrStatus_failed": "OCR: Başarısız",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "cancel": "Vazgeç",
+    "trackingLinkTitle": "Takip Linki",
+    "trackingLinkDesc": "Müşteriye bu linki göndererek seferi takip etmesini sağlayın.",
+    "copyTrackingLink": "Takip Linkini Kopyala",
+    "trackingLinkCopied": "Link panoya kopyalandı!",
+    "trackingLinkCopiedShort": "Kopyalandı!",
+    "signatureTitle": "Teslimat İmzası",
+    "signatureAlt": "Alıcı imzası",
+    "signatureViewFull": "Tam boyutu görüntüle →"
   },
   "Settings": {
     "title": "Ayarlar",
@@ -525,5 +573,39 @@
     "orgCreatedWarning": "Bu şifreyi adminle paylaşın. Yalnızca bir kez gösterilir.",
     "copyPassword": "Kopyala",
     "copied": "Kopyalandı!"
+  },
+  "Signature": {
+    "ariaLabel": "İmza pedi",
+    "title": "Teslimat İmzası",
+    "instruction": "Alıcı imzasını aşağıdaki alana atın",
+    "clear": "Temizle",
+    "confirm": "İmzayla Teslim Et",
+    "cancelSign": "Vazgeç",
+    "signatureSaved": "İmza kaydedildi."
+  },
+  "Tracking": {
+    "status": "Durum",
+    "origin": "Kalkış",
+    "destination": "Varış",
+    "estimatedDelivery": "Tahmini Teslimat",
+    "lastUpdate": "Son Güncelleme",
+    "driver": "Şoför"
+  },
+  "Invoice": {
+    "freightAmount": "Navlun Ücreti",
+    "currency": "Para Birimi",
+    "invoiceStatus": "Fatura Durumu",
+    "draft": "Taslak",
+    "sent": "Gönderildi",
+    "paid": "Ödendi",
+    "downloadPdf": "Fatura PDF İndir"
+  },
+  "PwaInstall": {
+    "ariaLabel": "Uygulamayı yükle",
+    "title": "Uygulamayı yükle",
+    "description": "Lojistik CRM'i ana ekranınıza ekleyerek daha hızlı erişin.",
+    "iosInstructions": "Safari'de paylaş (⬆) → 'Ana Ekrana Ekle' seçeneğine dokunun.",
+    "installButton": "Yükle",
+    "dismiss": "Kapat"
   }
 }

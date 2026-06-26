@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedDocumentUrls } from "@/lib/supabase/storage";
+import { Pagination } from "@/components/pagination";
 import { DocumentsClient, type DocumentItem } from "./documents-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -39,10 +40,12 @@ const VALID_TYPES = [
 type DocStatus = (typeof VALID_STATUSES)[number];
 type DocType = (typeof VALID_TYPES)[number];
 
+const PAGE_SIZE = 20;
+
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; type?: string }>;
+  searchParams: Promise<{ status?: string; type?: string; page?: string }>;
 }) {
   const t = await getTranslations("Documents");
   const me = await getCurrentUser();
@@ -54,8 +57,12 @@ export default async function DocumentsPage({
   const typeFilter = VALID_TYPES.includes(params.type as DocType)
     ? (params.type as DocType)
     : null;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   let items: DocumentItem[] = [];
+  let total = 0;
 
   if (me?.organization_id) {
     const supabase = await createClient();
@@ -64,9 +71,11 @@ export default async function DocumentsPage({
       .from("documents")
       .select(
         "id, trip_id, uploaded_by, type, file_url, status, ocr_data, created_at",
+        { count: "exact" },
       )
       .eq("organization_id", me.organization_id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (statusFilter) docsQuery = docsQuery.eq("status", statusFilter);
     if (typeFilter) docsQuery = docsQuery.eq("type", typeFilter);
@@ -84,6 +93,7 @@ export default async function DocumentsPage({
     ]);
 
     const docs = (docsRes.data as DocumentRow[]) ?? [];
+    total = docsRes.count ?? 0;
     const tripMap = new Map(
       ((tripsRes.data as TripInfo[]) ?? []).map((trip) => [trip.id, trip]),
     );
@@ -119,6 +129,10 @@ export default async function DocumentsPage({
     });
   }
 
+  const paginationParams: Record<string, string> = {};
+  if (statusFilter) paginationParams.status = statusFilter;
+  if (typeFilter) paginationParams.type = typeFilter;
+
   return (
     <main className="flex flex-1 flex-col gap-2 p-8">
       <h1 className="text-2xl font-bold">{t("title")}</h1>
@@ -128,6 +142,12 @@ export default async function DocumentsPage({
           items={items}
           initialStatus={statusFilter ?? "all"}
           initialType={typeFilter ?? "all"}
+        />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          baseParams={paginationParams}
         />
       </div>
     </main>

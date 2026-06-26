@@ -56,8 +56,8 @@ export default async function TripDetailPage({
   const stops = stopsRes.data ?? [];
   const docs = docsRes.data ?? [];
 
-  // Fetch driver and customer in parallel
-  const [driverRes, customerRes] = await Promise.all([
+  // Fetch driver, customer, and org in parallel
+  const [driverRes, customerRes, orgRes] = await Promise.all([
     trip.driver_id
       ? supabase
           .from("users")
@@ -72,6 +72,11 @@ export default async function TripDetailPage({
           .eq("id", trip.customer_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("organizations")
+      .select("id, name, tax_no")
+      .eq("id", me.organization_id)
+      .maybeSingle(),
   ]);
 
   // Uploader names for documents
@@ -89,10 +94,17 @@ export default async function TripDetailPage({
     );
   }
 
-  const signedUrls = await getSignedDocumentUrls(
-    docs.map((d) => d.file_url),
-    3600,
-  );
+  // Signed URLs for documents + delivery signature
+  const signaturePaths = trip.delivery_signature_url
+    ? [trip.delivery_signature_url]
+    : [];
+  const [signedUrls, signedSigUrls] = await Promise.all([
+    getSignedDocumentUrls(
+      docs.map((d) => d.file_url),
+      3600,
+    ),
+    getSignedDocumentUrls(signaturePaths, 3600),
+  ]);
 
   const documents = docs.map((doc) => ({
     id: doc.id,
@@ -105,6 +117,10 @@ export default async function TripDetailPage({
       : "—",
     signedUrl: signedUrls.get(doc.file_url) ?? null,
   }));
+
+  const deliverySignatureSignedUrl = trip.delivery_signature_url
+    ? (signedSigUrls.get(trip.delivery_signature_url) ?? null)
+    : null;
 
   return (
     <TripDetailClient
@@ -122,9 +138,18 @@ export default async function TripDetailPage({
         tracking_no: trip.tracking_no,
         distance_km: trip.distance_km ? Number(trip.distance_km) : null,
         notes: trip.notes,
+        delivery_signature_url: deliverySignatureSignedUrl,
+        delivered_at: trip.delivered_at,
+        tracking_token: trip.tracking_token,
+        freight_amount: trip.freight_amount
+          ? Number(trip.freight_amount)
+          : null,
+        freight_currency: trip.freight_currency,
+        invoice_status: trip.invoice_status,
       }}
       driver={driverRes.data ?? null}
       customer={customerRes.data ?? null}
+      org={orgRes.data ?? null}
       stops={stops.map((s) => ({
         id: s.id,
         stop_type: s.stop_type,

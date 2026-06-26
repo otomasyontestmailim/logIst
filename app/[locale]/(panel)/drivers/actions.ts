@@ -4,11 +4,20 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import {
+  vRequired,
+  vEmail,
+  vNumber,
+  hasErrors,
+  type FieldErrors,
+} from "@/lib/validate";
+import { sendEmail, driverInviteEmail, expiryReminderEmail } from "@/lib/email";
 
 export type DriverFormState = {
   ok: boolean;
   error?: string;
   message?: string;
+  fieldErrors?: FieldErrors;
 };
 
 export type InviteDriverState = DriverFormState & { password?: string };
@@ -44,7 +53,19 @@ export async function createDriver(
 
   const email = nn(formData.get("email"));
   const fullName = nn(formData.get("full_name"));
-  if (!email) return { ok: false, error: "email_required" };
+
+  const fieldErrors: FieldErrors = {};
+  const emailReq = vRequired(email, "email_required");
+  if (emailReq) fieldErrors.email = emailReq;
+  else {
+    const emailFmt = vEmail(email);
+    if (emailFmt) fieldErrors.email = emailFmt;
+  }
+  const yearErr = vNumber(formData.get("vehicle_year")?.toString());
+  if (yearErr) fieldErrors.vehicle_year = yearErr;
+  const capErr = vNumber(formData.get("capacity_ton")?.toString());
+  if (capErr) fieldErrors.capacity_ton = capErr;
+  if (hasErrors(fieldErrors)) return { ok: false, fieldErrors };
 
   // Parola verilmezse rastgele üret — şoför magic link ile de girebilir.
   const password =
@@ -53,9 +74,12 @@ export async function createDriver(
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
 
+  // TypeScript narrowing: validation above ensures email is non-null at this point
+  const safeEmail = email as string;
+
   // 1) auth.users
   const { data: created, error: authErr } = await admin.auth.admin.createUser({
-    email,
+    email: safeEmail,
     password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
@@ -71,7 +95,7 @@ export async function createDriver(
     organization_id: me.organization_id,
     role: "driver",
     full_name: fullName,
-    email,
+    email: safeEmail,
     phone: nn(formData.get("phone")),
   });
   if (userErr) {
@@ -125,8 +149,22 @@ export async function inviteDriver(
 
   const email = nn(formData.get("email"));
   const fullName = nn(formData.get("full_name"));
-  if (!email) return { ok: false, error: "email_required" };
-  if (!fullName) return { ok: false, error: "name_required" };
+
+  const inviteFieldErrors: FieldErrors = {};
+  const invEmailReq = vRequired(email, "email_required");
+  if (invEmailReq) inviteFieldErrors.email = invEmailReq;
+  else {
+    const invEmailFmt = vEmail(email);
+    if (invEmailFmt) inviteFieldErrors.email = invEmailFmt;
+  }
+  const invNameReq = vRequired(fullName, "name_required");
+  if (invNameReq) inviteFieldErrors.full_name = invNameReq;
+  if (hasErrors(inviteFieldErrors))
+    return { ok: false, fieldErrors: inviteFieldErrors };
+
+  // TypeScript narrowing: validation above ensures email/fullName are non-null at this point
+  const safeInvEmail = email as string;
+  const safeFullName = fullName as string;
 
   const password = crypto.randomUUID().slice(0, 8) + "Aa1!";
 
@@ -134,10 +172,10 @@ export async function inviteDriver(
   if (!admin) return { ok: false, error: "server_misconfigured" };
 
   const { data: created, error: authErr } = await admin.auth.admin.createUser({
-    email,
+    email: safeInvEmail,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName },
+    user_metadata: { full_name: safeFullName },
   });
   if (authErr || !created.user) {
     return { ok: false, error: authErr?.message ?? "auth_create_failed" };
@@ -148,8 +186,8 @@ export async function inviteDriver(
     id: uid,
     organization_id: me.organization_id,
     role: "driver",
-    full_name: fullName,
-    email,
+    full_name: safeFullName,
+    email: safeInvEmail,
   });
   if (userErr) {
     await admin.auth.admin.deleteUser(uid);
@@ -164,6 +202,26 @@ export async function inviteDriver(
     entity: "users",
     entityId: uid,
   });
+
+  // E-posta gönder (RESEND_API_KEY tanımlıysa — yoksa sessizce atla)
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/[^/]*$/, "") ??
+    "";
+  const { data: orgData } = await admin
+    .from("organizations")
+    .select("name")
+    .eq("id", me.organization_id)
+    .single();
+  const emailPayload = driverInviteEmail({
+    orgName: orgData?.name ?? "Lojistik CRM",
+    driverName: safeFullName,
+    email: safeInvEmail,
+    password,
+    appUrl,
+  });
+  await sendEmail({ to: safeInvEmail, ...emailPayload });
+
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "invited", password };
 }
@@ -184,6 +242,14 @@ export async function updateDriver(
 
   const driverId = nn(formData.get("driver_id"));
   if (!driverId) return { ok: false, error: "id_required" };
+
+  const updFieldErrors: FieldErrors = {};
+  const updYearErr = vNumber(formData.get("vehicle_year")?.toString());
+  if (updYearErr) updFieldErrors.vehicle_year = updYearErr;
+  const updCapErr = vNumber(formData.get("capacity_ton")?.toString());
+  if (updCapErr) updFieldErrors.capacity_ton = updCapErr;
+  if (hasErrors(updFieldErrors))
+    return { ok: false, fieldErrors: updFieldErrors };
 
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
@@ -235,6 +301,131 @@ export async function updateDriver(
   revalidatePath("/[locale]/drivers", "page");
   return { ok: true, message: "updated" };
 }
+
+// ─── Expiry reminders ────────────────────────────────────────────────────────
+
+export type ExpiryReminderState = {
+  ok: boolean;
+  error?: string;
+  message?: string;
+  count?: number;
+};
+
+const EXPIRY_DOC_LABELS = [
+  { key: "src_expiry" as const, label: "SRC" },
+  { key: "adr_expiry" as const, label: "ADR" },
+  { key: "psikoteknik_expiry" as const, label: "Psikoteknik" },
+  { key: "green_card_expiry" as const, label: "Yeşil Kart" },
+] satisfies {
+  key: keyof {
+    src_expiry: unknown;
+    adr_expiry: unknown;
+    psikoteknik_expiry: unknown;
+    green_card_expiry: unknown;
+  };
+  label: string;
+}[];
+
+/**
+ * Org içindeki şoförlerin süresi 30 gün içinde dolacak belgelerini bulur
+ * ve admin'e (çağıran kullanıcı) Resend ile özet e-posta gönderir.
+ */
+export async function sendExpiryReminders(
+  _prev: ExpiryReminderState,
+  _formData: FormData,
+): Promise<ExpiryReminderState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) return { ok: false, error: "unauthorized" };
+  if (me.role !== "admin" && me.role !== "dispatcher") {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
+
+  // 1. Org'daki tüm şoförleri getir
+  const { data: drivers, error: driversErr } = await admin
+    .from("users")
+    .select("id, full_name, email")
+    .eq("organization_id", me.organization_id)
+    .eq("role", "driver");
+
+  if (driversErr) return { ok: false, error: driversErr.message };
+  if (!drivers?.length) return { ok: true, message: "no_expiring", count: 0 };
+
+  // 2. Profillerini getir
+  const { data: profiles, error: profErr } = await admin
+    .from("driver_profiles")
+    .select(
+      "user_id, src_expiry, adr_expiry, psikoteknik_expiry, green_card_expiry",
+    )
+    .in(
+      "user_id",
+      drivers.map((d) => d.id),
+    );
+
+  if (profErr) return { ok: false, error: profErr.message };
+
+  // 3. 30 gün içinde dolanları bul
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = new Date(today);
+  cutoff.setDate(cutoff.getDate() + 30);
+  const todayStr = today.toISOString().split("T")[0]!;
+  const cutoffStr = cutoff.toISOString().split("T")[0]!;
+
+  const driverMap = new Map(drivers.map((d) => [d.id, d]));
+
+  const expiring: Array<{
+    driverName: string;
+    docType: string;
+    expiry: string;
+    daysLeft: number;
+  }> = [];
+
+  for (const profile of profiles ?? []) {
+    const driver = driverMap.get(profile.user_id);
+    if (!driver) continue;
+    const driverName = driver.full_name ?? driver.email ?? "—";
+
+    for (const { key, label } of EXPIRY_DOC_LABELS) {
+      const exp = profile[key];
+      if (!exp || exp < todayStr || exp > cutoffStr) continue;
+      const daysLeft = Math.ceil(
+        (new Date(exp + "T00:00:00").getTime() - today.getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+      expiring.push({ driverName, docType: label, expiry: exp, daysLeft });
+    }
+  }
+
+  if (expiring.length === 0)
+    return { ok: true, message: "no_expiring", count: 0 };
+
+  // 4. Org adını getir + e-posta gönder
+  const { data: org } = await admin
+    .from("organizations")
+    .select("name")
+    .eq("id", me.organization_id)
+    .single();
+
+  const adminEmail = me.authEmail;
+  if (!adminEmail) return { ok: false, error: "admin_no_email" };
+
+  const emailPayload = expiryReminderEmail({
+    orgName: org?.name ?? "Lojistik CRM",
+    adminName: me.full_name ?? adminEmail,
+    items: expiring,
+    appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "",
+  });
+
+  const result = await sendEmail({ to: adminEmail, ...emailPayload });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  return { ok: true, message: "sent", count: expiring.length };
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
 
 /** Şoförü siler (auth.users silinince public.users + driver_profiles cascade). */
 export async function deleteDriver(

@@ -6,10 +6,13 @@ import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format-date";
 import { getSignedDocumentUrls } from "@/lib/supabase/storage";
 import { DocumentActions } from "./document-detail-client";
+import { OcrEditForm } from "./ocr-edit-form";
+import type { OcrData } from "@/lib/ocr-types";
 import type {
   Database,
   DocumentType,
   DocumentStatus,
+  OcrStatus,
 } from "@/lib/supabase/database.types";
 
 type DocumentRow = Database["public"]["Tables"]["documents"]["Row"];
@@ -31,7 +34,6 @@ export default async function DocumentDetailPage({
   const t = await getTranslations("DocumentDetail");
   const tdt = await getTranslations("DocumentTypes");
   const tds = await getTranslations("DocumentStatus");
-  const tof = await getTranslations("OcrFields");
   const format = await getFormatter();
   const me = await getCurrentUser();
 
@@ -72,8 +74,12 @@ export default async function DocumentDetailPage({
 
   const ocrData =
     doc.ocr_data && typeof doc.ocr_data === "object"
-      ? (doc.ocr_data as Record<string, string>)
+      ? (doc.ocr_data as OcrData)
       : null;
+
+  // Runtime-safe fallback: migration 0007 eklenmediyse ocr_status null gelebilir.
+  const ocrStatus: OcrStatus =
+    (doc.ocr_status as OcrStatus | null | undefined) ?? "pending";
 
   const canApprove = me.role === "admin" || me.role === "dispatcher";
 
@@ -106,6 +112,8 @@ export default async function DocumentDetailPage({
           documentId={doc.id}
           status={doc.status as DocumentStatus}
           hasOcr={ocrData !== null}
+          ocrStatus={ocrStatus}
+          ocrError={doc.ocr_error}
           canApprove={canApprove}
         />
       </div>
@@ -160,25 +168,13 @@ export default async function DocumentDetailPage({
             </div>
           </div>
 
-          {/* OCR fields */}
-          <div className="rounded-lg border bg-card p-5 space-y-3">
-            <h2 className="font-semibold">{t("ocrTitle")}</h2>
-            {ocrData && Object.keys(ocrData).length > 0 ? (
-              <dl className="space-y-2 text-sm">
-                {Object.entries(ocrData).map(([key, value]) => (
-                  <div key={key} className="flex gap-3">
-                    <dt className="min-w-[10rem] shrink-0 text-muted-foreground">
-                      {tof.has(key)
-                        ? tof(key as Parameters<typeof tof>[0])
-                        : key}
-                    </dt>
-                    <dd className="font-medium break-words">{value ?? "—"}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className="text-sm text-muted-foreground">{t("noOcr")}</p>
-            )}
+          {/* OCR fields — düzenlenebilir form */}
+          <div className="rounded-lg border bg-card p-5">
+            <OcrEditForm
+              documentId={doc.id}
+              ocrData={ocrData}
+              canEdit={canApprove}
+            />
           </div>
         </div>
       </div>

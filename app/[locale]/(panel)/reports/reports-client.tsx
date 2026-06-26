@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Download, FileDown } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +55,65 @@ export function ReportsClient({
     setFrom("");
     setTo("");
     router.push("?");
+  }
+
+  async function exportPdf() {
+    if (driverStats.length === 0) {
+      toast.info(t("noData"));
+      return;
+    }
+    try {
+      // Dynamic import — bundles only when needed
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const today = new Date().toLocaleDateString("tr-TR");
+      const titleStr = `${t("title")} — ${today}`;
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(titleStr, 14, 18);
+
+      // Özet kartları
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `${t("totalTrips")}: ${summary.total}   ${t("completedTrips")}: ${summary.completed}   ${t("activeTrips")}: ${summary.active}`,
+        14,
+        28,
+      );
+
+      // Şoför tablosu
+      autoTable(doc, {
+        startY: 36,
+        head: [
+          [t("colDriver"), t("colTrips"), t("colCompleted"), t("colRate")],
+        ],
+        body: driverStats.map((r) => [
+          r.driverName,
+          r.total,
+          r.completed,
+          `${r.rate}%`,
+        ]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [37, 99, 235] },
+        columnStyles: {
+          1: { halign: "right" },
+          2: { halign: "right" },
+          3: { halign: "right" },
+        },
+      });
+
+      doc.save(`rapor-${today.replace(/\./g, "-")}.pdf`);
+    } catch {
+      toast.error(t("pdfError"));
+    }
   }
 
   function exportCsv() {
@@ -157,11 +216,10 @@ export function ReportsClient({
               type="button"
               variant="outline"
               size="sm"
-              disabled
-              title={t("zipPlaceholder")}
+              onClick={exportPdf}
             >
-              <FileDown className="mr-1.5 size-3.5" />
-              {t("exportZip")}
+              <FileText className="mr-1.5 size-3.5" />
+              {t("exportPdf")}
             </Button>
           </div>
         </div>

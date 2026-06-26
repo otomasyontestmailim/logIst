@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Truck } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { OfflineQueueBadge } from "@/components/offline-queue-badge";
 import { DriverClient } from "./driver-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -83,7 +84,10 @@ export default async function DriverPage() {
           </div>
           <span className="text-sm font-semibold">{tApp("name")}</span>
         </div>
-        <SignOutButton />
+        <div className="flex items-center gap-2">
+          <OfflineQueueBadge />
+          <SignOutButton />
+        </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 p-4 sm:p-6">

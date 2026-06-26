@@ -138,7 +138,12 @@
     "vehicleInfo": "Voertuiginformatie",
     "vehicleModel": "Model",
     "vehicleYear": "Bouwjaar",
-    "capacityTon": "Capaciteit (TON)"
+    "capacityTon": "Capaciteit (TON)",
+    "sendExpiryReminders": "Verloopdatum herinnering sturen",
+    "expiryReminderSending": "Verzenden...",
+    "expiryReminderSent": "Verloopdatum herinnering verzonden voor {count} document(en).",
+    "expiryReminderNone": "Geen documenten die binnen 30 dagen verlopen.",
+    "expiryReminderError": "E-mail verzenden mislukt: {error}"
   },
   "Customers": {
     "title": "Klanten",
@@ -293,11 +298,32 @@
     "noDocuments": "Nog geen documenten.",
     "selectType": "Documenttype",
     "uploadDocument": "Document scannen / uploaden",
-    "addPhoto": "Documentfoto toevoegen",
+    "addPhoto": "Uit galerij kiezen",
+    "scanDocument": "Document scannen",
+    "uploadQueued": "Offline — document wordt geüpload zodra verbinding hersteld is.",
     "detailsTitle": "Details & notities",
     "uploading": "Uploaden...",
     "uploadSuccess": "Document geüpload.",
-    "uploadError": "Uploaden mislukt: {error}"
+    "uploadError": "Uploaden mislukt: {error}",
+    "signatureSaved": "Handtekening opgeslagen — levering ter bevestiging verzonden."
+  },
+  "OfflineQueue": {
+    "pendingTitle": "{count} documenten wachten op upload",
+    "pending": "{count} in wachtrij",
+    "syncing": "Synchroniseren…"
+  },
+  "Scanner": {
+    "ariaLabel": "Documentscanner",
+    "title": "Document scannen",
+    "titleWithScan": "Document scannen (randdetectie)",
+    "openCamera": "Camera openen",
+    "opening": "Camera openen…",
+    "cameraError": "Camera kon niet worden geopend.",
+    "capture": "Foto maken",
+    "retake": "Opnieuw",
+    "use": "Deze foto gebruiken",
+    "retry": "Opnieuw proberen",
+    "close": "Sluiten"
   },
   "DocumentTypes": {
     "cmr": "CMR",
@@ -346,9 +372,11 @@
     "colCompleted": "Voltooid",
     "colRate": "Voltooiingspercentage",
     "exportCsv": "CSV exporteren",
+    "exportPdf": "PDF exporteren",
     "exportZip": "Documenten downloaden (ZIP)",
     "zipPlaceholder": "ZIP-export komt binnenkort.",
-    "noData": "Geen ritten in dit datumbereik."
+    "noData": "Geen ritten in dit datumbereik.",
+    "pdfError": "PDF kon niet worden gegenereerd. Probeer het opnieuw."
   },
   "Notifications": {
     "title": "Meldingen",
@@ -385,7 +413,10 @@
     "org_create_failed": "Organisatie aanmaken mislukt.",
     "ocr_not_configured": "OCR is niet geconfigureerd (geen API-sleutel).",
     "ocr_failed": "OCR mislukt.",
-    "server_misconfigured": "Server is verkeerd geconfigureerd. Neem contact op met uw beheerder."
+    "server_misconfigured": "Server is verkeerd geconfigureerd. Neem contact op met uw beheerder.",
+    "email_invalid": "Voer een geldig e-mailadres in.",
+    "number_invalid": "Voer een geldig getal in.",
+    "required": "Dit veld is verplicht."
   },
   "OcrFields": {
     "sender": "Afzender",
@@ -436,7 +467,15 @@
     "colStatus": "Status",
     "colDate": "Datum",
     "colUploader": "Geüpload door",
-    "viewDocument": "Bekijk"
+    "viewDocument": "Bekijk",
+    "trackingLinkTitle": "Trackinglink",
+    "trackingLinkDesc": "Stuur deze link naar de klant zodat ze de zending kunnen volgen.",
+    "copyTrackingLink": "Kopieer Trackinglink",
+    "trackingLinkCopied": "Link gekopieerd!",
+    "trackingLinkCopiedShort": "Gekopieerd!",
+    "signatureTitle": "Leveringshandtekening",
+    "signatureAlt": "Handtekening ontvanger",
+    "signatureViewFull": "Volledig formaat bekijken →"
   },
   "CustomerDetail": {
     "back": "← Terug naar klanten",
@@ -463,7 +502,16 @@
     "approve": "Goedkeuren",
     "reject": "Afwijzen",
     "ocrRun": "OCR uitvoeren",
-    "ocrRerun": "OCR opnieuw uitvoeren"
+    "ocrRerun": "OCR opnieuw uitvoeren",
+    "ocrEdit": "Bewerken",
+    "ocrSavedToast": "OCR-velden opgeslagen.",
+    "ocrStatus_pending": "OCR: In wachtrij",
+    "ocrStatus_processing": "OCR: Verwerken…",
+    "ocrStatus_done": "OCR: Gereed",
+    "ocrStatus_failed": "OCR: Mislukt",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "cancel": "Annuleren"
   },
   "Settings": {
     "title": "Instellingen",
@@ -525,5 +573,39 @@
     "orgCreatedWarning": "Deel dit wachtwoord met de admin. Het wordt slechts eenmaal getoond.",
     "copyPassword": "Kopiëren",
     "copied": "Gekopieerd!"
+  },
+  "Signature": {
+    "ariaLabel": "Handtekeningveld",
+    "title": "Leveringshandtekening",
+    "instruction": "Vraag de ontvanger om hieronder te tekenen",
+    "clear": "Wissen",
+    "confirm": "Ondertekenen & Leveren",
+    "cancelSign": "Annuleren",
+    "signatureSaved": "Handtekening opgeslagen."
+  },
+  "Tracking": {
+    "status": "Status",
+    "origin": "Vertrekpunt",
+    "destination": "Bestemming",
+    "estimatedDelivery": "Verwachte levering",
+    "lastUpdate": "Laatste update",
+    "driver": "Chauffeur"
+  },
+  "Invoice": {
+    "freightAmount": "Vrachttarief",
+    "currency": "Valuta",
+    "invoiceStatus": "Factuurstatus",
+    "draft": "Concept",
+    "sent": "Verzonden",
+    "paid": "Betaald",
+    "downloadPdf": "Factuur PDF downloaden"
+  },
+  "PwaInstall": {
+    "ariaLabel": "App installeren",
+    "title": "App installeren",
+    "description": "Voeg Logistiek CRM toe aan uw startscherm voor snellere toegang.",
+    "iosInstructions": "Tik in Safari op delen (⬆) → 'Zet op beginscherm'.",
+    "installButton": "Installeren",
+    "dismiss": "Sluiten"
   }
 }

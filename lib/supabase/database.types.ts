@@ -24,6 +24,7 @@ export type DocumentType =
   | "customs"
   | "delivery_note";
 export type DocumentStatus = "pending" | "approved" | "rejected";
+export type OcrStatus = "pending" | "processing" | "done" | "failed";
 export type CustomerType = "shipper" | "consignee" | "both";
 
 // JSON yardımcı tipi (ocr_data jsonb için)
@@ -157,6 +158,15 @@ export type Database = {
           distance_km: number | null;
           notes: string | null;
           created_at: string;
+          // ePOD (0008)
+          delivery_signature_url: string | null;
+          delivered_at: string | null;
+          // Tracking link (0009)
+          tracking_token: string | null;
+          // Freight & invoice (0010)
+          freight_amount: number | null;
+          freight_currency: string | null;
+          invoice_status: string | null;
         };
         Insert: {
           id?: string;
@@ -176,6 +186,12 @@ export type Database = {
           distance_km?: number | null;
           notes?: string | null;
           created_at?: string;
+          delivery_signature_url?: string | null;
+          delivered_at?: string | null;
+          tracking_token?: string | null;
+          freight_amount?: number | null;
+          freight_currency?: string | null;
+          invoice_status?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["trips"]["Insert"]>;
         Relationships: [];
@@ -190,6 +206,8 @@ export type Database = {
           file_url: string;
           page_count: number;
           ocr_data: Json | null;
+          ocr_status: OcrStatus;
+          ocr_error: string | null;
           status: DocumentStatus;
           captured_at: string | null;
           created_at: string;
@@ -203,6 +221,8 @@ export type Database = {
           file_url: string;
           page_count?: number;
           ocr_data?: Json | null;
+          ocr_status?: OcrStatus;
+          ocr_error?: string | null;
           status?: DocumentStatus;
           captured_at?: string | null;
           created_at?: string;

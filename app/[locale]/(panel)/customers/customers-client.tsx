@@ -109,6 +109,8 @@ function CustomerForm({
     initialState,
   );
 
+  const fe = state.fieldErrors ?? {};
+
   useEffect(() => {
     if (
       state.ok &&
@@ -143,6 +145,7 @@ function CustomerForm({
           label={t("name")}
           required
           defaultValue={customer?.name}
+          error={fe.name ? errText(fe.name) : undefined}
         />
         <Field
           name="contact"
@@ -197,12 +200,14 @@ function Field({
   type = "text",
   required = false,
   defaultValue,
+  error,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
   defaultValue?: string | null;
+  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -216,7 +221,18 @@ function Field({
         type={type}
         required={required}
         defaultValue={defaultValue ?? undefined}
+        aria-invalid={!!error}
+        className={
+          error
+            ? "border-destructive focus-visible:ring-destructive"
+            : undefined
+        }
       />
+      {error && (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

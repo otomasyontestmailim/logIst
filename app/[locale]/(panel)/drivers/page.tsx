@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { ExportButton } from "@/components/export-button";
 import { Link } from "@/i18n/navigation";
+import { Pagination } from "@/components/pagination";
 import type { Database } from "@/lib/supabase/database.types";
 import { DriversClient, type DriverRow } from "./drivers-client";
 
@@ -11,19 +12,31 @@ type UserRow = Pick<
 >;
 type ProfileRow = Database["public"]["Tables"]["driver_profiles"]["Row"];
 
-export default async function DriversPage() {
+const PAGE_SIZE = 25;
+
+export default async function DriversPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const t = await getTranslations("Drivers");
   const tc = await getTranslations("Common");
   const supabase = await createClient();
+  const { page: pageStr } = await searchParams;
+  const page = Math.max(1, parseInt(pageStr ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   // RLS, listeyi otomatik olarak giriş yapan admin'in firmasıyla sınırlar.
-  const { data: users } = await supabase
+  const { data: users, count } = await supabase
     .from("users")
-    .select("id, full_name, email, phone, created_at")
+    .select("id, full_name, email, phone, created_at", { count: "exact" })
     .eq("role", "driver")
     .order("created_at", { ascending: false })
+    .range(from, to)
     .returns<UserRow[]>();
 
+  const total = count ?? 0;
   const ids = (users ?? []).map((u) => u.id);
   let profiles: ProfileRow[] = [];
   if (ids.length > 0) {
@@ -78,6 +91,7 @@ export default async function DriversPage() {
         </div>
       </div>
       <DriversClient drivers={drivers} />
+      <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
     </main>
   );
 }

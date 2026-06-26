@@ -41,6 +41,8 @@ type UserRow = Pick<
 const initialState: TripFormState = { ok: false };
 
 const LOADING_TYPES = ["palletized", "bulk", "parcel", "other"] as const;
+const CURRENCIES = ["EUR", "USD", "TRY"] as const;
+const INVOICE_STATUSES = ["draft", "sent", "paid"] as const;
 
 export function TripsClient({
   trips,
@@ -165,12 +167,15 @@ function TripForm({
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
   const tlt = useTranslations("LoadingTypes");
+  const ti = useTranslations("Invoice");
   const errText = useErrorText();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
     trip ? updateTrip : createTrip,
     initialState,
   );
+
+  const fe = state.fieldErrors ?? {};
 
   useEffect(() => {
     if (
@@ -204,12 +209,14 @@ function TripForm({
           label={t("origin")}
           required
           defaultValue={trip?.origin}
+          error={fe.origin ? errText(fe.origin) : undefined}
         />
         <Field
           name="destination"
           label={t("destination")}
           required
           defaultValue={trip?.destination}
+          error={fe.destination ? errText(fe.destination) : undefined}
         />
 
         <div className="space-y-1.5">
@@ -305,6 +312,45 @@ function TripForm({
           defaultValue={trip?.distance_km?.toString()}
         />
 
+        <Field
+          name="freight_amount"
+          label={ti("freightAmount")}
+          type="number"
+          defaultValue={trip?.freight_amount?.toString()}
+        />
+
+        <div className="space-y-1.5">
+          <Label htmlFor="freight_currency">{ti("currency")}</Label>
+          <select
+            id="freight_currency"
+            name="freight_currency"
+            defaultValue={trip?.freight_currency ?? "EUR"}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="invoice_status">{ti("invoiceStatus")}</Label>
+          <select
+            id="invoice_status"
+            name="invoice_status"
+            defaultValue={trip?.invoice_status ?? "draft"}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {INVOICE_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {ti(s)}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
           <Label htmlFor="notes">{t("notes")}</Label>
           <textarea
@@ -357,12 +403,14 @@ function Field({
   type = "text",
   required = false,
   defaultValue,
+  error,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
   defaultValue?: string | null;
+  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -376,7 +424,18 @@ function Field({
         type={type}
         required={required}
         defaultValue={defaultValue ?? undefined}
+        aria-invalid={!!error}
+        className={
+          error
+            ? "border-destructive focus-visible:ring-destructive"
+            : undefined
+        }
       />
+      {error && (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

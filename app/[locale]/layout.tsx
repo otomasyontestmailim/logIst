@@ -4,6 +4,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaRegister } from "@/components/pwa-register";
+import { PwaInstallBanner } from "@/components/pwa-install-banner";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -20,6 +22,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Lojistik CRM",
   description: "Şoför belge ve sefer yönetimi",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Lojistik",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export function generateStaticParams() {
@@ -48,6 +63,8 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           {children}
           <Toaster />
+          <PwaRegister />
+          <PwaInstallBanner />
         </NextIntlClientProvider>
       </body>
     </html>

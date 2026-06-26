@@ -5,26 +5,10 @@ import type AnthropicSDK from "@anthropic-ai/sdk";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { DOCUMENTS_BUCKET } from "@/lib/supabase/storage";
 import type { DocumentType } from "@/lib/supabase/database.types";
+import { OCR_FIELDS, type OcrData } from "@/lib/ocr-types";
 
-// OCR ile çıkarılacak alanlar. Tümü string; bulunamayan alan "" döner.
-// (Yapılandırılmış çıktı şeması strict olduğu için tüm alanlar required.)
-export const OCR_FIELDS = [
-  "sender",
-  "receiver",
-  "sender_address",
-  "receiver_address",
-  "document_number",
-  "document_date",
-  "total_amount",
-  "currency",
-  "gross_weight",
-  "package_count",
-  "plate",
-  "summary",
-] as const;
-
-export type OcrField = (typeof OCR_FIELDS)[number];
-export type OcrData = Record<OcrField, string>;
+export type { OcrField, OcrData } from "@/lib/ocr-types";
+export { OCR_FIELDS };
 
 // Belge tipine göre modele kısa ipucu (hangi alanlar öne çıkar).
 const TYPE_HINTS: Record<DocumentType, string> = {
@@ -113,13 +97,15 @@ export async function extractDocumentFields(
 
 /**
  * Bir belge kaydı için OCR çalıştırır ve `documents.ocr_data`'yı günceller.
- * En iyi çaba: hata yutulur, ana akışı bloklamaz. Başarıyı boolean döndürür.
+ * ocr_status: pending → processing → done | failed
+ * Başarıyı boolean döndürür.
  */
 export async function runOcrForDocument(documentId: string): Promise<boolean> {
   if (!process.env.ANTHROPIC_API_KEY) return false;
 
   const admin = adminClientOrNull();
   if (!admin) return false;
+
   const { data: doc } = await admin
     .from("documents")
     .select("id, type, file_url")
@@ -127,13 +113,25 @@ export async function runOcrForDocument(documentId: string): Promise<boolean> {
     .single();
   if (!doc) return false;
 
+  // Durum: işleniyor
+  await admin
+    .from("documents")
+    .update({ ocr_status: "processing", ocr_error: null })
+    .eq("id", documentId);
+
   const ext = doc.file_url.split(".").pop()?.toLowerCase() ?? "jpg";
   const mediaType = MEDIA_BY_EXT[ext] ?? "image/jpeg";
 
   const { data: file } = await admin.storage
     .from(DOCUMENTS_BUCKET)
     .download(doc.file_url);
-  if (!file) return false;
+  if (!file) {
+    await admin
+      .from("documents")
+      .update({ ocr_status: "failed", ocr_error: "Dosya indirilemedi." })
+      .eq("id", documentId);
+    return false;
+  }
 
   const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
 
@@ -141,14 +139,35 @@ export async function runOcrForDocument(documentId: string): Promise<boolean> {
   try {
     fields = await extractDocumentFields(base64, mediaType, doc.type);
   } catch (err) {
+    const msg = err instanceof Error ? err.message : "Bilinmeyen hata";
     console.error("[ocr] çıkarım hatası:", err);
+    await admin
+      .from("documents")
+      .update({ ocr_status: "failed", ocr_error: msg })
+      .eq("id", documentId);
     return false;
   }
-  if (!fields) return false;
+
+  if (!fields) {
+    await admin
+      .from("documents")
+      .update({ ocr_status: "failed", ocr_error: "Alan çıkarımı başarısız." })
+      .eq("id", documentId);
+    return false;
+  }
 
   const { error } = await admin
     .from("documents")
-    .update({ ocr_data: fields })
+    .update({ ocr_data: fields, ocr_status: "done", ocr_error: null })
     .eq("id", documentId);
-  return !error;
+
+  if (error) {
+    await admin
+      .from("documents")
+      .update({ ocr_status: "failed", ocr_error: error.message })
+      .eq("id", documentId);
+    return false;
+  }
+
+  return true;
 }

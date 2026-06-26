@@ -9,22 +9,40 @@ import {
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { ArrowRight, Camera, ChevronDown, ImagePlus } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  ChevronDown,
+  ImagePlus,
+  ScanText,
+} from "lucide-react";
 import { MapView } from "@/components/map/map-view";
 import { StopsTimeline } from "@/components/stops-timeline";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image";
+import { useUploadQueue } from "@/lib/use-upload-queue";
 import { formatDate } from "@/lib/format-date";
 import { updateTripStatus, type TripFormState } from "../(panel)/trips/actions";
 import {
-  createDocument,
   rejectTrip,
   reportLocation,
+  saveDeliverySignature,
   type DocumentFormState,
 } from "./actions";
 import { DRIVER_NEXT_STATUS, STATUS_CLASSES } from "@/lib/trip-status";
+import { createClient } from "@/lib/supabase/client";
+import { SignaturePad } from "@/components/signature-pad";
+import dynamic from "next/dynamic";
+
+// Scanner büyük (OpenCV.js) — yalnızca açıldığında yükle
+const DocumentScanner = dynamic(
+  () =>
+    import("@/components/document-scanner").then((m) => ({
+      default: m.DocumentScanner,
+    })),
+  { ssr: false },
+);
 import type {
   Database,
   DocumentType,
@@ -157,6 +175,8 @@ function TripCard({
     rejectTrip,
     docInitial,
   );
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [signaturePending, setSignaturePending] = useState(false);
 
   useEffect(() => {
     if (statusState.ok && statusState.message === "updated") {
@@ -230,20 +250,61 @@ function TripCard({
         </div>
       </div>
 
+      {showSignaturePad && (
+        <SignaturePad
+          onClose={() => setShowSignaturePad(false)}
+          onConfirm={async (blob) => {
+            setSignaturePending(true);
+            try {
+              const supabase = createClient();
+              const filePath = `${organizationId}/${trip.id}/signature.png`;
+              const { error: storErr } = await supabase.storage
+                .from("documents")
+                .upload(filePath, blob, {
+                  contentType: "image/png",
+                  upsert: true,
+                });
+              if (storErr) {
+                toast.error(t("errorToast", { error: storErr.message }));
+                return;
+              }
+              const result = await saveDeliverySignature(trip.id, filePath);
+              if (result.ok) {
+                toast.success(t("signatureSaved"));
+                setShowSignaturePad(false);
+              } else {
+                toast.error(
+                  t("errorToast", { error: result.error ?? "unknown" }),
+                );
+              }
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : "upload_failed";
+              toast.error(t("errorToast", { error: msg }));
+            } finally {
+              setSignaturePending(false);
+            }
+          }}
+        />
+      )}
+
       {next && nextLabelKey && (
         <div className="flex gap-2">
           <Button
             className="flex-1"
             size="lg"
-            disabled={statusPending || rejectPending}
+            disabled={statusPending || rejectPending || signaturePending}
             onClick={() => {
+              if (trip.status === "delivering") {
+                setShowSignaturePad(true);
+                return;
+              }
               const fd = new FormData();
               fd.set("trip_id", trip.id);
               fd.set("status", next);
               startTransition(() => statusAction(fd));
             }}
           >
-            {statusPending ? t("saving") : t(nextLabelKey)}
+            {statusPending || signaturePending ? t("saving") : t(nextLabelKey)}
           </Button>
           {trip.status === "driver_approval" && (
             <Button
@@ -341,47 +402,44 @@ function DocumentSection({
   const fileRef = useRef<HTMLInputElement>(null);
   const [docType, setDocType] = useState<DocumentType>("cmr");
   const [uploading, setUploading] = useState(false);
-  const [docState, docAction, docPending] = useActionState(
-    createDocument,
-    docInitial,
-  );
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const { upload } = useUploadQueue();
 
-  useEffect(() => {
-    if (docState.ok && docState.message === "created") {
-      toast.success(t("uploadSuccess"));
-    } else if (!docState.ok && docState.error) {
-      toast.error(t("uploadError", { error: docState.error }));
+  async function uploadBlob(blob: Blob) {
+    setUploading(true);
+    try {
+      const result = await upload({
+        blob,
+        tripId: trip.id,
+        organizationId,
+        docType,
+      });
+      if (result === "queued") {
+        toast.info(t("uploadQueued"));
+      } else {
+        toast.success(t("uploadSuccess"));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "upload_failed";
+      toast.error(t("uploadError", { error: msg }));
+    } finally {
+      setUploading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docState]);
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      const blob = await compressImage(file);
-      const supabase = createClient();
-      const path = `${organizationId}/${trip.id}/${crypto.randomUUID()}.jpg`;
-      const { error } = await supabase.storage
-        .from("documents")
-        .upload(path, blob, { contentType: "image/jpeg" });
-      if (error) {
-        toast.error(t("uploadError", { error: error.message }));
-        return;
-      }
-      const fd = new FormData();
-      fd.set("trip_id", trip.id);
-      fd.set("type", docType);
-      fd.set("file_path", path);
-      startTransition(() => docAction(fd));
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
+    const blob = await compressImage(file);
+    await uploadBlob(blob);
+    if (fileRef.current) fileRef.current.value = "";
   }
 
-  const busy = uploading || docPending;
+  async function handleScanCapture(blob: Blob) {
+    await uploadBlob(blob);
+  }
+
+  const busy = uploading;
 
   return (
     <div className="space-y-3">
@@ -431,20 +489,45 @@ function DocumentSection({
           className="hidden"
           onChange={handleFile}
         />
-        {/* SoforFatura ekranındaki gibi fotoğraf ekleme kutusu */}
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-6 text-sm text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
-        >
-          {busy ? (
-            <Camera className="size-6 animate-pulse" />
-          ) : (
-            <ImagePlus className="size-6" />
-          )}
-          {busy ? t("uploading") : t("addPhoto")}
-        </button>
+
+        {/* Tarama + galeri butonları */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setScannerOpen(true)}
+            className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-5 text-sm text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            {busy ? (
+              <Camera className="size-6 animate-pulse" />
+            ) : (
+              <ScanText className="size-6" />
+            )}
+            {busy ? t("uploading") : t("scanDocument")}
+          </button>
+
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+            className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input p-5 text-sm text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            {busy ? (
+              <Camera className="size-6 animate-pulse" />
+            ) : (
+              <ImagePlus className="size-6" />
+            )}
+            {busy ? t("uploading") : t("addPhoto")}
+          </button>
+        </div>
+
+        {/* Kenar tespitli tarayıcı modal */}
+        {scannerOpen && (
+          <DocumentScanner
+            onCapture={handleScanCapture}
+            onClose={() => setScannerOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

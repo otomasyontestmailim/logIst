@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { vRequired, hasErrors, type FieldErrors } from "@/lib/validate";
 
 export type CustomerFormState = {
   ok: boolean;
   error?: string;
   message?: string;
+  fieldErrors?: FieldErrors;
 };
 
 function nn(v: FormDataEntryValue | null): string | null {
@@ -29,7 +31,11 @@ export async function createCustomer(
   }
 
   const name = nn(formData.get("name"));
-  if (!name) return { ok: false, error: "name_required" };
+  const createCustErrors: FieldErrors = {};
+  const nameErr = vRequired(name, "name_required");
+  if (nameErr) createCustErrors.name = nameErr;
+  if (hasErrors(createCustErrors))
+    return { ok: false, fieldErrors: createCustErrors };
 
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
@@ -37,7 +43,7 @@ export async function createCustomer(
     .from("customers")
     .insert({
       organization_id: me.organization_id,
-      name,
+      name: name!,
       type: (nn(formData.get("type")) ?? "both") as
         | "both"
         | "shipper"
@@ -78,7 +84,11 @@ export async function updateCustomer(
   const customerId = nn(formData.get("customer_id"));
   const name = nn(formData.get("name"));
   if (!customerId) return { ok: false, error: "id_required" };
-  if (!name) return { ok: false, error: "name_required" };
+  const updateCustErrors: FieldErrors = {};
+  const updNameErr = vRequired(name, "name_required");
+  if (updNameErr) updateCustErrors.name = updNameErr;
+  if (hasErrors(updateCustErrors))
+    return { ok: false, fieldErrors: updateCustErrors };
 
   const admin = adminClientOrNull();
   if (!admin) return { ok: false, error: "server_misconfigured" };
@@ -98,7 +108,7 @@ export async function updateCustomer(
   const { error } = await admin
     .from("customers")
     .update({
-      name,
+      name: name ?? undefined,
       type: (nn(formData.get("type")) ?? "both") as
         | "both"
         | "shipper"

@@ -119,6 +119,8 @@ function DriverForm({
     initialState,
   );
 
+  const fe = state.fieldErrors ?? {};
+
   useEffect(() => {
     if (
       state.ok &&
@@ -152,6 +154,7 @@ function DriverForm({
           name="full_name"
           label={t("fullName")}
           defaultValue={driver?.full_name}
+          error={fe.full_name ? errText(fe.full_name) : undefined}
         />
         {driver ? (
           <div className="space-y-1.5">
@@ -164,7 +167,13 @@ function DriverForm({
             />
           </div>
         ) : (
-          <Field name="email" label={t("email")} type="email" required />
+          <Field
+            name="email"
+            label={t("email")}
+            type="email"
+            required
+            error={fe.email ? errText(fe.email) : undefined}
+          />
         )}
         <Field name="phone" label={t("phone")} defaultValue={driver?.phone} />
         <Field
@@ -212,12 +221,14 @@ function DriverForm({
           label={t("vehicleYear")}
           type="number"
           defaultValue={p?.vehicle_year?.toString()}
+          error={fe.vehicle_year ? errText(fe.vehicle_year) : undefined}
         />
         <Field
           name="capacity_ton"
           label={t("capacityTon")}
           type="number"
           defaultValue={p?.capacity_ton?.toString()}
+          error={fe.capacity_ton ? errText(fe.capacity_ton) : undefined}
         />
         {!driver && (
           <div className="space-y-1.5">
@@ -259,12 +270,14 @@ function Field({
   type = "text",
   required = false,
   defaultValue,
+  error,
 }: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
   defaultValue?: string | null;
+  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -278,7 +291,18 @@ function Field({
         type={type}
         required={required}
         defaultValue={defaultValue ?? undefined}
+        aria-invalid={!!error}
+        className={
+          error
+            ? "border-destructive focus-visible:ring-destructive"
+            : undefined
+        }
       />
+      {error && (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

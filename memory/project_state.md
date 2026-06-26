@@ -1,33 +1,38 @@
 # Proje Durumu — Lojistik CRM
 
-> Son güncelleme: 2026-06-25 · Session başında oku, sonda güncelle.
+> Son güncelleme: 2026-06-26 (ikinci session) · Session başında oku, sonda güncelle.
 
 ---
 
 ## Tamamlanan Fazlar
 
-| Faz | Açıklama                                                             | Durum |
-| --- | -------------------------------------------------------------------- | ----- |
-| 0   | Next.js + Tailwind + shadcn + Supabase kurulum                       | ✓     |
-| 1   | Şoför yönetimi (CRUD + belge süre rozetleri)                         | ✓     |
-| 2   | Müşteri + Sefer yönetimi                                             | ✓     |
-| 2.5 | TIRPORT pipeline (7 aşama, harita, canlı konum)                      | ✓     |
-| 3   | Şoför mobil (PWA) belge yükleme — basit upload ✓, jscanify/offline ✗ | Kısmi |
-| 4   | Belge gelen kutusu + onay/red + Claude Vision OCR (`lib/ocr.ts`)     | ✓     |
-| 5   | Belge süresi uyarıları, CSV/ZIP dışa aktarma, audit log              | Kısmi |
+| Faz | Açıklama                                                                 | Durum |
+| --- | ------------------------------------------------------------------------ | ----- |
+| 0   | Next.js + Tailwind + shadcn + Supabase kurulum                           | ✓     |
+| 1   | Şoför yönetimi (CRUD + belge süre rozetleri)                             | ✓     |
+| 2   | Müşteri + Sefer yönetimi                                                 | ✓     |
+| 2.5 | TIRPORT pipeline (7 aşama, harita, canlı konum)                          | ✓     |
+| 3   | Şoför mobil (PWA) belge yükleme — upload ✓, jscanify ✓, offline kuyruk ✓ | ✓     |
+| 4   | Belge gelen kutusu + onay/red + Claude Vision OCR (`lib/ocr.ts`)         | ✓     |
+| 5   | Belge süresi uyarıları, CSV/ZIP dışa aktarma, audit log                  | Kısmi |
 
 ---
 
 ## Aktif Teknik Borçlar
 
-- [ ] jscanify / kamera kenar-tespit (Faz 3 tam)
-- [ ] Offline kuyruğu (IndexedDB + background sync)
+- [x] jscanify / kamera kenar-tespit ✓ (`components/document-scanner.tsx`, CDN lazy load)
+- [x] Offline kuyruğu ✓ (`lib/upload-queue.ts`, `lib/use-upload-queue.ts`, `/api/documents/queue-flush`)
 - [x] OCR: Claude Vision → `documents.ocr_data` — `lib/ocr.ts` + `extractDocument` action ✓
-- [ ] PDF rapor (Faz 5)
-- [ ] Şoför davet/onboarding akışı
-- [ ] E-posta SMTP yapılandırması
-- [ ] Zod şema + inline alan hataları; liste pagination
+- [x] OCR durum takibi: `ocr_status` (pending/processing/done/failed) — `lib/ocr.ts` status güncellemeleri + `/documents/[id]` rozet + spinner ✓
+- [x] OCR alan düzenleme: `OcrEditForm` + `saveOcrData` action — belge detay sayfasında inline düzenleme + kaydetme ✓
+- [x] PDF rapor — `jspdf` + `jspdf-autotable` client-side, "PDF Dışa Aktar" butonu `reports-client.tsx` ✓ (npm install gerekli)
+- [x] E-posta SMTP — Resend entegrasyonu `lib/email.ts` ✓ (RESEND_API_KEY + npm install gerekli)
+- [x] Zod şema + inline alan hataları — `lib/validate.ts` + `fieldErrors` pattern, 3 form ✓
+- [x] Liste pagination — drivers/trips/customers/documents, server-side, URL param ✓
 - [ ] Süper admin firma açma / abonelik yönetimi UI
+- [x] npm install çalıştırılmalı (resend + jspdf + jspdf-autotable paketi eklendi)
+- [x] `sendExpiryReminders()` server action — `drivers/actions.ts`; `expiryReminderEmail()` template — `lib/email.ts`; 3 dil i18n ✓
+- [ ] **Migration 0007** — Supabase SQL Editor'dan uygulanmalı (postgres MCP read-only; DB_URL yok)
 
 ---
 
@@ -163,11 +168,90 @@ Tüm panel ekranları tamamlandıktan sonra aşağıdaki özellikler eklendi:
 
 - 3 dil (tr/en/nl) — `Dashboard`, `Nav`, `Drivers`, `Documents`, `Reports`, `Notifications` namespace'leri genişletildi
 
-## Sıradaki Öncelikler (Faz seçimi)
+## Session (2026-06-26, üçüncü) — ePOD + Tracking + Fatura PDF
 
-1. **jscanify kamera tarama** (Faz 3 tamamlama)
-2. **Offline kuyruğu** (Faz 3 tamamlama — karmaşık, son sıraya)
-3. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç (radarda)
+**3 yeni özellik eklendi, npm run check ✓ temiz:**
+
+### Özellik 1 — ePOD (Dijital Teslimat İmzası)
+
+- `supabase/migrations/0008_epod.sql` — trips'e delivery_signature_url + delivered_at
+- `components/signature-pad.tsx` — canvas tabanlı dokunmatik imza pedi (touch/mouse, Temizle/Onayla)
+- `app/[locale]/driver/actions.ts` — `saveDeliverySignature()` ekle (delivering→delivery_approval + URL kaydet + audit)
+- `app/[locale]/driver/driver-client.tsx` — "Teslim Ettim" butonu artık SignaturePad açıyor; imzayı Storage'a (`{org}/{trip}/signature.png`) yükleyip action çağırıyor
+- `trips/[id]/page.tsx` — delivery_signature_url için imzalı URL + org verisi fetch
+- `trips/[id]/trip-detail-client.tsx` — imza önizlemesi + tam boy link (sağ kenar çubuğu)
+- `Signature` namespace: 3 dil (tr/en/nl)
+
+### Özellik 2 — Müşteri Takip Linki
+
+- `supabase/migrations/0009_tracking.sql` — trips'e tracking_token UUID + unique index
+- `app/track/[token]/page.tsx` — auth gerektirmeyen public sayfa (service-role bypass); durum, güzergah, tarih, şoför adı (soyad gizli); Türkçe/İngilizce karışık tasarım
+- `trips/[id]/trip-detail-client.tsx` — "Takip Linkini Kopyala" butonu (navigator.clipboard + toast), sağ kenar çubuğunda
+- `TripDetail` namespace'e tracking anahtarları: 3 dil
+
+### Özellik 3 — Navlun Ücreti & Fatura PDF
+
+- `supabase/migrations/0010_freight.sql` — freight_amount, freight_currency (default EUR), invoice_status (draft/sent/paid)
+- `trips/actions.ts` — cargoFields() freight alanlarını topluyor
+- `trips/trips-client.tsx` — TripForm'a freight_amount, freight_currency, invoice_status alanları eklendi
+- `lib/invoice-pdf.ts` — jsPDF + jspdf-autotable ile client-side fatura PDF üretimi (firma, müşteri, güzergah, navlun + KDV %0 satırları, INV-{tripId} no)
+- `trips/[id]/page.tsx` — freight alanları + org bilgisi client'a iletiliyor
+- `trips/[id]/trip-detail-client.tsx` — cargo bölümünde freight/durum + "Fatura PDF İndir" butonu (dynamic import)
+- `Invoice` namespace: 3 dil
+
+---
+
+## Session (2026-06-26) — OCR + PWA
+
+**Grup B — OCR entegrasyon tamamlandı:**
+
+- `lib/ocr.ts`: `runOcrForDocument` artık `ocr_status` (pending→processing→done/failed) güncelliyor
+- `/documents/[id]`: OCR durum rozeti + spinner + `OcrEditForm` inline düzenleme
+- `saveOcrData` server action eklendi (`documents/actions.ts`)
+- 3 dil güncellendi
+
+**Grup C — PWA güçlendirme:**
+
+- `app/manifest.ts` + `app/icon.tsx` + `app/apple-icon.tsx` — Next.js ImageResponse ile otomatik ikonlar
+- `app/pwa-icon-192/route.tsx` + `app/pwa-icon-512/route.tsx` — 192/512px PNG ikonlar
+- `public/sw.js` — Service worker (cache-first statik, network-first dinamik, offline fallback)
+- `app/offline/page.tsx` — offline fallback sayfası
+- `components/pwa-register.tsx` — SW kayıt bileşeni
+- `components/pwa-install-banner.tsx` — "Ana ekrana ekle" banner (Android native + iOS manual)
+- `layout.tsx` güncellemeleri: PwaRegister + PwaInstallBanner + meta tags
+
+**jscanify kamera tarama (Grup C devam):**
+
+- `package.json`: `jscanify ^1.2.0` eklendi (npm install gerekli)
+- `components/document-scanner.tsx`: getUserMedia + gerçek zamanlı edge highlight + extract
+  - OpenCV.js + jscanify CDN'den lazy yüklenir; yoksa ham kare kullanılır (progressive)
+  - State: idle → opening → scanning → captured → (confirm/retry)
+- `driver-client.tsx`: DocumentScanner dynamic import, "Belge Tara" + "Galeriden Seç" iki buton grid
+- 3 dil `Scanner` namespace eklendi
+
+**Offline IndexedDB upload kuyruğu (Grup C devam):**
+
+- `lib/upload-queue.ts` — IndexedDB CRUD (enqueue, getPending, updateEntry, cleanDone)
+- `lib/use-upload-queue.ts` — React hook: online→direkt yükle, offline→kuyruğa ekle, flush on online
+- `lib/use-queue-count.ts` — sadece sayı okuyan, flush tetiklemeyen hook (badge için)
+- `app/api/documents/queue-flush/route.ts` — POST endpoint: Storage'a yükleme sonrası DB kaydı
+- `components/offline-queue-badge.tsx` — bekleyen yükleme rozeti (şoför başlığı)
+- `app/offline/offline-client.tsx` + `app/offline/page.tsx` — offline fallback sayfası
+- driver-client.tsx: `useUploadQueue()` entegrasyonu, `uploadQueued` toast
+- 3 dil `OfflineQueue` namespace eklendi
+
+## Sıradaki Öncelikler
+
+1. **Migration 0007–0010** Supabase SQL Editor'dan uygula
+2. **Git push** kullanıcı onayıyla
+3. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç
+
+### Build düzeltmeleri (2026-06-26)
+
+- `jspdf-autotable` → `^3.8.4` (3.8.5 npm'de yok)
+- `customers/actions.ts`: `name!` (insert) + `name ?? undefined` (update) TS hatası giderildi
+- `lib/ocr-types.ts` (YENİ): `OCR_FIELDS`/`OcrField`/`OcrData` client-safe dosyaya taşındı
+- `ocr-edit-form.tsx` + `documents/[id]/page.tsx`: `@/lib/ocr` → `@/lib/ocr-types`
 
 ---
 
