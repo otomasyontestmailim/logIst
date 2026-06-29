@@ -266,20 +266,35 @@ Tüm panel ekranları tamamlandıktan sonra aşağıdaki özellikler eklendi:
 
 **Kurulum:** `cd apps/mobile && npm install --legacy-peer-deps` ✓ (911 paket)
 
-**Sıradaki Adımlar (mobil):**
+### Mobil build düzeltmeleri (2026-06-29) — APK Android'de ÇALIŞIYOR ✓
 
-1. `apps/mobile/.env` oluştur (EXPO_PUBLIC_SUPABASE_URL + ANON_KEY)
-2. `npx eas login` → `npx eas build:configure`
-3. `npx expo start --android` ile lokal test
-4. `npx eas build --platform android --profile preview` → APK
-5. Test → `--profile production` → Play Store iç test
+EAS preview APK üretildi, gerçek Android cihazda **giriş + akış sorunsuz test edildi**.
+Yol boyunca çözülen sorunlar:
+
+- `react`/`react-native`/`async-storage`/`netinfo` versiyonları Expo SDK 52'ye sabitlendi
+- `react-native-web` + `react-dom@18.3.1` eklendi (web bundler + react 18 uyumu)
+- `.npmrc` `legacy-peer-deps=true` (EAS strict npm install için)
+- `eas.json`: `buildType: app-bundle`, iOS submit boş alanlar kaldırıldı
+- **KRİTİK:** `.env` gitignore'da → EAS build'i alamıyor → APK'da boş Supabase env →
+  createClient çöküp splash'te takılıyordu. Çözüm: public URL+anon key `eas.json`'ın
+  her build profiline `env` olarak gömüldü (commit f3cb0eb)
+- `app.json`: web platform bölümü kaldırıldı (Android-only)
+
+**iOS notu:** Fiziksel iPhone'a kurulum için Apple Developer ($99/yıl) ŞART. Ücretsiz
+tek yol Expo Go (geliştirme PC'si + telefon ağ erişimi gerekir). VM'de tunnel patlıyor.
+
+### Mobil — kalan iş / iyileştirme fikirleri
+
+- [ ] Gerçek app icon + splash (şu an 1x1 placeholder PNG)
+- [ ] Push bildirim (yeni sefer atandığında) — expo-notifications
+- [ ] Belge tarama kenar-tespiti (şu an düz kamera/galeri)
+- [ ] Realtime güncelleme (supabase realtime) — şu an sadece pull-to-refresh
+- [ ] i18n (şu an sadece TR hardcoded)
 
 ## Sıradaki Öncelikler
 
 1. **Migration 0007–0010** Supabase SQL Editor'dan uygula
-2. **Git push** kullanıcı onayıyla
-3. **Mobil test:** `.env` oluştur → `expo start --android`
-4. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç
+2. **dev/prod ayrı Supabase** — gerçek müşteri verisinden ÖNCE çözülecek borç
 
 ### Build düzeltmeleri (2026-06-26)
 
