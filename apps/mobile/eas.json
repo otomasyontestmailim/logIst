@@ -5,7 +5,11 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase.qratix.com",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgxMzA4ODAwLCJleHAiOjIwOTY2Njg4MDB9.2_GHRKPL2RJYYoDa6Ap3FF0ZW94SQ_Q7JrEEjKDGGVM"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -14,6 +18,10 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase.qratix.com",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgxMzA4ODAwLCJleHAiOjIwOTY2Njg4MDB9.2_GHRKPL2RJYYoDa6Ap3FF0ZW94SQ_Q7JrEEjKDGGVM"
       }
     },
     "production": {
@@ -22,6 +30,10 @@
       },
       "ios": {
         "autoIncrement": true
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase.qratix.com",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgxMzA4ODAwLCJleHAiOjIwOTY2Njg4MDB9.2_GHRKPL2RJYYoDa6Ap3FF0ZW94SQ_Q7JrEEjKDGGVM"
       }
     }
   },
