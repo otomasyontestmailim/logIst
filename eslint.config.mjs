@@ -38,6 +38,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Impeccable design skill bundle (vendored scripts; not project source).
     ".claude/**",
+    // Expo mobil uygulama — kendi ESLint/TS yapılandırması var (apps/mobile).
+    "apps/**",
   ]),
 ]);
 

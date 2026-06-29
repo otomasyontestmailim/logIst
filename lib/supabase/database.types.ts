@@ -167,6 +167,10 @@ export type Database = {
           freight_amount: number | null;
           freight_currency: string | null;
           invoice_status: string | null;
+          // Fuel, trip no, invoice direction (0011)
+          fuel_level: number | null;
+          trip_no: string | null;
+          invoice_direction: string | null;
         };
         Insert: {
           id?: string;
@@ -192,6 +196,9 @@ export type Database = {
           freight_amount?: number | null;
           freight_currency?: string | null;
           invoice_status?: string | null;
+          fuel_level?: number | null;
+          trip_no?: string | null;
+          invoice_direction?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["trips"]["Insert"]>;
         Relationships: [];

@@ -26,6 +26,13 @@ function num(v: FormDataEntryValue | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** 0-100 arası tam sayıya sıkıştırır (akaryakıt yüzdesi). */
+function pct(v: FormDataEntryValue | null): number | null {
+  const n = num(v);
+  if (n === null) return null;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
 /** Formdan yük bilgisi alanlarını toplar (create + update ortak). */
 function cargoFields(formData: FormData) {
   return {
@@ -39,6 +46,9 @@ function cargoFields(formData: FormData) {
     freight_amount: num(formData.get("freight_amount")),
     freight_currency: nn(formData.get("freight_currency")) ?? "EUR",
     invoice_status: nn(formData.get("invoice_status")) ?? "draft",
+    invoice_direction: nn(formData.get("invoice_direction")) ?? "outgoing",
+    fuel_level: pct(formData.get("fuel_level")),
+    trip_no: nn(formData.get("trip_no")),
   };
 }
 

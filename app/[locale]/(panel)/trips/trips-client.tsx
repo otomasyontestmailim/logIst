@@ -43,6 +43,7 @@ const initialState: TripFormState = { ok: false };
 const LOADING_TYPES = ["palletized", "bulk", "parcel", "other"] as const;
 const CURRENCIES = ["EUR", "USD", "TRY"] as const;
 const INVOICE_STATUSES = ["draft", "sent", "paid"] as const;
+const INVOICE_DIRECTIONS = ["outgoing", "incoming"] as const;
 
 export function TripsClient({
   trips,
@@ -205,6 +206,12 @@ function TripForm({
       {trip && <input type="hidden" name="trip_id" value={trip.id} />}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field
+          name="trip_no"
+          label={t("tripNo")}
+          placeholder={t("tripNoAuto")}
+          defaultValue={trip?.trip_no}
+        />
+        <Field
           name="origin"
           label={t("origin")}
           required
@@ -313,6 +320,16 @@ function TripForm({
         />
 
         <Field
+          name="fuel_level"
+          label={t("fuelLevel")}
+          type="number"
+          min={0}
+          max={100}
+          placeholder="0–100"
+          defaultValue={trip?.fuel_level?.toString()}
+        />
+
+        <Field
           name="freight_amount"
           label={ti("freightAmount")}
           type="number"
@@ -346,6 +363,22 @@ function TripForm({
             {INVOICE_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {ti(s)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="invoice_direction">{ti("invoiceDirection")}</Label>
+          <select
+            id="invoice_direction"
+            name="invoice_direction"
+            defaultValue={trip?.invoice_direction ?? "outgoing"}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {INVOICE_DIRECTIONS.map((d) => (
+              <option key={d} value={d}>
+                {ti(d)}
               </option>
             ))}
           </select>
@@ -404,6 +437,9 @@ function Field({
   required = false,
   defaultValue,
   error,
+  placeholder,
+  min,
+  max,
 }: {
   name: string;
   label: string;
@@ -411,6 +447,9 @@ function Field({
   required?: boolean;
   defaultValue?: string | null;
   error?: string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
 }) {
   return (
     <div className="space-y-1.5">
@@ -424,6 +463,9 @@ function Field({
         type={type}
         required={required}
         defaultValue={defaultValue ?? undefined}
+        placeholder={placeholder}
+        min={min}
+        max={max}
         aria-invalid={!!error}
         className={
           error
@@ -597,10 +639,13 @@ function TripTable({
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-left text-muted-foreground">
           <tr>
+            <th className="px-4 py-3 font-medium">{t("colTripNo")}</th>
             <th className="px-4 py-3 font-medium">{t("colOrigin")}</th>
             <th className="px-4 py-3 font-medium">{t("colDestination")}</th>
             <th className="px-4 py-3 font-medium">{t("colCustomer")}</th>
             <th className="px-4 py-3 font-medium">{t("colDriver")}</th>
+            <th className="px-4 py-3 font-medium">{t("colFuel")}</th>
+            <th className="px-4 py-3 font-medium">{t("colFreight")}</th>
             <th className="px-4 py-3 font-medium">{t("colStatus")}</th>
             <th className="px-4 py-3 font-medium">{t("colDates")}</th>
             <th className="px-4 py-3" />
@@ -614,9 +659,10 @@ function TripTable({
                   href={`/trips/${trip.id}`}
                   className="text-primary hover:underline underline-offset-2"
                 >
-                  {trip.origin}
+                  {trip.trip_no ?? "—"}
                 </Link>
               </td>
+              <td className="px-4 py-3 font-medium">{trip.origin}</td>
               <td className="px-4 py-3 text-muted-foreground">
                 {trip.destination}
               </td>
@@ -625,6 +671,14 @@ function TripTable({
               </td>
               <td className="px-4 py-3 text-sm text-muted-foreground">
                 {trip.driver_id ? driverMap.get(trip.driver_id) : "—"}
+              </td>
+              <td className="px-4 py-3">
+                <FuelBadge level={trip.fuel_level} />
+              </td>
+              <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                {trip.freight_amount != null
+                  ? `${trip.freight_amount.toLocaleString()} ${trip.freight_currency ?? ""}`
+                  : "—"}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={trip.status} tripId={trip.id} />
@@ -683,6 +737,27 @@ function TripTable({
           setConfirmId(null);
         }}
       />
+    </div>
+  );
+}
+
+function FuelBadge({ level }: { level: number | null }) {
+  if (level == null)
+    return <span className="text-sm text-muted-foreground">—</span>;
+  const color =
+    level <= 20
+      ? "bg-red-500"
+      : level <= 50
+        ? "bg-amber-500"
+        : "bg-emerald-500";
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="h-1.5 w-10 overflow-hidden rounded-full bg-muted">
+        <div className={`h-full ${color}`} style={{ width: `${level}%` }} />
+      </div>
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {level}%
+      </span>
     </div>
   );
 }
