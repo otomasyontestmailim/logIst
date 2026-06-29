@@ -146,6 +146,9 @@ export default async function TripDetailPage({
           : null,
         freight_currency: trip.freight_currency,
         invoice_status: trip.invoice_status,
+        fuel_level: trip.fuel_level != null ? Number(trip.fuel_level) : null,
+        trip_no: trip.trip_no,
+        invoice_direction: trip.invoice_direction,
       }}
       driver={driverRes.data ?? null}
       customer={customerRes.data ?? null}

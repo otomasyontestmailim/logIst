@@ -51,6 +51,9 @@ export type TripDetailProps = {
     freight_amount: number | null;
     freight_currency: string | null;
     invoice_status: string | null;
+    fuel_level: number | null;
+    trip_no: string | null;
+    invoice_direction: string | null;
   };
   driver: { id: string; full_name: string | null; email: string | null } | null;
   customer: { id: string; name: string } | null;
@@ -144,7 +147,12 @@ export function TripDetailClient({
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          {trip.trip_no && (
+            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              {trip.trip_no}
+            </span>
+          )}
+          <h1 className="mt-1 flex items-center gap-2 text-2xl font-bold">
             {trip.origin}
             <ArrowRight className="size-5 shrink-0 text-muted-foreground" />
             {trip.destination}
@@ -265,6 +273,27 @@ export function TripDetailClient({
                   value={trip.distance_km.toString()}
                 />
               )}
+              {trip.fuel_level != null && (
+                <>
+                  <dt className="text-muted-foreground">{tt("fuelLevel")}</dt>
+                  <dd className="flex items-center gap-2 font-medium">
+                    <span className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                      <span
+                        className={cn(
+                          "block h-full",
+                          trip.fuel_level <= 20
+                            ? "bg-red-500"
+                            : trip.fuel_level <= 50
+                              ? "bg-amber-500"
+                              : "bg-emerald-500",
+                        )}
+                        style={{ width: `${trip.fuel_level}%` }}
+                      />
+                    </span>
+                    <span className="tabular-nums">{trip.fuel_level}%</span>
+                  </dd>
+                </>
+              )}
               {trip.freight_amount != null && (
                 <InfoRow
                   label={ti("freightAmount")}
@@ -275,6 +304,12 @@ export function TripDetailClient({
                 <InfoRow
                   label={ti("invoiceStatus")}
                   value={ti(trip.invoice_status as "draft" | "sent" | "paid")}
+                />
+              )}
+              {trip.invoice_direction && (
+                <InfoRow
+                  label={ti("invoiceDirection")}
+                  value={ti(trip.invoice_direction as "incoming" | "outgoing")}
                 />
               )}
             </dl>
