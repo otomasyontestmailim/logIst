@@ -44,6 +44,7 @@
   "Nav": {
     "dashboard": "Dashboard",
     "drivers": "Drivers",
+    "vehicles": "Vehicles",
     "customers": "Customers",
     "trips": "Trips",
     "documents": "Documents",
@@ -145,6 +146,44 @@
     "expiryReminderNone": "No documents expiring within 30 days.",
     "expiryReminderError": "Failed to send email: {error}"
   },
+  "Vehicles": {
+    "title": "Vehicles",
+    "subtitle": "Manage your truck and trailer fleet",
+    "plate": "Plate",
+    "trailerPlate": "Trailer Plate",
+    "brand": "Brand",
+    "model": "Model",
+    "year": "Year",
+    "capacityTon": "Capacity (tons)",
+    "inspectionExpiry": "Inspection Expiry",
+    "insuranceExpiry": "Insurance Expiry",
+    "lastServiceKm": "Last Service (km)",
+    "currentKm": "Current Km",
+    "notes": "Notes",
+    "addVehicle": "Add Vehicle",
+    "editVehicle": "Edit Vehicle",
+    "noVehicles": "No vehicles added yet.",
+    "expired": "Expired",
+    "expiringSoon": "Expiring soon",
+    "ok": "OK",
+    "linkedTrips": "Linked Trips",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "createdToast": "Vehicle added.",
+    "updatedToast": "Vehicle updated.",
+    "deletedToast": "Vehicle deleted.",
+    "deleteConfirm": "Are you sure you want to delete this vehicle?",
+    "errorToast": "Operation failed: {error}"
+  },
+  "VehicleDetail": {
+    "back": "← Back to vehicles",
+    "expiriesTitle": "Document Expiries",
+    "noTrips": "No trips for this vehicle.",
+    "colRoute": "Route",
+    "colStatus": "Status",
+    "colDate": "Date"
+  },
   "Customers": {
     "title": "Customers",
     "subtitle": "Shipper and consignee companies",
@@ -189,6 +228,8 @@
     "selectCustomer": "Select a customer",
     "driver": "Driver",
     "selectDriver": "Select a driver",
+    "vehicle": "Vehicle",
+    "vehiclePlaceholder": "Select a vehicle",
     "loadDate": "Load Date",
     "deliveryDate": "Delivery Date",
     "status": "Status",
@@ -282,7 +323,12 @@
     "ocrView": "View OCR fields",
     "ocrTitle": "Fields extracted by OCR (please review)",
     "ocrRerun": "Re-run",
-    "ocrDoneToast": "OCR completed."
+    "ocrDoneToast": "OCR completed.",
+    "groupTitle": "#{tripId} — {origin} → {destination} | Driver: {driver} | {date}",
+    "documentsCount": "{count, plural, one {# document} other {# documents}}",
+    "noPending": "No pending",
+    "noResults": "No results found",
+    "review": "Review"
   },
   "Driver": {
     "title": "My Trips",
@@ -301,6 +347,7 @@
     "statusUpdated": "Trip status updated.",
     "errorToast": "Operation failed: {error}",
     "documentsTitle": "Documents",
+    "messagesTitle": "Messages",
     "noDocuments": "No documents yet.",
     "selectType": "Document type",
     "uploadDocument": "Scan / Upload Document",
@@ -404,6 +451,8 @@
   "ValidationErrors": {
     "unauthorized": "You are not authorized.",
     "forbidden": "You don't have permission for this action.",
+    "content_required": "Message content is required.",
+    "plate_required": "Plate is required.",
     "email_required": "E-mail is required.",
     "name_required": "Name is required.",
     "origin_required": "Origin is required.",
@@ -482,6 +531,14 @@
     "signatureTitle": "Delivery Signature",
     "signatureAlt": "Recipient signature",
     "signatureViewFull": "View full size →"
+  },
+  "TripMessages": {
+    "title": "Messages",
+    "send": "Send",
+    "placeholder": "Write a message...",
+    "noMessages": "No messages yet.",
+    "you": "You",
+    "errorToast": "Action failed: {error}"
   },
   "CustomerDetail": {
     "back": "← Back to Customers",

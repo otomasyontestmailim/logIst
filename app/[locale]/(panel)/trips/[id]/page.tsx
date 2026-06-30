@@ -15,6 +15,7 @@ type DocumentRow = Pick<
   Database["public"]["Tables"]["documents"]["Row"],
   "id" | "type" | "status" | "created_at" | "uploaded_by" | "file_url"
 >;
+type MessageRow = Database["public"]["Tables"]["trip_messages"]["Row"];
 
 export default async function TripDetailPage({
   params,
@@ -50,6 +51,16 @@ export default async function TripDetailPage({
       .returns<DocumentRow[]>(),
   ]);
 
+  const { data: messageRows } = await supabase
+    .from("trip_messages")
+    .select("*")
+    .eq("trip_id", id)
+    .eq("organization_id", me.organization_id)
+    .order("created_at", { ascending: false })
+    .limit(50)
+    .returns<MessageRow[]>();
+  const messages = (messageRows ?? []).slice().reverse();
+
   if (!tripRes.data) notFound();
 
   const trip = tripRes.data;
@@ -79,16 +90,21 @@ export default async function TripDetailPage({
       .maybeSingle(),
   ]);
 
-  // Uploader names for documents
-  const uploaderIds = [
-    ...new Set(docs.map((d) => d.uploaded_by).filter(Boolean) as string[]),
+  // Uploader + mesaj gönderen adları (tek sorguda)
+  const userIds = [
+    ...new Set(
+      [
+        ...docs.map((d) => d.uploaded_by),
+        ...messages.map((m) => m.sender_id),
+      ].filter(Boolean) as string[],
+    ),
   ];
   let uploaderMap = new Map<string, string>();
-  if (uploaderIds.length > 0) {
+  if (userIds.length > 0) {
     const { data: uploaders } = await supabase
       .from("users")
       .select("id, full_name, email")
-      .in("id", uploaderIds);
+      .in("id", userIds);
     uploaderMap = new Map(
       (uploaders ?? []).map((u) => [u.id, u.full_name ?? u.email ?? "—"]),
     );
@@ -161,6 +177,14 @@ export default async function TripDetailPage({
         seq: s.seq,
       }))}
       documents={documents}
+      messages={messages.map((m) => ({
+        id: m.id,
+        content: m.content,
+        created_at: m.created_at,
+        sender_id: m.sender_id,
+        senderName: uploaderMap.get(m.sender_id) ?? "—",
+      }))}
+      currentUserId={me.id}
       userRole={me.role}
     />
   );

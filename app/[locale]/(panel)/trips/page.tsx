@@ -14,6 +14,10 @@ type UserRow = Pick<
   Database["public"]["Tables"]["users"]["Row"],
   "id" | "full_name" | "email"
 >;
+type VehicleRow = Pick<
+  Database["public"]["Tables"]["vehicles"]["Row"],
+  "id" | "plate" | "brand" | "model"
+>;
 
 const PAGE_SIZE = 20;
 
@@ -39,6 +43,7 @@ export default async function TripsPage({
   let trips: TripRow[] = [];
   let customers: CustomerRow[] = [];
   let drivers: UserRow[] = [];
+  let vehicles: VehicleRow[] = [];
   let stops: StopRow[] = [];
   let total = 0;
 
@@ -62,30 +67,37 @@ export default async function TripsPage({
       tripsQuery = tripsQuery.eq("customer_id", customer);
     }
 
-    const [tripsRes, customersRes, driversRes, stopsRes] = await Promise.all([
-      tripsQuery,
-      supabase
-        .from("customers")
-        .select("*")
-        .eq("organization_id", me.organization_id)
-        .order("name"),
-      supabase
-        .from("users")
-        .select("id, full_name, email")
-        .eq("organization_id", me.organization_id)
-        .eq("role", "driver")
-        .order("full_name"),
-      supabase
-        .from("trip_stops")
-        .select("*")
-        .eq("organization_id", me.organization_id)
-        .order("seq"),
-    ]);
+    const [tripsRes, customersRes, driversRes, vehiclesRes, stopsRes] =
+      await Promise.all([
+        tripsQuery,
+        supabase
+          .from("customers")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .order("name"),
+        supabase
+          .from("users")
+          .select("id, full_name, email")
+          .eq("organization_id", me.organization_id)
+          .eq("role", "driver")
+          .order("full_name"),
+        supabase
+          .from("vehicles")
+          .select("id, plate, brand, model")
+          .eq("organization_id", me.organization_id)
+          .order("plate"),
+        supabase
+          .from("trip_stops")
+          .select("*")
+          .eq("organization_id", me.organization_id)
+          .order("seq"),
+      ]);
 
     trips = tripsRes.data ?? [];
     total = tripsRes.count ?? 0;
     customers = customersRes.data ?? [];
     drivers = driversRes.data ?? [];
+    vehicles = vehiclesRes.data ?? [];
     stops = stopsRes.data ?? [];
   }
 
@@ -128,6 +140,7 @@ export default async function TripsPage({
           trips={trips}
           customers={customers}
           drivers={drivers}
+          vehicles={vehicles}
           stops={stops}
           initialStatus={status}
         />

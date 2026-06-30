@@ -1,8 +1,123 @@
 # Proje Durumu — Lojistik CRM
 
-> Son güncelleme: 2026-06-26 (ikinci session) · Session başında oku, sonda güncelle.
+> Son güncelleme: 2026-06-30 · Session başında oku, sonda güncelle.
 
 ---
+
+## Session (2026-06-30, üçüncü) — Bug düzeltmeleri: i18n karışıklığı + araç seçici
+
+**4 madde tamamlandı, `npm run check` ✓ + `npm run build` ✓ temiz.**
+
+- **tr.json TripDetail/DocumentDetail karışıklığı düzeltildi** (önceki session'da
+  flag'lenen background task): `trackingLinkTitle`, `trackingLinkDesc`,
+  `copyTrackingLink`, `trackingLinkCopied`, `trackingLinkCopiedShort`,
+  `signatureTitle`, `signatureAlt`, `signatureViewFull` — yanlışlıkla
+  `DocumentDetail` altındaydı, `TripDetail`'e taşındı (en/nl zaten doğruydu).
+  3 dil anahtar sayısı eşitlendi (593/593/593).
+- **Sefer formuna araç seçici eklendi:** `trips/page.tsx` artık `vehicles`
+  tablosunu (id, plate, brand, model) org filtreli çekiyor; `trips-client.tsx`
+  TripForm'a `<select name="vehicle_id">` eklendi (plaka — marka/model
+  formatında, boş seçenek dahil); `trips/actions.ts` createTrip/updateTrip
+  artık `vehicle_id`'yi insert/update ediyor. `Trips` namespace'e `vehicle` +
+  `vehiclePlaceholder` 3 dilde eklendi.
+- **trip_no kontrolü:** zaten önceki session'da (commit `c90d6c2`) hem sefer
+  listesinde (badge/link sütunu) hem detay sayfası başlığında gösteriliyormuş
+  — ek değişiklik gerekmedi, doğrulandı.
+- **Kod kalite taraması:** `driver-client.tsx`'te bulunan gerçek i18n hatası
+  düzeltildi — `statusState.error`, `rejectState.error`,
+  `saveDeliverySignature` sonucu ham hata kodunu (`forbidden`,
+  `invalid_transition` vb.) `useErrorText()` ile çevirmeden gösteriyordu;
+  artık diğer tüm client component'lerle aynı desene (`errText()`) uyuyor.
+  `trips/[id]`, `vehicles/*`, `trip-messages-client.tsx` taraması temiz çıktı.
+
+## Session (2026-06-30, ikinci) — Araç yönetimi + Şoför-dispatcher mesajlaşma
+
+**2 yeni özellik eklendi, `npm run check` ✓ + `npm run build` ✓ temiz.**
+
+### Özellik 1 — Araç (Kamyon/Dorse) Yönetimi
+
+- `supabase/migrations/0012_vehicles.sql` (UYGULANMADI — elle SQL Editor'dan
+  uygulanmalı): `vehicles` tablosu (plate, trailer_plate, brand, model, year,
+  capacity_ton, inspection_expiry, insurance_expiry, last_service_km,
+  current_km, notes) + RLS (`org member` tek politika, `current_org_id()`) +
+  `trips.vehicle_id` FK kolonu.
+- `database.types.ts`: `vehicles` tablo tipi + `trips.vehicle_id` eklendi.
+- `(panel)/vehicles/{page.tsx,vehicles-client.tsx,actions.ts,[id]/page.tsx}`:
+  drivers sayfası deseni — liste (arama, pagination 25/sayfa), ekle/düzenle
+  formu, silme onayı, detay sayfası (bilgiler + muayene/sigorta rozetleri +
+  bağlı seferler tablosu, `trips.vehicle_id` ile).
+- Rozet sistemi `lib/expiry.ts`'deki `expiryStatus()` (drivers ile aynı
+  helper) — kırmızı (süresi doldu) / sarı (30 gün içinde) / yeşil (güncel).
+- Sidebar: `components/app-shell.tsx`'e "Araçlar" linki (`Container` ikonu —
+  `Truck` zaten Şoförler'de kullanılıyordu, çakışmayı önlemek için farklı ikon
+  seçildi).
+- `components/ui/textarea.tsx` (YENİ): shadcn/Input ile aynı stil, proje daha
+  önce Textarea component'i içermiyordu (araç notları + mesaj kutusu için).
+- i18n: `Vehicles`, `VehicleDetail` namespace + `Nav.vehicles` + 3 dil
+  (tr/en/nl) eşit.
+
+### Özellik 2 — Şoför-Dispatcher Mesajlaşma
+
+- `supabase/migrations/0013_trip_messages.sql` (UYGULANMADI): `trip_messages`
+  tablosu (trip_id, sender_id, content) + tek org-bazlı RLS politikası
+  (kullanıcının istediği SQL aynen kullanıldı — driver-özel kısıtlama yok,
+  sadece org içi erişim).
+- `database.types.ts`: `trip_messages` tablo tipi eklendi.
+- `sendTripMessage` server action → `(panel)/trips/actions.ts`'e eklendi (yeni
+  dosya açmak yerine mevcut dosyaya — driver tarafı zaten
+  `../(panel)/trips/actions` import ediyor, tek action iki tarafta da
+  kullanılıyor). Şoför yalnızca kendi seferine (`driver_id` eşleşmesi) mesaj
+  gönderebilir; admin/dispatcher org içindeki tüm seferlere.
+- `components/trip-messages-client.tsx` (YENİ, paylaşılan): mesaj baloncukları
+  (kendi mesajı sağda/primary renk, karşı taraf solda/muted), gönderen adı +
+  saat, `useActionState(sendTripMessage)` ile form, 10 saniyede bir
+  `router.refresh()` polling (Supabase realtime yerine basit çözüm).
+- Panel: `trips/[id]/page.tsx` son 50 mesajı sender adlarıyla çekiyor (uploader
+  sorgusuyla birleştirildi — tek `users` sorgusu), `trip-detail-client.tsx`
+  sağ kenar çubuğunda `TripMessagesClient` render ediyor.
+- Şoför: `driver/page.tsx` tüm seferlerin mesajlarını tek sorguda çekiyor,
+  `driver-client.tsx`'teki `TripCard`'a "Mesajlar" `<details>` bölümü eklendi
+  (Belgeler bölümünün altında, `MessageCircle` ikonu).
+- i18n: `TripMessages` namespace + `Driver.messagesTitle` + 3 dil eşit.
+
+### Tespit edilen mevcut hata (bu session'da DÜZELTİLMEDİ — ayrı task olarak işaretlendi)
+
+`messages/tr.json`'da `trackingLinkTitle`/`signatureTitle` gibi 8 anahtar
+yanlışlıkla `TripDetail` yerine `DocumentDetail` içinde — en/nl'de doğru
+yerde. Türkçe kullanıcılar sefer detayındaki takip linki/imza kartlarında ham
+anahtar adı görüyor olabilir. Kapsam dışı olduğu için ayrı bir background task
+olarak flag'lendi (spawn_task, task_1280d7a6), bu session'da dokunulmadı.
+
+### Sıradaki
+
+- [ ] **Migration 0012 + 0013** Supabase SQL Editor'dan elle uygulanmalı
+- [x] tr.json TripDetail/DocumentDetail anahtar karışıklığı düzeltildi
+      (2026-06-30, üçüncü session)
+- [ ] Araç detay sayfasında inline düzenle/sil yok (liste sayfasından
+      yapılıyor) — istenirse customers/[id] desenine taşınabilir
+- [x] Sefer formuna (`trips-client.tsx`) `vehicle_id` seçici eklendi
+      (2026-06-30, üçüncü session)
+
+## Session (2026-06-30) — Belge gelen kutusu: trip bazlı gruplama
+
+`documents/page.tsx` + `documents-client.tsx` düz belge listesinden sefer (trip)
+bazlı gruplu görünüme çevrildi:
+
+- `page.tsx`: documents/trips/users 3 paralel sorgu; belgeler `trip_id`'ye göre
+  JS'te gruplanır (documents zaten `created_at` DESC geldiği için grup sırası da
+  otomatik en güncel sefer önce olacak şekilde korunur). Sayfalama artık **belge
+  sayısına değil trip grup sayısına** göre yapılıyor (`PAGE_SIZE=20` grup/sayfa);
+  signed URL'ler yalnızca o sayfadaki belgeler için üretiliyor (performans).
+- `documents-client.tsx`: `DocumentItem` tipinden `tripLabel`/`driverName` kaldırıldı
+  (artık grup başlığında); yeni `GroupedTrip` tipi eklendi. Tablo yerine her sefer
+  için kart: başlık (`groupTitle` — kısa trip ID + origin→destination + şoför +
+  yükleme tarihi) + toplam belge rozeti + bekleyen onay rozeti (yoksa "Bekleyen yok").
+  status/type filtreleri URL'de aynı şekilde korunuyor; filtre sonucu boşsa
+  "Sonuç bulunamadı" (`noResults`), hiç belge yoksa eski "empty" mesajı.
+- i18n: `Documents` namespace'e `groupTitle`, `documentsCount`, `noPending`,
+  `noResults`, `review` eklendi (tr/en/nl, 3 dil eşit).
+- `/documents/[id]` detay sayfası değişmedi.
+- `npm run check` ✓ temiz (lint + typecheck + format).
 
 ## Tamamlanan Fazlar
 
@@ -48,6 +163,10 @@
 - Org: "Demo Lojistik" — `organizations` tablosunda
 - Admin: `admin@demolojistik.com` / Demo1234!
 - Şoför: `sofor@demolojistik.com` / Demo1234!
+- **UYARI (2026-06-30):** tarayıcı doğrulamasında bu parola ile giriş
+  "E-posta veya parola hatalı" hatası verdi (form/Supabase auth çağrısı
+  kendisi çalışıyor — sadece kimlik bilgisi reddedildi). Parola değişmiş
+  olabilir; sonraki session'da doğrulanmalı/güncellenmeli.
 
 ---
 

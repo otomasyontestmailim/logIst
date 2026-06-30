@@ -18,6 +18,7 @@ type CustomerName = Pick<
   Database["public"]["Tables"]["customers"]["Row"],
   "id" | "name"
 >;
+type MessageRow = Database["public"]["Tables"]["trip_messages"]["Row"];
 
 export default async function DriverPage() {
   const locale = await getLocale();
@@ -34,6 +35,14 @@ export default async function DriverPage() {
   let documents: DocumentRow[] = [];
   let customers: CustomerName[] = [];
   let stops: StopRow[] = [];
+  let messages: Array<{
+    id: string;
+    trip_id: string;
+    content: string;
+    created_at: string;
+    sender_id: string;
+    senderName: string;
+  }> = [];
 
   if (user?.organization_id) {
     const supabase = await createClient();
@@ -52,7 +61,7 @@ export default async function DriverPage() {
         ...new Set(trips.map((trip) => trip.customer_id).filter(Boolean)),
       ] as string[];
 
-      const [docsRes, customersRes, stopsRes] = await Promise.all([
+      const [docsRes, customersRes, stopsRes, messagesRes] = await Promise.all([
         supabase
           .from("documents")
           .select("id, trip_id, type, status, created_at")
@@ -66,11 +75,38 @@ export default async function DriverPage() {
           .select("*")
           .in("trip_id", tripIds)
           .order("seq"),
+        supabase
+          .from("trip_messages")
+          .select("*")
+          .in("trip_id", tripIds)
+          .order("created_at", { ascending: true })
+          .returns<MessageRow[]>(),
       ]);
 
       documents = (docsRes.data as DocumentRow[]) ?? [];
       customers = (customersRes.data as CustomerName[]) ?? [];
       stops = (stopsRes.data as StopRow[]) ?? [];
+
+      const rawMessages = messagesRes.data ?? [];
+      const senderIds = [...new Set(rawMessages.map((m) => m.sender_id))];
+      let senderMap = new Map<string, string>();
+      if (senderIds.length > 0) {
+        const { data: senders } = await supabase
+          .from("users")
+          .select("id, full_name, email")
+          .in("id", senderIds);
+        senderMap = new Map(
+          (senders ?? []).map((u) => [u.id, u.full_name ?? u.email ?? "—"]),
+        );
+      }
+      messages = rawMessages.map((m) => ({
+        id: m.id,
+        trip_id: m.trip_id,
+        content: m.content,
+        created_at: m.created_at,
+        sender_id: m.sender_id,
+        senderName: senderMap.get(m.sender_id) ?? "—",
+      }));
     }
   }
 
@@ -97,6 +133,8 @@ export default async function DriverPage() {
           documents={documents}
           customers={customers}
           stops={stops}
+          messages={messages}
+          currentUserId={user?.id ?? ""}
           organizationId={user?.organization_id ?? ""}
         />
       </main>

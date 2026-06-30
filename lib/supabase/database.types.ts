@@ -171,6 +171,8 @@ export type Database = {
           fuel_level: number | null;
           trip_no: string | null;
           invoice_direction: string | null;
+          // Vehicle link (0012)
+          vehicle_id: string | null;
         };
         Insert: {
           id?: string;
@@ -199,8 +201,45 @@ export type Database = {
           fuel_level?: number | null;
           trip_no?: string | null;
           invoice_direction?: string | null;
+          vehicle_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["trips"]["Insert"]>;
+        Relationships: [];
+      };
+      vehicles: {
+        Row: {
+          id: string;
+          organization_id: string;
+          plate: string;
+          trailer_plate: string | null;
+          brand: string | null;
+          model: string | null;
+          year: number | null;
+          capacity_ton: number | null;
+          inspection_expiry: string | null;
+          insurance_expiry: string | null;
+          last_service_km: number | null;
+          current_km: number | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          plate: string;
+          trailer_plate?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          year?: number | null;
+          capacity_ton?: number | null;
+          inspection_expiry?: string | null;
+          insurance_expiry?: string | null;
+          last_service_km?: number | null;
+          current_km?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["vehicles"]["Insert"]>;
         Relationships: [];
       };
       documents: {
@@ -265,6 +304,28 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["trip_stops"]["Insert"]>;
+        Relationships: [];
+      };
+      trip_messages: {
+        Row: {
+          id: string;
+          organization_id: string;
+          trip_id: string;
+          sender_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          trip_id: string;
+          sender_id: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["trip_messages"]["Insert"]
+        >;
         Relationships: [];
       };
       driver_locations: {

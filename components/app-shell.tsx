@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   Truck,
+  Container,
   Users,
   Package,
   FileText,
@@ -22,6 +23,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 const navItems = [
   { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
   { href: "/drivers", key: "drivers", icon: Truck },
+  { href: "/vehicles", key: "vehicles", icon: Container },
   { href: "/customers", key: "customers", icon: Users },
   { href: "/trips", key: "trips", icon: Package },
   { href: "/documents", key: "documents", icon: FileText },

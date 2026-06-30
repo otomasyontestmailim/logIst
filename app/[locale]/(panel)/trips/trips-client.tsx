@@ -37,6 +37,10 @@ type UserRow = Pick<
   Database["public"]["Tables"]["users"]["Row"],
   "id" | "full_name" | "email"
 >;
+type VehicleRow = Pick<
+  Database["public"]["Tables"]["vehicles"]["Row"],
+  "id" | "plate" | "brand" | "model"
+>;
 
 const initialState: TripFormState = { ok: false };
 
@@ -49,12 +53,14 @@ export function TripsClient({
   trips,
   customers,
   drivers,
+  vehicles,
   stops,
   initialStatus,
 }: {
   trips: TripRow[];
   customers: CustomerRow[];
   drivers: UserRow[];
+  vehicles: VehicleRow[];
   stops: StopRow[];
   initialStatus?: string;
 }) {
@@ -132,6 +138,7 @@ export function TripsClient({
             }}
             customers={customers}
             drivers={drivers}
+            vehicles={vehicles}
           />
           {editing && (
             <StopsEditor
@@ -159,11 +166,13 @@ function TripForm({
   onDone,
   customers,
   drivers,
+  vehicles,
 }: {
   trip: TripRow | null;
   onDone: () => void;
   customers: CustomerRow[];
   drivers: UserRow[];
+  vehicles: VehicleRow[];
 }) {
   const t = useTranslations("Trips");
   const ts = useTranslations("TripStatus");
@@ -255,6 +264,25 @@ function TripForm({
             {drivers.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.full_name ?? d.email}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="vehicle_id">{t("vehicle")}</Label>
+          <select
+            id="vehicle_id"
+            name="vehicle_id"
+            defaultValue={trip?.vehicle_id ?? ""}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">{t("vehiclePlaceholder")}</option>
+            {vehicles.map((v) => (
+              <option key={v.id} value={v.id}>
+                {[v.plate, [v.brand, v.model].filter(Boolean).join(" ")]
+                  .filter(Boolean)
+                  .join(" — ")}
               </option>
             ))}
           </select>

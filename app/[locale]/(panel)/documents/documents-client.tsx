@@ -1,6 +1,12 @@
 "use client";
 
-import { Fragment, startTransition, useActionState, useEffect } from "react";
+import {
+  Fragment,
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -18,17 +24,23 @@ import type {
   DocumentStatus,
   DocumentType,
 } from "@/lib/supabase/database.types";
-import { useState } from "react";
 
 export type DocumentItem = {
   id: string;
   type: DocumentType;
   status: DocumentStatus;
   createdAt: string;
-  tripLabel: string;
-  driverName: string;
   signedUrl: string | null;
   ocrData: Record<string, string> | null;
+};
+
+export type GroupedTrip = {
+  tripId: string;
+  origin: string;
+  destination: string;
+  driverName: string;
+  loadDate: string | null;
+  documents: DocumentItem[];
 };
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -50,11 +62,11 @@ const DOC_TYPES = [
 const initialState: DocumentInboxFormState = { ok: false };
 
 export function DocumentsClient({
-  items,
+  groups,
   initialStatus,
   initialType,
 }: {
-  items: DocumentItem[];
+  groups: GroupedTrip[];
   initialStatus: string;
   initialType: string;
 }) {
@@ -117,13 +129,7 @@ export function DocumentsClient({
     startTransition(() => formAction(fd));
   }
 
-  if (items.length === 0 && initialStatus === "all" && initialType === "all") {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {t("empty")}
-      </div>
-    );
-  }
+  const hasFilter = initialStatus !== "all" || initialType !== "all";
 
   return (
     <div className="space-y-4">
@@ -156,157 +162,180 @@ export function DocumentsClient({
         </select>
       </div>
 
-      {items.length === 0 ? (
+      {groups.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          {t("empty")}
+          {hasFilter ? t("noResults") : t("empty")}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">{t("colType")}</th>
-                <th className="px-4 py-3 font-medium">{t("colTrip")}</th>
-                <th className="px-4 py-3 font-medium">{t("colDriver")}</th>
-                <th className="px-4 py-3 font-medium">{t("colDate")}</th>
-                <th className="px-4 py-3 font-medium">{t("colStatus")}</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {items.map((doc) => {
-                const hasOcr =
-                  doc.ocrData &&
-                  Object.values(doc.ocrData).some((v) => v && v.trim() !== "");
-                const expanded = expandedId === doc.id;
-                return (
-                  <Fragment key={doc.id}>
-                    <tr className="align-top">
-                      <td className="px-4 py-3 font-medium">
-                        <Link
-                          href={`/documents/${doc.id}`}
-                          className="text-primary hover:underline underline-offset-2"
-                        >
-                          {tdt(doc.type)}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {doc.tripLabel}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {doc.driverName}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {formatDate(format, doc.createdAt)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[doc.status] ?? STATUS_CLASSES.pending}`}
-                        >
-                          {tds(doc.status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={hasOcr ? t("ocrView") : t("ocrRun")}
-                            title={hasOcr ? t("ocrView") : t("ocrRun")}
-                            disabled={ocrPending}
-                            onClick={() => {
-                              if (hasOcr) {
-                                setExpandedId(expanded ? null : doc.id);
-                              } else {
-                                runOcr(doc.id);
-                              }
-                            }}
-                          >
-                            <ScanText
-                              className={`size-4 ${hasOcr ? "text-primary" : "text-muted-foreground"}`}
-                            />
-                          </Button>
-                          {doc.signedUrl && (
-                            <a
-                              href={doc.signedUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              aria-label={t("view")}
-                              className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+        <div className="space-y-4">
+          {groups.map((group) => {
+            const pendingCount = group.documents.filter(
+              (d) => d.status === "pending",
+            ).length;
+            return (
+              <div key={group.tripId} className="rounded-lg border">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-3">
+                  <h2 className="text-sm font-semibold">
+                    {t("groupTitle", {
+                      tripId: group.tripId.slice(0, 8),
+                      origin: group.origin,
+                      destination: group.destination,
+                      driver: group.driverName,
+                      date: formatDate(format, group.loadDate),
+                    })}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                      {t("documentsCount", { count: group.documents.length })}
+                    </span>
+                    {pendingCount > 0 ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        {pendingCount} {tds("pending")}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                        {t("noPending")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="divide-y">
+                  {group.documents.map((doc) => {
+                    const hasOcr =
+                      doc.ocrData &&
+                      Object.values(doc.ocrData).some(
+                        (v) => v && v.trim() !== "",
+                      );
+                    const expanded = expandedId === doc.id;
+                    return (
+                      <Fragment key={doc.id}>
+                        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
+                              {tdt(doc.type)}
+                            </span>
+                            <span
+                              className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[doc.status] ?? STATUS_CLASSES.pending}`}
                             >
-                              <ExternalLink className="size-4" />
-                            </a>
-                          )}
-                          {doc.status === "pending" && (
-                            <>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                disabled={pending}
-                                onClick={() => setStatus(doc.id, "approved")}
-                                aria-label={t("approve")}
-                              >
-                                <Check className="size-4 text-green-600" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                disabled={pending}
-                                onClick={() => setStatus(doc.id, "rejected")}
-                                aria-label={t("reject")}
-                              >
-                                <X className="size-4 text-destructive" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    {expanded && hasOcr && (
-                      <tr className="bg-muted/30">
-                        <td colSpan={6} className="px-4 py-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-xs font-semibold text-muted-foreground">
-                              {t("ocrTitle")}
-                            </h3>
+                              {tds(doc.status)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(format, doc.createdAt)}
+                            </span>
+                            <Link
+                              href={`/documents/${doc.id}`}
+                              className="text-xs text-primary hover:underline underline-offset-2"
+                            >
+                              {t("review")}
+                            </Link>
+                          </div>
+                          <div className="flex justify-end gap-1">
                             <Button
                               type="button"
-                              variant="outline"
-                              size="sm"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={hasOcr ? t("ocrView") : t("ocrRun")}
+                              title={hasOcr ? t("ocrView") : t("ocrRun")}
                               disabled={ocrPending}
-                              onClick={() => runOcr(doc.id)}
+                              onClick={() => {
+                                if (hasOcr) {
+                                  setExpandedId(expanded ? null : doc.id);
+                                } else {
+                                  runOcr(doc.id);
+                                }
+                              }}
                             >
-                              {t("ocrRerun")}
+                              <ScanText
+                                className={`size-4 ${hasOcr ? "text-primary" : "text-muted-foreground"}`}
+                              />
                             </Button>
-                          </div>
-                          <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
-                            {Object.entries(doc.ocrData!)
-                              .filter(([, v]) => v && v.trim() !== "")
-                              .map(([key, value]) => (
-                                <div
-                                  key={key}
-                                  className="flex justify-between gap-2 border-b border-border/50 py-1 text-sm"
+                            {doc.signedUrl && (
+                              <a
+                                href={doc.signedUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label={t("view")}
+                                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+                              >
+                                <ExternalLink className="size-4" />
+                              </a>
+                            )}
+                            {doc.status === "pending" && (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={pending}
+                                  onClick={() => setStatus(doc.id, "approved")}
+                                  aria-label={t("approve")}
                                 >
-                                  <dt className="text-muted-foreground">
-                                    {tof.has(key) ? tof(key) : key}
-                                  </dt>
-                                  <dd className="text-right font-medium">
-                                    {value}
-                                  </dd>
-                                </div>
-                              ))}
-                          </dl>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+                                  <Check className="size-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={pending}
+                                  onClick={() => setStatus(doc.id, "rejected")}
+                                  aria-label={t("reject")}
+                                >
+                                  <X className="size-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {expanded && hasOcr && (
+                          <div className="bg-muted/30 px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className="text-xs font-semibold text-muted-foreground">
+                                {t("ocrTitle")}
+                              </h3>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={ocrPending}
+                                onClick={() => runOcr(doc.id)}
+                              >
+                                {t("ocrRerun")}
+                              </Button>
+                            </div>
+                            <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+                              {Object.entries(doc.ocrData!)
+                                .filter(([, v]) => v && v.trim() !== "")
+                                .map(([key, value]) => (
+                                  <div
+                                    key={key}
+                                    className="flex justify-between gap-2 border-b border-border/50 py-1 text-sm"
+                                  >
+                                    <dt className="text-muted-foreground">
+                                      {(() => {
+                                        try {
+                                          return tof(
+                                            key as Parameters<typeof tof>[0],
+                                          );
+                                        } catch {
+                                          return key;
+                                        }
+                                      })()}
+                                    </dt>
+                                    <dd className="text-right font-medium">
+                                      {value}
+                                    </dd>
+                                  </div>
+                                ))}
+                            </dl>
+                          </div>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

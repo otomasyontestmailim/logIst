@@ -14,8 +14,13 @@ import {
   Camera,
   ChevronDown,
   ImagePlus,
+  MessageCircle,
   ScanText,
 } from "lucide-react";
+import {
+  TripMessagesClient,
+  type TripMessage,
+} from "@/components/trip-messages-client";
 import { MapView } from "@/components/map/map-view";
 import { StopsTimeline } from "@/components/stops-timeline";
 import { Button } from "@/components/ui/button";
@@ -23,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { compressImage } from "@/lib/image";
 import { useUploadQueue } from "@/lib/use-upload-queue";
 import { formatDate } from "@/lib/format-date";
+import { useErrorText } from "@/lib/use-error-text";
 import { updateTripStatus, type TripFormState } from "../(panel)/trips/actions";
 import {
   rejectTrip,
@@ -55,6 +61,7 @@ type DocumentRow = Pick<
   "id" | "trip_id" | "type" | "status" | "created_at"
 >;
 type CustomerName = { id: string; name: string };
+type TripMessageRow = TripMessage & { trip_id: string };
 
 const DOCUMENT_TYPES: DocumentType[] = [
   "cmr",
@@ -88,12 +95,16 @@ export function DriverClient({
   documents,
   customers,
   stops,
+  messages,
+  currentUserId,
   organizationId,
 }: {
   trips: TripRow[];
   documents: DocumentRow[];
   customers: CustomerName[];
   stops: StopRow[];
+  messages: TripMessageRow[];
+  currentUserId: string;
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
@@ -139,6 +150,8 @@ export function DriverClient({
           }
           documents={documents.filter((d) => d.trip_id === trip.id)}
           stops={stops.filter((s) => s.trip_id === trip.id)}
+          messages={messages.filter((m) => m.trip_id === trip.id)}
+          currentUserId={currentUserId}
           organizationId={organizationId}
         />
       ))}
@@ -154,18 +167,23 @@ function TripCard({
   customerName,
   documents,
   stops,
+  messages,
+  currentUserId,
   organizationId,
 }: {
   trip: TripRow;
   customerName: string | null;
   documents: DocumentRow[];
   stops: StopRow[];
+  messages: TripMessageRow[];
+  currentUserId: string;
   organizationId: string;
 }) {
   const t = useTranslations("Driver");
   const tt = useTranslations("Trips");
   const tts = useTranslations("TripStatus");
   const format = useFormatter();
+  const errText = useErrorText();
 
   const [statusState, statusAction, statusPending] = useActionState(
     updateTripStatus,
@@ -182,7 +200,7 @@ function TripCard({
     if (statusState.ok && statusState.message === "updated") {
       toast.success(t("statusUpdated"));
     } else if (!statusState.ok && statusState.error) {
-      toast.error(t("errorToast", { error: statusState.error }));
+      toast.error(t("errorToast", { error: errText(statusState.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusState]);
@@ -191,7 +209,7 @@ function TripCard({
     if (rejectState.ok && rejectState.message === "rejected") {
       toast.success(t("rejectedToast"));
     } else if (!rejectState.ok && rejectState.error) {
-      toast.error(t("errorToast", { error: rejectState.error }));
+      toast.error(t("errorToast", { error: errText(rejectState.error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rejectState]);
@@ -273,9 +291,7 @@ function TripCard({
                 toast.success(t("signatureSaved"));
                 setShowSignaturePad(false);
               } else {
-                toast.error(
-                  t("errorToast", { error: result.error ?? "unknown" }),
-                );
+                toast.error(t("errorToast", { error: errText(result.error) }));
               }
             } catch (err) {
               const msg = err instanceof Error ? err.message : "upload_failed";
@@ -370,6 +386,23 @@ function TripCard({
             trip={trip}
             documents={documents}
             organizationId={organizationId}
+          />
+        </div>
+      </details>
+
+      <details className="group rounded-lg border">
+        <summary className="flex cursor-pointer items-center justify-between p-3 text-sm font-semibold select-none">
+          <span className="flex items-center gap-1.5">
+            <MessageCircle className="size-4" />
+            {t("messagesTitle")}
+          </span>
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="border-t p-3">
+          <TripMessagesClient
+            tripId={trip.id}
+            messages={messages}
+            currentUserId={currentUserId}
           />
         </div>
       </details>

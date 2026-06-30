@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  TripMessagesClient,
+  type TripMessage,
+} from "@/components/trip-messages-client";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format-date";
 import { useErrorText } from "@/lib/use-error-text";
@@ -74,6 +78,8 @@ export type TripDetailProps = {
     uploaderName: string;
     signedUrl: string | null;
   }>;
+  messages: TripMessage[];
+  currentUserId: string;
   userRole: "admin" | "dispatcher" | "driver" | null;
 };
 
@@ -86,6 +92,8 @@ export function TripDetailClient({
   org,
   stops,
   documents,
+  messages,
+  currentUserId,
   userRole,
 }: TripDetailProps) {
   const t = useTranslations("TripDetail");
@@ -494,6 +502,12 @@ export function TripDetailClient({
               <p className="text-sm text-muted-foreground">{t("noCustomer")}</p>
             )}
           </div>
+
+          <TripMessagesClient
+            tripId={trip.id}
+            messages={messages}
+            currentUserId={currentUserId}
+          />
 
           {/* Tracking link */}
           {trip.tracking_token && (

@@ -44,6 +44,7 @@
   "Nav": {
     "dashboard": "Dashboard",
     "drivers": "Chauffeurs",
+    "vehicles": "Voertuigen",
     "customers": "Klanten",
     "trips": "Ritten",
     "documents": "Documenten",
@@ -145,6 +146,44 @@
     "expiryReminderNone": "Geen documenten die binnen 30 dagen verlopen.",
     "expiryReminderError": "E-mail verzenden mislukt: {error}"
   },
+  "Vehicles": {
+    "title": "Voertuigen",
+    "subtitle": "Beheer uw vrachtwagen- en aanhangerpark",
+    "plate": "Kenteken",
+    "trailerPlate": "Aanhanger Kenteken",
+    "brand": "Merk",
+    "model": "Model",
+    "year": "Jaar",
+    "capacityTon": "Capaciteit (ton)",
+    "inspectionExpiry": "Keuring Vervaldatum",
+    "insuranceExpiry": "Verzekering Vervaldatum",
+    "lastServiceKm": "Laatste Onderhoud (km)",
+    "currentKm": "Huidige Km",
+    "notes": "Notities",
+    "addVehicle": "Voertuig Toevoegen",
+    "editVehicle": "Voertuig Bewerken",
+    "noVehicles": "Nog geen voertuigen toegevoegd.",
+    "expired": "Verlopen",
+    "expiringSoon": "Verloopt binnenkort",
+    "ok": "In orde",
+    "linkedTrips": "Gekoppelde Ritten",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "cancel": "Annuleren",
+    "createdToast": "Voertuig toegevoegd.",
+    "updatedToast": "Voertuig bijgewerkt.",
+    "deletedToast": "Voertuig verwijderd.",
+    "deleteConfirm": "Weet u zeker dat u dit voertuig wilt verwijderen?",
+    "errorToast": "Bewerking mislukt: {error}"
+  },
+  "VehicleDetail": {
+    "back": "← Terug naar voertuigen",
+    "expiriesTitle": "Documentvervaldatums",
+    "noTrips": "Geen ritten voor dit voertuig.",
+    "colRoute": "Route",
+    "colStatus": "Status",
+    "colDate": "Datum"
+  },
   "Customers": {
     "title": "Klanten",
     "subtitle": "Afzenders en geadresseerden",
@@ -189,6 +228,8 @@
     "selectCustomer": "Selecteer een klant",
     "driver": "Chauffeur",
     "selectDriver": "Selecteer een chauffeur",
+    "vehicle": "Voertuig",
+    "vehiclePlaceholder": "Selecteer een voertuig",
     "loadDate": "Laaddatum",
     "deliveryDate": "Leverdatum",
     "status": "Status",
@@ -282,7 +323,12 @@
     "ocrView": "OCR-velden bekijken",
     "ocrTitle": "Velden uit OCR (controleer)",
     "ocrRerun": "Opnieuw uitvoeren",
-    "ocrDoneToast": "OCR voltooid."
+    "ocrDoneToast": "OCR voltooid.",
+    "groupTitle": "#{tripId} — {origin} → {destination} | Chauffeur: {driver} | {date}",
+    "documentsCount": "{count, plural, one {# document} other {# documenten}}",
+    "noPending": "Geen wachtend",
+    "noResults": "Geen resultaten gevonden",
+    "review": "Beoordelen"
   },
   "Driver": {
     "title": "Mijn ritten",
@@ -301,6 +347,7 @@
     "statusUpdated": "Ritstatus bijgewerkt.",
     "errorToast": "Bewerking mislukt: {error}",
     "documentsTitle": "Documenten",
+    "messagesTitle": "Berichten",
     "noDocuments": "Nog geen documenten.",
     "selectType": "Documenttype",
     "uploadDocument": "Document scannen / uploaden",
@@ -404,6 +451,8 @@
   "ValidationErrors": {
     "unauthorized": "U bent niet bevoegd.",
     "forbidden": "U heeft geen toestemming voor deze actie.",
+    "content_required": "Berichtinhoud is verplicht.",
+    "plate_required": "Kenteken is verplicht.",
     "email_required": "E-mail is verplicht.",
     "name_required": "Naam is verplicht.",
     "origin_required": "Vertrekpunt is verplicht.",
@@ -482,6 +531,14 @@
     "signatureTitle": "Leveringshandtekening",
     "signatureAlt": "Handtekening ontvanger",
     "signatureViewFull": "Volledig formaat bekijken →"
+  },
+  "TripMessages": {
+    "title": "Berichten",
+    "send": "Verzenden",
+    "placeholder": "Schrijf een bericht...",
+    "noMessages": "Nog geen berichten.",
+    "you": "U",
+    "errorToast": "Actie mislukt: {error}"
   },
   "CustomerDetail": {
     "back": "← Terug naar klanten",

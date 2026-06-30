@@ -80,6 +80,7 @@ export async function createTrip(
 
   const customerId = nn(formData.get("customer_id"));
   const driverId = nn(formData.get("driver_id"));
+  const vehicleId = nn(formData.get("vehicle_id"));
 
   const { data: inserted, error } = await admin
     .from("trips")
@@ -89,6 +90,7 @@ export async function createTrip(
       destination,
       customer_id: customerId,
       driver_id: driverId,
+      vehicle_id: vehicleId,
       load_date: nn(formData.get("load_date")),
       delivery_date: nn(formData.get("delivery_date")),
       status: driverId ? "driver_approval" : "requested",
@@ -150,6 +152,7 @@ export async function updateTrip(
 
   const customerId = nn(formData.get("customer_id"));
   const driverId = nn(formData.get("driver_id"));
+  const vehicleId = nn(formData.get("vehicle_id"));
 
   const { error } = await admin
     .from("trips")
@@ -158,6 +161,7 @@ export async function updateTrip(
       destination,
       customer_id: customerId,
       driver_id: driverId,
+      vehicle_id: vehicleId,
       load_date: nn(formData.get("load_date")),
       delivery_date: nn(formData.get("delivery_date")),
       ...cargoFields(formData),
@@ -343,4 +347,55 @@ export async function updateTripStatus(
   revalidatePath("/[locale]/trips", "page");
   revalidatePath("/[locale]/driver", "page");
   return { ok: true, message: "updated" };
+}
+
+/**
+ * Sefer mesajı gönderir. Admin/dispatcher firmadaki tüm seferlere; şoför
+ * yalnızca kendine atanan sefere mesaj gönderebilir. Panel ve şoför
+ * tarafında aynı action kullanılır.
+ */
+export async function sendTripMessage(
+  _prev: TripFormState,
+  formData: FormData,
+): Promise<TripFormState> {
+  const me = await getCurrentUser();
+  if (!me || !me.organization_id) {
+    return { ok: false, error: "unauthorized" };
+  }
+
+  const tripId = nn(formData.get("trip_id"));
+  const content = nn(formData.get("content"));
+  if (!tripId) return { ok: false, error: "id_required" };
+
+  const fieldErrors: FieldErrors = {};
+  const contentErr = vRequired(content, "content_required");
+  if (contentErr) fieldErrors.content = contentErr;
+  if (hasErrors(fieldErrors)) return { ok: false, fieldErrors };
+
+  const admin = adminClientOrNull();
+  if (!admin) return { ok: false, error: "server_misconfigured" };
+
+  const { data: target } = await admin
+    .from("trips")
+    .select("organization_id, driver_id")
+    .eq("id", tripId)
+    .single();
+  if (!target || target.organization_id !== me.organization_id) {
+    return { ok: false, error: "not_found" };
+  }
+  if (me.role === "driver" && target.driver_id !== me.id) {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const { error } = await admin.from("trip_messages").insert({
+    organization_id: me.organization_id,
+    trip_id: tripId,
+    sender_id: me.id,
+    content: content as string,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/[locale]/trips/[id]", "page");
+  revalidatePath("/[locale]/driver", "page");
+  return { ok: true, message: "sent" };
 }

@@ -3,7 +3,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedDocumentUrls } from "@/lib/supabase/storage";
 import { Pagination } from "@/components/pagination";
-import { DocumentsClient, type DocumentItem } from "./documents-client";
+import {
+  DocumentsClient,
+  type DocumentItem,
+  type GroupedTrip,
+} from "./documents-client";
 import type { Database } from "@/lib/supabase/database.types";
 
 type DocumentRow = Pick<
@@ -19,7 +23,7 @@ type DocumentRow = Pick<
 >;
 type TripInfo = Pick<
   Database["public"]["Tables"]["trips"]["Row"],
-  "id" | "origin" | "destination" | "driver_id"
+  "id" | "origin" | "destination" | "driver_id" | "load_date"
 >;
 type UserInfo = Pick<
   Database["public"]["Tables"]["users"]["Row"],
@@ -61,7 +65,7 @@ export default async function DocumentsPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  let items: DocumentItem[] = [];
+  let groups: GroupedTrip[] = [];
   let total = 0;
 
   if (me?.organization_id) {
@@ -71,11 +75,9 @@ export default async function DocumentsPage({
       .from("documents")
       .select(
         "id, trip_id, uploaded_by, type, file_url, status, ocr_data, created_at",
-        { count: "exact" },
       )
       .eq("organization_id", me.organization_id)
-      .order("created_at", { ascending: false })
-      .range(from, to);
+      .order("created_at", { ascending: false });
 
     if (statusFilter) docsQuery = docsQuery.eq("status", statusFilter);
     if (typeFilter) docsQuery = docsQuery.eq("type", typeFilter);
@@ -84,7 +86,7 @@ export default async function DocumentsPage({
       docsQuery,
       supabase
         .from("trips")
-        .select("id, origin, destination, driver_id")
+        .select("id, origin, destination, driver_id, load_date")
         .eq("organization_id", me.organization_id),
       supabase
         .from("users")
@@ -93,7 +95,6 @@ export default async function DocumentsPage({
     ]);
 
     const docs = (docsRes.data as DocumentRow[]) ?? [];
-    total = docsRes.count ?? 0;
     const tripMap = new Map(
       ((tripsRes.data as TripInfo[]) ?? []).map((trip) => [trip.id, trip]),
     );
@@ -104,29 +105,61 @@ export default async function DocumentsPage({
       ]),
     );
 
+    // documents zaten created_at DESC sıralı; trip_id'ye göre gruplarken bu
+    // sıra korunur, yani en yeni belgeye sahip sefer grubu en üstte kalır.
+    const docsByTrip = new Map<string, DocumentRow[]>();
+    for (const doc of docs) {
+      const arr = docsByTrip.get(doc.trip_id);
+      if (arr) arr.push(doc);
+      else docsByTrip.set(doc.trip_id, [doc]);
+    }
+
+    const allGroups = Array.from(docsByTrip.entries()).map(
+      ([tripId, docsForTrip]) => {
+        const trip = tripMap.get(tripId);
+        const driverName = trip?.driver_id
+          ? (userMap.get(trip.driver_id) ?? "—")
+          : "—";
+        return {
+          tripId,
+          origin: trip?.origin ?? "—",
+          destination: trip?.destination ?? "—",
+          driverName,
+          loadDate: trip?.load_date ?? null,
+          docs: docsForTrip,
+        };
+      },
+    );
+
+    total = allGroups.length;
+    const pageGroups = allGroups.slice(from, to + 1);
+    const pageDocs = pageGroups.flatMap((g) => g.docs);
+
     const signedUrls = await getSignedDocumentUrls(
-      docs.map((d) => d.file_url),
+      pageDocs.map((d) => d.file_url),
       3600,
     );
 
-    items = docs.map((doc) => {
-      const trip = tripMap.get(doc.trip_id);
-      return {
-        id: doc.id,
-        type: doc.type,
-        status: doc.status,
-        createdAt: doc.created_at,
-        tripLabel: trip ? `${trip.origin} → ${trip.destination}` : "—",
-        driverName: doc.uploaded_by
-          ? (userMap.get(doc.uploaded_by) ?? "—")
-          : "—",
-        signedUrl: signedUrls.get(doc.file_url) ?? null,
-        ocrData:
-          doc.ocr_data && typeof doc.ocr_data === "object"
-            ? (doc.ocr_data as Record<string, string>)
-            : null,
-      };
-    });
+    groups = pageGroups.map((g) => ({
+      tripId: g.tripId,
+      origin: g.origin,
+      destination: g.destination,
+      driverName: g.driverName,
+      loadDate: g.loadDate,
+      documents: g.docs.map(
+        (doc): DocumentItem => ({
+          id: doc.id,
+          type: doc.type,
+          status: doc.status,
+          createdAt: doc.created_at,
+          signedUrl: signedUrls.get(doc.file_url) ?? null,
+          ocrData:
+            doc.ocr_data && typeof doc.ocr_data === "object"
+              ? (doc.ocr_data as Record<string, string>)
+              : null,
+        }),
+      ),
+    }));
   }
 
   const paginationParams: Record<string, string> = {};
@@ -139,7 +172,7 @@ export default async function DocumentsPage({
       <p className="text-muted-foreground">{t("subtitle")}</p>
       <div className="mt-4">
         <DocumentsClient
-          items={items}
+          groups={groups}
           initialStatus={statusFilter ?? "all"}
           initialType={typeFilter ?? "all"}
         />
