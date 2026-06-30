@@ -3,6 +3,10 @@
     "name": "Logistics CRM",
     "tagline": "Driver document and trip management"
   },
+  "Theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
+  },
   "Common": {
     "loading": "Loading...",
     "save": "Save",

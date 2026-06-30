@@ -3,6 +3,10 @@
     "name": "Logistiek CRM",
     "tagline": "Beheer van chauffeursdocumenten en ritten"
   },
+  "Theme": {
+    "switchToDark": "Schakel naar donkere modus",
+    "switchToLight": "Schakel naar lichte modus"
+  },
   "Common": {
     "loading": "Laden...",
     "save": "Opslaan",

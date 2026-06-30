@@ -8,6 +8,7 @@ import { Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Card,
   CardContent,
@@ -69,7 +70,11 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-sidebar p-4">
+    <main className="relative flex flex-1 flex-col items-center justify-center gap-8 bg-sidebar p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       {/* Marka alanı */}
       <div className="flex flex-col items-center gap-2 text-center">
         <div className="flex items-center gap-3">

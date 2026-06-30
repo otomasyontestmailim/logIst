@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { SignOutButton } from "@/components/sign-out-button";
 
 const navItems = [
@@ -80,8 +81,8 @@ export function AppShell({
   return (
     <div className="flex min-h-full flex-1">
       {/* Masaüstü sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar md:flex">
-        <div className="flex h-14 items-center gap-2.5 border-b px-4">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+        <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Truck className="size-4" />
           </div>
@@ -98,8 +99,8 @@ export function AppShell({
             onClick={() => setMobileOpen(false)}
             aria-hidden
           />
-          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col border-r bg-background shadow-lg">
-            <div className="flex h-14 items-center justify-between border-b px-4">
+          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-lg">
+            <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
               <div className="flex items-center gap-2.5">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Truck className="size-4" />
@@ -122,7 +123,7 @@ export function AppShell({
 
       {/* Ana içerik */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-4 border-b px-4">
+        <header className="flex h-14 items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -138,6 +139,7 @@ export function AppShell({
           </div>
           <div className="flex items-center gap-2">
             {headerSlot}
+            <ThemeToggle />
             <LocaleSwitcher />
             <SignOutButton />
           </div>

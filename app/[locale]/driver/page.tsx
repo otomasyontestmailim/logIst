@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Truck } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { OfflineQueueBadge } from "@/components/offline-queue-badge";
 import { DriverClient } from "./driver-client";
 import type { Database } from "@/lib/supabase/database.types";
@@ -113,7 +114,7 @@ export default async function DriverPage() {
   return (
     <div className="flex min-h-svh flex-col">
       {/* Sabit marka başlığı — mobil PWA'da uygulama çubuğu hissi */}
-      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-sidebar px-4">
+      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4">
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Truck className="size-4" />
@@ -122,6 +123,7 @@ export default async function DriverPage() {
         </div>
         <div className="flex items-center gap-2">
           <OfflineQueueBadge />
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </header>

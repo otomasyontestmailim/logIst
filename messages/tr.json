@@ -3,6 +3,10 @@
     "name": "Lojistik CRM",
     "tagline": "Şoför belge ve sefer yönetimi"
   },
+  "Theme": {
+    "switchToDark": "Karanlık moda geç",
+    "switchToLight": "Aydınlık moda geç"
+  },
   "Common": {
     "loading": "Yükleniyor...",
     "save": "Kaydet",

@@ -199,31 +199,33 @@ export function TripDetailClient({
       <div className="flex items-center gap-0 overflow-x-auto rounded-lg border bg-card px-4 py-3">
         {PIPELINE_STATUSES.concat(["completed" as TripStatus]).map(
           (s, i, arr) => {
-            const done =
-              PIPELINE_STATUSES.indexOf(currentStatus) >= i ||
-              currentStatus === "completed";
+            const isFinal = currentStatus === "completed";
+            const done = isFinal || currentIdx >= i;
             const active = s === currentStatus;
+            const lineFilled = isFinal || currentIdx > i;
+            const tone = active
+              ? STATUS_TONE[s as TripStatus]
+              : done
+                ? "status-done"
+                : "status-idle";
             return (
               <div key={s} className="flex shrink-0 items-center">
                 <div
                   className={cn(
-                    "flex flex-col items-center gap-1 px-2",
-                    active ? "opacity-100" : done ? "opacity-70" : "opacity-35",
+                    "flex flex-col items-center gap-1 px-2 transition-opacity duration-200",
+                    active ? "opacity-100" : done ? "opacity-90" : "opacity-40",
                   )}
                 >
                   <span
                     className={cn(
-                      "size-2.5 rounded-full",
-                      active
-                        ? `status-dot ${STATUS_TONE[s as TripStatus]}`
-                        : done
-                          ? "bg-primary/60"
-                          : "bg-muted-foreground/30",
+                      "rounded-full transition-all duration-200",
+                      `status-dot ${tone}`,
+                      active ? "size-3" : "size-2.5",
                     )}
                   />
                   <span
                     className={cn(
-                      "text-xs whitespace-nowrap",
+                      "text-xs whitespace-nowrap transition-colors duration-200",
                       active && "font-semibold text-foreground",
                       !active && "text-muted-foreground",
                     )}
@@ -232,7 +234,12 @@ export function TripDetailClient({
                   </span>
                 </div>
                 {i < arr.length - 1 && (
-                  <div className="h-px w-4 shrink-0 bg-border" />
+                  <div
+                    className={cn(
+                      "h-px w-4 shrink-0 transition-colors duration-200",
+                      lineFilled ? "bg-success/50" : "bg-border",
+                    )}
+                  />
                 )}
               </div>
             );
