@@ -58,7 +58,7 @@ export async function extractDocumentFields(
   const message = await client.messages.create({
     // Maliyet-odaklı OCR: Haiku görüntü + yapılandırılmış çıktı destekler,
     // belge alan çıkarımı için yeterli ve Opus'tan çok daha ucuz.
-    model: "claude-haiku-4-5",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     system:
       "Sen bir lojistik belge okuma asistanısın. Verilen taranmış belgeden " +
