@@ -4,7 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format-date";
-import { STATUS_CLASSES } from "@/lib/trip-status";
+import { StatusChip } from "@/components/ui/status-chip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState } from "@/components/empty-state";
+import { StatTile } from "@/components/stat-tile";
+import { STATUS_TONE_NAME } from "@/lib/trip-status";
 import { CustomerDetailActions } from "./customer-detail-client";
 import type { Database, TripStatus } from "@/lib/supabase/database.types";
 
@@ -82,7 +93,7 @@ export default async function CustomerDetailPage({
         : tc("typeBoth");
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       <Link
         href="/customers"
         className="text-sm text-muted-foreground hover:text-foreground w-fit"
@@ -99,7 +110,7 @@ export default async function CustomerDetailPage({
 
       {/* Info grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border bg-card p-6 space-y-3">
+        <div className="rounded-xl border bg-card p-6 space-y-3 shadow-resting">
           <h2 className="font-semibold">{tc("name")}</h2>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <InfoRow label={tc("country")} value={customer.country} />
@@ -113,14 +124,11 @@ export default async function CustomerDetailPage({
           </dl>
         </div>
 
-        <div className="rounded-lg border bg-card p-6 flex flex-col justify-center items-center gap-1">
-          <span className="text-4xl font-bold tabular-nums">
-            {trips.length}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {tc("colTrips")}
-          </span>
-        </div>
+        <StatTile
+          label={tc("colTrips")}
+          value={trips.length}
+          className="flex flex-col justify-center"
+        />
       </div>
 
       {/* Edit / Delete */}
@@ -132,51 +140,47 @@ export default async function CustomerDetailPage({
       <section className="space-y-3">
         <h2 className="font-semibold">{t("tripHistory")}</h2>
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            {t("noTrips")}
-          </div>
+          <EmptyState title={t("noTrips")} />
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{tc("colName")}</th>
-                  <th className="px-4 py-3 font-medium">{tc("colType")}</th>
-                  <th className="px-4 py-3 font-medium">{tc("colLocation")}</th>
-                  <th className="px-4 py-3 font-medium">{tc("colContact")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {trips.map((trip) => (
-                  <tr key={trip.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/trips/${trip.id}`}
-                        className="text-primary hover:underline underline-offset-2"
-                      >
-                        {trip.origin} → {trip.destination}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[trip.status as TripStatus]}`}
-                      >
-                        {ts(trip.status as TripStatus)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(format, trip.load_date)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {trip.driver_id
-                        ? (driverMap.get(trip.driver_id) ?? "—")
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colRoute")}</TableHead>
+                <TableHead>{t("colStatus")}</TableHead>
+                <TableHead>{t("colLoadDate")}</TableHead>
+                <TableHead>{t("colDriver")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trips.map((trip) => (
+                <TableRow key={trip.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      href={`/trips/${trip.id}`}
+                      className="text-primary underline-offset-2 hover:underline"
+                    >
+                      {trip.origin} → {trip.destination}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusChip
+                      tone={STATUS_TONE_NAME[trip.status as TripStatus]}
+                    >
+                      {ts(trip.status as TripStatus)}
+                    </StatusChip>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(format, trip.load_date)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {trip.driver_id
+                      ? (driverMap.get(trip.driver_id) ?? "—")
+                      : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
     </main>

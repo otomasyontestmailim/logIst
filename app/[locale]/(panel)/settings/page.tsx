@@ -2,6 +2,7 @@ import { redirect } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { PageHeader } from "@/components/page-header";
 import { ProfileForm, OrgForm, PasswordForm } from "./settings-client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -33,17 +34,15 @@ export default async function SettingsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-8 p-8">
-      <div>
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
-      </div>
+    <main className="flex flex-1 flex-col gap-8 p-4 md:p-8">
+      <PageHeader title={t("title")} />
 
       {/* Profile */}
       <section className="max-w-2xl space-y-4">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">{t("profileTitle")}</h2>
         </div>
-        <div className="rounded-lg border bg-card p-6">
+        <div className="rounded-xl border bg-card p-6 shadow-resting">
           <ProfileForm fullName={me.full_name} email={me.authEmail} />
         </div>
       </section>
@@ -53,7 +52,7 @@ export default async function SettingsPage() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold">{t("passwordTitle")}</h2>
         </div>
-        <div className="rounded-lg border bg-card p-6">
+        <div className="rounded-xl border bg-card p-6 shadow-resting">
           <PasswordForm />
         </div>
       </section>
@@ -64,7 +63,7 @@ export default async function SettingsPage() {
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">{t("orgTitle")}</h2>
           </div>
-          <div className="rounded-lg border bg-card p-6">
+          <div className="rounded-xl border bg-card p-6 shadow-resting">
             <OrgForm orgName={org.name} taxNo={org.tax_no} />
           </div>
         </section>

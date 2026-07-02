@@ -4,8 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format-date";
-import { expiryStatus } from "@/lib/expiry";
-import { STATUS_CLASSES } from "@/lib/trip-status";
+import { StatusChip } from "@/components/ui/status-chip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState } from "@/components/empty-state";
+import { ExpiryBadge } from "@/components/expiry-badge";
+import { STATUS_TONE_NAME } from "@/lib/trip-status";
 import type { Database, TripStatus } from "@/lib/supabase/database.types";
 
 type VehicleRow = Database["public"]["Tables"]["vehicles"]["Row"];
@@ -52,7 +62,7 @@ export default async function VehicleDetailPage({
   const trips = tripsRes.data ?? [];
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       <Link
         href="/vehicles"
         className="text-sm text-muted-foreground hover:text-foreground w-fit"
@@ -72,7 +82,7 @@ export default async function VehicleDetailPage({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border bg-card p-6 space-y-3">
+        <div className="rounded-xl border bg-card p-6 space-y-3 shadow-resting">
           <h2 className="font-semibold">{tv("title")}</h2>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <InfoRow
@@ -104,21 +114,21 @@ export default async function VehicleDetailPage({
           )}
         </div>
 
-        <div className="rounded-lg border bg-card p-6 space-y-3">
+        <div className="rounded-xl border bg-card p-6 space-y-3 shadow-resting">
           <h2 className="font-semibold">{t("expiriesTitle")}</h2>
           <div className="space-y-2 text-sm">
-            <ExpiryRow
-              label={tv("inspectionExpiry")}
-              date={vehicle.inspection_expiry}
-              format={format}
-              t={tv}
-            />
-            <ExpiryRow
-              label={tv("insuranceExpiry")}
-              date={vehicle.insurance_expiry}
-              format={format}
-              t={tv}
-            />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">
+                {tv("inspectionExpiry")}
+              </span>
+              <ExpiryBadge date={vehicle.inspection_expiry} showOk />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">
+                {tv("insuranceExpiry")}
+              </span>
+              <ExpiryBadge date={vehicle.insurance_expiry} showOk />
+            </div>
           </div>
         </div>
       </div>
@@ -126,45 +136,41 @@ export default async function VehicleDetailPage({
       <section className="space-y-3">
         <h2 className="font-semibold">{tv("linkedTrips")}</h2>
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            {t("noTrips")}
-          </div>
+          <EmptyState title={t("noTrips")} />
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{t("colRoute")}</th>
-                  <th className="px-4 py-3 font-medium">{t("colStatus")}</th>
-                  <th className="px-4 py-3 font-medium">{t("colDate")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {trips.map((trip) => (
-                  <tr key={trip.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/trips/${trip.id}`}
-                        className="text-primary hover:underline underline-offset-2"
-                      >
-                        {trip.origin} → {trip.destination}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[trip.status as TripStatus]}`}
-                      >
-                        {ts(trip.status as TripStatus)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(format, trip.load_date)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colRoute")}</TableHead>
+                <TableHead>{t("colStatus")}</TableHead>
+                <TableHead>{t("colDate")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trips.map((trip) => (
+                <TableRow key={trip.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      href={`/trips/${trip.id}`}
+                      className="text-primary underline-offset-2 hover:underline"
+                    >
+                      {trip.origin} → {trip.destination}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusChip
+                      tone={STATUS_TONE_NAME[trip.status as TripStatus]}
+                    >
+                      {ts(trip.status as TripStatus)}
+                    </StatusChip>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(format, trip.load_date)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
     </main>
@@ -178,44 +184,5 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </>
-  );
-}
-
-function ExpiryRow({
-  label,
-  date,
-  format,
-  t,
-}: {
-  label: string;
-  date: string | null;
-  format: Awaited<ReturnType<typeof getFormatter>>;
-  t: Awaited<ReturnType<typeof getTranslations>>;
-}) {
-  if (!date) {
-    return (
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="text-muted-foreground">—</span>
-      </div>
-    );
-  }
-  const status = expiryStatus(date);
-  let cls = "text-muted-foreground";
-  let badge = t("ok");
-  if (status === "expired") {
-    cls = "text-destructive font-medium";
-    badge = t("expired");
-  } else if (status === "expiring") {
-    cls = "text-amber-700 dark:text-amber-400 font-medium";
-    badge = t("expiringSoon");
-  }
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cls}>
-        {formatDate(format, date)} · {badge}
-      </span>
-    </div>
   );
 }

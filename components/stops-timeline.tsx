@@ -32,10 +32,10 @@ export function StopsTimeline({ stops }: { stops: StopRow[] }) {
               <span
                 className={`mt-0.5 size-3 shrink-0 rounded-full border-2 ${
                   stop.actual_at
-                    ? "border-green-600 bg-green-600"
+                    ? "border-success bg-success"
                     : stop.stop_type === "pickup"
-                      ? "border-blue-600 bg-blue-600"
-                      : "border-blue-600 bg-background"
+                      ? "border-primary bg-primary"
+                      : "border-primary bg-background"
                 }`}
               />
               {!last && <span className="w-px flex-1 bg-border" />}

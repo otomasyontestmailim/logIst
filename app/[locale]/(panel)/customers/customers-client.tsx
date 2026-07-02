@@ -14,7 +14,15 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createCustomer,
   deleteCustomer,
@@ -22,6 +30,8 @@ import {
   type CustomerFormState,
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { Field as FormField } from "@/components/field";
 import { useErrorText } from "@/lib/use-error-text";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -131,7 +141,7 @@ function CustomerForm({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-lg border bg-card p-6 shadow-sm"
+      className="rounded-xl border bg-card p-6 shadow-resting"
     >
       <h2 className="mb-4 text-lg font-semibold">
         {customer ? t("editCustomer") : t("newCustomer")}
@@ -152,19 +162,17 @@ function CustomerForm({
           label={t("contact")}
           defaultValue={customer?.contact}
         />
-        <div className="space-y-1.5">
-          <Label htmlFor="type">{t("type")}</Label>
-          <select
+        <FormField label={t("type")} htmlFor="type">
+          <NativeSelect
             id="type"
             name="type"
             defaultValue={customer?.type ?? "both"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="shipper">{t("typeShipper")}</option>
             <option value="consignee">{t("typeConsignee")}</option>
             <option value="both">{t("typeBoth")}</option>
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
         <Field
           name="country"
           label={t("country")}
@@ -210,11 +218,7 @@ function Field({
   error?: string;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+    <FormField label={label} htmlFor={name} required={required} error={error}>
       <Input
         id={name}
         name={name}
@@ -222,18 +226,8 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? undefined}
         aria-invalid={!!error}
-        className={
-          error
-            ? "border-destructive focus-visible:ring-destructive"
-            : undefined
-        }
       />
-      {error && (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -266,56 +260,52 @@ function CustomerTable({
   }, [deleteState]);
 
   if (customers.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {emptyText}
-      </div>
-    );
+    return <EmptyState title={emptyText} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 font-medium">{t("colName")}</th>
-            <th className="px-4 py-3 font-medium">{t("colType")}</th>
-            <th className="px-4 py-3 font-medium">{t("colLocation")}</th>
-            <th className="px-4 py-3 font-medium">{t("colContact")}</th>
-            <th className="px-4 py-3 font-medium">{t("colTrips")}</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("colName")}</TableHead>
+            <TableHead>{t("colType")}</TableHead>
+            <TableHead>{t("colLocation")}</TableHead>
+            <TableHead>{t("colContact")}</TableHead>
+            <TableHead>{t("colTrips")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {customers.map((c) => (
-            <tr key={c.id} className="align-top">
-              <td className="px-4 py-3 font-medium">
+            <TableRow key={c.id} className="align-top">
+              <TableCell className="font-medium">
                 <Link
                   href={`/customers/${c.id}`}
-                  className="text-primary hover:underline underline-offset-2"
+                  className="text-primary underline-offset-2 hover:underline"
                 >
                   {c.name}
                 </Link>
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 {t(
                   `type${c.type.charAt(0).toUpperCase()}${c.type.slice(1)}` as
                     | "typeShipper"
                     | "typeConsignee"
                     | "typeBoth",
                 )}
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 <div>
                   {c.city && `${c.city}`}
                   {c.country && ` (${c.country})`}
                 </div>
                 {c.address && <div className="text-xs">{c.address}</div>}
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 {c.contact}
-              </td>
-              <td className="px-4 py-3 text-sm">
+              </TableCell>
+              <TableCell className="tabular-nums">
                 {tripCounts[c.id] ? (
                   <Link
                     href={`/trips?customer=${c.id}`}
@@ -326,8 +316,8 @@ function CustomerTable({
                 ) : (
                   <span className="text-muted-foreground">—</span>
                 )}
-              </td>
-              <td className="px-4 py-3 text-right">
+              </TableCell>
+              <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <Button
                     type="button"
@@ -349,11 +339,11 @@ function CustomerTable({
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <ConfirmDialog
         open={confirmId !== null}
         onOpenChange={(o) => {

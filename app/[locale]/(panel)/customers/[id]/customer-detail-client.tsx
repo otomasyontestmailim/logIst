@@ -13,8 +13,9 @@ import { toast } from "sonner";
 import { Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Field as FormField } from "@/components/field";
 import { useErrorText } from "@/lib/use-error-text";
 import {
   updateCustomer,
@@ -95,7 +96,7 @@ export function CustomerDetailActions({ customer }: { customer: CustomerRow }) {
         <form
           ref={formRef}
           action={updateAction}
-          className="rounded-lg border bg-card p-6 shadow-sm"
+          className="rounded-xl border bg-card p-6 shadow-resting"
         >
           <h2 className="mb-4 text-lg font-semibold">{tc("editCustomer")}</h2>
           <input type="hidden" name="customer_id" value={customer.id} />
@@ -111,19 +112,17 @@ export function CustomerDetailActions({ customer }: { customer: CustomerRow }) {
               label={tc("contact")}
               defaultValue={customer.contact}
             />
-            <div className="space-y-1.5">
-              <Label htmlFor="type">{tc("type")}</Label>
-              <select
+            <FormField label={tc("type")} htmlFor="type">
+              <NativeSelect
                 id="type"
                 name="type"
                 defaultValue={customer.type ?? "both"}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="shipper">{tc("typeShipper")}</option>
                 <option value="consignee">{tc("typeConsignee")}</option>
                 <option value="both">{tc("typeBoth")}</option>
-              </select>
-            </div>
+              </NativeSelect>
+            </FormField>
             <Field
               name="country"
               label={tc("country")}
@@ -186,17 +185,13 @@ function Field({
   defaultValue?: string | null;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+    <FormField label={label} htmlFor={name} required={required}>
       <Input
         id={name}
         name={name}
         required={required}
         defaultValue={defaultValue ?? undefined}
       />
-    </div>
+    </FormField>
   );
 }

@@ -72,7 +72,7 @@ export function NotificationsDropdown({
                       alert.type === "expired_doc" && "bg-destructive",
                       alert.type === "expiring_doc" && "bg-warning",
                       alert.type === "pending_docs" && "bg-primary",
-                      alert.type === "due_soon" && "bg-blue-500",
+                      alert.type === "due_soon" && "bg-primary",
                     )}
                   />
                   <span className="leading-snug">{alert.message}</span>

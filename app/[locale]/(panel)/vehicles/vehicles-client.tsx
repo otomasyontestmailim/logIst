@@ -14,8 +14,15 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createVehicle,
   deleteVehicle,
@@ -23,10 +30,10 @@ import {
   type VehicleFormState,
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { formatDate } from "@/lib/format-date";
-import { expiryStatus } from "@/lib/expiry";
+import { EmptyState } from "@/components/empty-state";
+import { ExpiryBadge } from "@/components/expiry-badge";
+import { Field as FormField } from "@/components/field";
 import { useErrorText } from "@/lib/use-error-text";
-import { useFormatter } from "next-intl";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type VehicleRow = Database["public"]["Tables"]["vehicles"]["Row"];
@@ -128,7 +135,7 @@ function VehicleForm({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-lg border bg-card p-6 shadow-sm"
+      className="rounded-xl border bg-card p-6 shadow-resting"
     >
       <h2 className="mb-4 text-lg font-semibold">
         {vehicle ? t("editVehicle") : t("addVehicle")}
@@ -188,15 +195,14 @@ function VehicleForm({
           defaultValue={vehicle?.current_km?.toString()}
         />
       </div>
-      <div className="mt-4 space-y-1.5">
-        <Label htmlFor="notes">{t("notes")}</Label>
+      <FormField label={t("notes")} htmlFor="notes" className="mt-4">
         <Textarea
           id="notes"
           name="notes"
           rows={3}
           defaultValue={vehicle?.notes ?? undefined}
         />
-      </div>
+      </FormField>
       <div className="mt-5 flex gap-2">
         <Button type="submit" disabled={pending}>
           {pending ? t("saving") : t("save")}
@@ -230,11 +236,7 @@ function Field({
   error?: string;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+    <FormField label={label} htmlFor={name} required={required} error={error}>
       <Input
         id={name}
         name={name}
@@ -242,18 +244,8 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? undefined}
         aria-invalid={!!error}
-        className={
-          error
-            ? "border-destructive focus-visible:ring-destructive"
-            : undefined
-        }
       />
-      {error && (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -284,33 +276,29 @@ function VehicleTable({
   }, [deleteState]);
 
   if (vehicles.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {emptyText}
-      </div>
-    );
+    return <EmptyState title={emptyText} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 font-medium">{t("plate")}</th>
-            <th className="px-4 py-3 font-medium">{t("brand")}</th>
-            <th className="px-4 py-3 font-medium">{t("capacityTon")}</th>
-            <th className="px-4 py-3 font-medium">{t("inspectionExpiry")}</th>
-            <th className="px-4 py-3 font-medium">{t("insuranceExpiry")}</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("plate")}</TableHead>
+            <TableHead>{t("brand")}</TableHead>
+            <TableHead>{t("capacityTon")}</TableHead>
+            <TableHead>{t("inspectionExpiry")}</TableHead>
+            <TableHead>{t("insuranceExpiry")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {vehicles.map((v) => (
-            <tr key={v.id} className="align-top">
-              <td className="px-4 py-3 font-medium">
+            <TableRow key={v.id} className="align-top">
+              <TableCell className="font-mono text-[0.8125rem] font-medium">
                 <Link
                   href={`/vehicles/${v.id}`}
-                  className="text-primary hover:underline underline-offset-2"
+                  className="text-primary underline-offset-2 hover:underline"
                 >
                   {v.plate}
                 </Link>
@@ -319,20 +307,20 @@ function VehicleTable({
                     {v.trailer_plate}
                   </div>
                 )}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 {[v.brand, v.model].filter(Boolean).join(" ") || "—"}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground tabular-nums">
                 {v.capacity_ton != null ? `${v.capacity_ton} TON` : "—"}
-              </td>
-              <td className="px-4 py-3">
-                <ExpiryBadge date={v.inspection_expiry} />
-              </td>
-              <td className="px-4 py-3">
-                <ExpiryBadge date={v.insurance_expiry} />
-              </td>
-              <td className="px-4 py-3 text-right">
+              </TableCell>
+              <TableCell>
+                <ExpiryBadge date={v.inspection_expiry} showOk />
+              </TableCell>
+              <TableCell>
+                <ExpiryBadge date={v.insurance_expiry} showOk />
+              </TableCell>
+              <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <Button
                     type="button"
@@ -354,11 +342,11 @@ function VehicleTable({
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <ConfirmDialog
         open={confirmId !== null}
         onOpenChange={(o) => {
@@ -375,35 +363,5 @@ function VehicleTable({
         }}
       />
     </div>
-  );
-}
-
-function ExpiryBadge({ date }: { date?: string | null }) {
-  const t = useTranslations("Vehicles");
-  const format = useFormatter();
-  if (!date) return <span className="text-muted-foreground">—</span>;
-
-  const status = expiryStatus(date);
-
-  let cls = "bg-muted text-muted-foreground";
-  let label = t("ok");
-  if (status === "expired") {
-    cls = "bg-destructive/15 text-destructive";
-    label = t("expired");
-  } else if (status === "expiring") {
-    cls = "bg-amber-500/15 text-amber-700 dark:text-amber-400";
-    label = t("expiringSoon");
-  } else {
-    cls =
-      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-  }
-
-  return (
-    <span
-      title={label}
-      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}
-    >
-      {formatDate(format, date)}
-    </span>
   );
 }

@@ -8,6 +8,16 @@ import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState } from "@/components/empty-state";
+import { StatTile } from "@/components/stat-tile";
 import { toCsv } from "@/lib/export/csv";
 
 export type TripSummary = {
@@ -102,7 +112,8 @@ export function ReportsClient({
           `${r.rate}%`,
         ]),
         styles: { fontSize: 9 },
-        headStyles: { fillColor: [37, 99, 235] },
+        // Marka rengi: petrol-teal (#2d6e75)
+        headStyles: { fillColor: [45, 110, 117] },
         columnStyles: {
           1: { halign: "right" },
           2: { halign: "right" },
@@ -139,7 +150,7 @@ export function ReportsClient({
   return (
     <div className="flex flex-col gap-8">
       {/* Tarih filtresi */}
-      <div className="flex flex-wrap items-end gap-4 rounded-lg border bg-card p-4">
+      <div className="flex flex-wrap items-end gap-4 rounded-xl border bg-card p-4 shadow-resting">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="date-from">{t("dateFrom")}</Label>
           <Input
@@ -183,15 +194,7 @@ export function ReportsClient({
             { label: t("completedTrips"), value: summary.completed },
             { label: t("activeTrips"), value: summary.active },
           ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="flex flex-col gap-1 rounded-xl border bg-card p-5 shadow-sm"
-            >
-              <span className="text-xs font-medium text-muted-foreground">
-                {label}
-              </span>
-              <span className="text-3xl font-bold tabular-nums">{value}</span>
-            </div>
+            <StatTile key={label} label={label} value={value} />
           ))}
         </div>
       </section>
@@ -225,54 +228,48 @@ export function ReportsClient({
         </div>
 
         {driverStats.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-            {t("noData")}
-          </div>
+          <EmptyState title={t("noData")} />
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{t("colDriver")}</th>
-                  <th className="px-4 py-3 text-right font-medium">
-                    {t("colTrips")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium">
-                    {t("colCompleted")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium">
-                    {t("colRate")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {driverStats.map((row) => (
-                  <tr key={row.driverId} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{row.driverName}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
-                      {row.total}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
-                      {row.completed}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span
-                        className={
-                          row.rate >= 80
-                            ? "font-semibold text-green-600 dark:text-green-400"
-                            : row.rate >= 50
-                              ? "text-warning"
-                              : "text-destructive"
-                        }
-                      >
-                        {row.rate}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colDriver")}</TableHead>
+                <TableHead className="text-right">{t("colTrips")}</TableHead>
+                <TableHead className="text-right">
+                  {t("colCompleted")}
+                </TableHead>
+                <TableHead className="text-right">{t("colRate")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {driverStats.map((row) => (
+                <TableRow key={row.driverId}>
+                  <TableCell className="font-medium">
+                    {row.driverName}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.total}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.completed}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <span
+                      className={
+                        row.rate >= 80
+                          ? "font-semibold text-success"
+                          : row.rate >= 50
+                            ? "text-warning"
+                            : "text-destructive"
+                      }
+                    >
+                      {row.rate}%
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
     </div>

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import { VehiclesClient, type VehicleRow } from "./vehicles-client";
 
@@ -28,13 +29,8 @@ export default async function VehiclesPage({
   const total = count ?? 0;
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
-        </div>
-      </div>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <VehiclesClient vehicles={vehicles ?? []} />
       <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
     </main>

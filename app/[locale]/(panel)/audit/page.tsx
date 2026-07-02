@@ -3,6 +3,16 @@ import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format-date";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import type { Database } from "@/lib/supabase/database.types";
 
 type AuditRow = Pick<
@@ -49,47 +59,44 @@ export default async function AuditPage() {
   );
 
   return (
-    <main className="flex flex-1 flex-col gap-2 p-8">
-      <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="text-muted-foreground">{t("subtitle")}</p>
+    <main className="flex flex-1 flex-col gap-2 p-4 md:p-8">
+      <PageHeader title={t("title")} description={t("subtitle")} />
 
-      <div className="mt-4 overflow-x-auto rounded-lg border">
+      <div className="mt-4">
         {logs.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            {t("empty")}
-          </div>
+          <EmptyState title={t("empty")} />
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">{t("colDate")}</th>
-                <th className="px-4 py-3 font-medium">{t("colUser")}</th>
-                <th className="px-4 py-3 font-medium">{t("colAction")}</th>
-                <th className="px-4 py-3 font-medium">{t("colEntity")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colDate")}</TableHead>
+                <TableHead>{t("colUser")}</TableHead>
+                <TableHead>{t("colAction")}</TableHead>
+                <TableHead>{t("colEntity")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {logs.map((log) => (
-                <tr key={log.id}>
-                  <td className="px-4 py-2.5 text-xs whitespace-nowrap text-muted-foreground">
+                <TableRow key={log.id}>
+                  <TableCell className="py-2.5 text-xs whitespace-nowrap text-muted-foreground">
                     {formatDate(format, log.created_at)}
-                  </td>
-                  <td className="px-4 py-2.5">
+                  </TableCell>
+                  <TableCell className="py-2.5">
                     {log.user_id ? (nameMap.get(log.user_id) ?? "—") : "—"}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
                       {log.action}
                     </code>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="py-2.5 text-xs text-muted-foreground">
                     {log.entity}
                     {log.entity_id ? ` · ${log.entity_id.slice(0, 8)}` : ""}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
     </main>

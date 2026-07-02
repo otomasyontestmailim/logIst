@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 import {
   ReportsClient,
   type DriverStat,
@@ -87,11 +88,8 @@ export default async function ReportsPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-      </div>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <ReportsClient
         summary={summary}
         driverStats={driverStats}
