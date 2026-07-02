@@ -14,7 +14,14 @@ import { IdCard, Pencil, Plus, Trash2, Truck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   createDriver,
   deleteDriver,
@@ -22,8 +29,9 @@ import {
   type DriverFormState,
 } from "./actions";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { formatDate } from "@/lib/format-date";
-import { expiryStatus } from "@/lib/expiry";
+import { EmptyState } from "@/components/empty-state";
+import { ExpiryBadge } from "@/components/expiry-badge";
+import { Field as FormField } from "@/components/field";
 import { useErrorText } from "@/lib/use-error-text";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -143,7 +151,7 @@ function DriverForm({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-lg border bg-card p-6 shadow-sm"
+      className="rounded-xl border bg-card p-6 shadow-resting"
     >
       <h2 className="mb-4 text-lg font-semibold">
         {driver ? t("editDriver") : t("newDriver")}
@@ -157,15 +165,14 @@ function DriverForm({
           error={fe.full_name ? errText(fe.full_name) : undefined}
         />
         {driver ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="email">{t("email")}</Label>
+          <FormField label={t("email")} htmlFor="email">
             <Input
               id="email"
               type="email"
               defaultValue={driver.email ?? undefined}
               disabled
             />
-          </div>
+          </FormField>
         ) : (
           <Field
             name="email"
@@ -231,15 +238,14 @@ function DriverForm({
           error={fe.capacity_ton ? errText(fe.capacity_ton) : undefined}
         />
         {!driver && (
-          <div className="space-y-1.5">
-            <Label htmlFor="password">{t("password")}</Label>
+          <FormField label={t("password")} htmlFor="password">
             <Input
               id="password"
               name="password"
               type="text"
               autoComplete="off"
             />
-          </div>
+          </FormField>
         )}
       </div>
       {!driver && (
@@ -280,11 +286,7 @@ function Field({
   error?: string;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+    <FormField label={label} htmlFor={name} required={required} error={error}>
       <Input
         id={name}
         name={name}
@@ -292,18 +294,8 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? undefined}
         aria-invalid={!!error}
-        className={
-          error
-            ? "border-destructive focus-visible:ring-destructive"
-            : undefined
-        }
       />
-      {error && (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -320,7 +312,7 @@ function DriverScorecard({
   const p = driver.profile;
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-xl border bg-card p-6 shadow-resting">
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold">{driver.full_name}</h2>
@@ -407,47 +399,43 @@ function DriverTable({
   }, [deleteState]);
 
   if (drivers.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {emptyText}
-      </div>
-    );
+    return <EmptyState icon={Truck} title={emptyText} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 font-medium">{t("colName")}</th>
-            <th className="px-4 py-3 font-medium">{t("colContact")}</th>
-            <th className="px-4 py-3 font-medium">{t("colVehicle")}</th>
-            <th className="px-4 py-3 font-medium">{t("colExpiries")}</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("colName")}</TableHead>
+            <TableHead>{t("colContact")}</TableHead>
+            <TableHead>{t("colVehicle")}</TableHead>
+            <TableHead>{t("colExpiries")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {drivers.map((d) => (
-            <tr key={d.id} className="align-top">
-              <td className="px-4 py-3 font-medium">
+            <TableRow key={d.id} className="align-top">
+              <TableCell className="font-medium">
                 <Link
                   href={`/drivers/${d.id}`}
-                  className="text-primary hover:underline underline-offset-2"
+                  className="text-primary underline-offset-2 hover:underline"
                 >
                   {d.full_name ?? t("noProfile")}
                 </Link>
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 <div>{d.email}</div>
                 {d.phone && <div className="text-xs">{d.phone}</div>}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </TableCell>
+              <TableCell className="font-mono text-[0.8125rem] text-muted-foreground">
                 {d.profile?.plate ?? t("noProfile")}
                 {d.profile?.trailer_no && (
                   <span className="text-xs"> / {d.profile.trailer_no}</span>
                 )}
-              </td>
-              <td className="px-4 py-3">
+              </TableCell>
+              <TableCell>
                 <div className="flex flex-wrap gap-1.5">
                   <ExpiryBadge label="SRC" date={d.profile?.src_expiry} />
                   <ExpiryBadge label="ADR" date={d.profile?.adr_expiry} />
@@ -460,8 +448,8 @@ function DriverTable({
                     date={d.profile?.green_card_expiry}
                   />
                 </div>
-              </td>
-              <td className="px-4 py-3 text-right">
+              </TableCell>
+              <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <Button
                     type="button"
@@ -492,11 +480,11 @@ function DriverTable({
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <ConfirmDialog
         open={confirmId !== null}
         onOpenChange={(o) => {
@@ -513,32 +501,5 @@ function DriverTable({
         }}
       />
     </div>
-  );
-}
-
-function ExpiryBadge({ label, date }: { label: string; date?: string | null }) {
-  const t = useTranslations("Drivers");
-  const format = useFormatter();
-  if (!date) return null;
-
-  const status = expiryStatus(date);
-
-  let cls = "bg-muted text-muted-foreground";
-  let title = "";
-  if (status === "expired") {
-    cls = "bg-destructive/15 text-destructive";
-    title = t("expired");
-  } else if (status === "expiring") {
-    cls = "bg-amber-500/15 text-amber-700 dark:text-amber-400";
-    title = t("expiringSoon");
-  }
-
-  return (
-    <span
-      title={title}
-      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}
-    >
-      {label}: {formatDate(format, date)}
-    </span>
   );
 }

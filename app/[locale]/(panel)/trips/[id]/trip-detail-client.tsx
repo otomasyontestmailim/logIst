@@ -14,6 +14,15 @@ import {
 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { StatusChip } from "@/components/ui/status-chip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   TripMessagesClient,
   type TripMessage,
@@ -23,8 +32,8 @@ import { formatDate } from "@/lib/format-date";
 import { useErrorText } from "@/lib/use-error-text";
 import {
   PIPELINE_STATUSES,
-  STATUS_CLASSES,
   STATUS_TONE,
+  STATUS_TONE_NAME,
   canTransition,
 } from "@/lib/trip-status";
 import { updateTripStatus, type TripFormState } from "../actions";
@@ -144,7 +153,7 @@ export function TripDetailClient({
   }, [statusState]);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       {/* Back + header */}
       <Link
         href="/trips"
@@ -166,14 +175,9 @@ export function TripDetailClient({
             {trip.destination}
           </h1>
           <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                STATUS_CLASSES[currentStatus],
-              )}
-            >
+            <StatusChip tone={STATUS_TONE_NAME[currentStatus]}>
               {ts(currentStatus)}
-            </span>
+            </StatusChip>
             {trip.load_date && (
               <span>{formatDate(format, trip.load_date)}</span>
             )}
@@ -196,7 +200,7 @@ export function TripDetailClient({
       </div>
 
       {/* Pipeline progress */}
-      <div className="flex items-center gap-0 overflow-x-auto rounded-lg border bg-card px-4 py-3">
+      <div className="flex items-center gap-0 overflow-x-auto rounded-xl border bg-card px-4 py-3 shadow-resting">
         {PIPELINE_STATUSES.concat(["completed" as TripStatus]).map(
           (s, i, arr) => {
             const isFinal = currentStatus === "completed";
@@ -252,7 +256,7 @@ export function TripDetailClient({
         {/* Left: cargo + stops + docs */}
         <div className="lg:col-span-2 space-y-6">
           {/* Cargo */}
-          <section className="rounded-lg border bg-card p-5 space-y-3">
+          <section className="rounded-xl border bg-card p-5 space-y-3 shadow-resting">
             <h2 className="font-semibold">{t("cargoInfo")}</h2>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {trip.cargo_type && (
@@ -297,10 +301,10 @@ export function TripDetailClient({
                         className={cn(
                           "block h-full",
                           trip.fuel_level <= 20
-                            ? "bg-red-500"
+                            ? "bg-destructive"
                             : trip.fuel_level <= 50
-                              ? "bg-amber-500"
-                              : "bg-emerald-500",
+                              ? "bg-warning"
+                              : "bg-success",
                         )}
                         style={{ width: `${trip.fuel_level}%` }}
                       />
@@ -373,7 +377,7 @@ export function TripDetailClient({
                 {stops.map((stop) => (
                   <div
                     key={stop.id}
-                    className="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm"
+                    className="flex items-start gap-3 rounded-xl border bg-card px-4 py-3 text-sm shadow-resting"
                   >
                     <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                     <div>
@@ -403,71 +407,63 @@ export function TripDetailClient({
                 {t("noDocuments")}
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-left text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">{t("colType")}</th>
-                      <th className="px-4 py-3 font-medium">
-                        {t("colStatus")}
-                      </th>
-                      <th className="px-4 py-3 font-medium">
-                        {t("colUploader")}
-                      </th>
-                      <th className="px-4 py-3 font-medium">{t("colDate")}</th>
-                      <th className="px-4 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {documents.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-muted/20">
-                        <td className="px-4 py-3 font-medium">
-                          <span className="flex items-center gap-2">
-                            <FileText className="size-4 shrink-0 text-muted-foreground" />
-                            {tdt(doc.type)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                              doc.status === "approved" &&
-                                "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-                              doc.status === "rejected" &&
-                                "bg-destructive/15 text-destructive",
-                              doc.status === "pending" &&
-                                "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                            )}
-                          >
-                            {tds(doc.status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {doc.uploaderName}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {formatDate(format, doc.created_at)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            href={`/documents/${doc.id}`}
-                            className="text-xs font-medium text-primary hover:underline underline-offset-2"
-                          >
-                            {t("viewDocument")}
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("colType")}</TableHead>
+                    <TableHead>{t("colStatus")}</TableHead>
+                    <TableHead>{t("colUploader")}</TableHead>
+                    <TableHead>{t("colDate")}</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {documents.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium">
+                        <span className="flex items-center gap-2">
+                          <FileText className="size-4 shrink-0 text-muted-foreground" />
+                          {tdt(doc.type)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip
+                          tone={
+                            doc.status === "approved"
+                              ? "done"
+                              : doc.status === "rejected"
+                                ? "danger"
+                                : "wait"
+                          }
+                        >
+                          {tds(doc.status)}
+                        </StatusChip>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {doc.uploaderName}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(format, doc.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Link
+                          href={`/documents/${doc.id}`}
+                          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          {t("viewDocument")}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </section>
         </div>
 
         {/* Right: driver + customer */}
         <div className="space-y-4">
-          <div className="rounded-lg border bg-card p-5 space-y-2">
+          <div className="rounded-xl border bg-card p-5 space-y-2 shadow-resting">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               {t("driverCard")}
             </h2>
@@ -492,7 +488,7 @@ export function TripDetailClient({
             )}
           </div>
 
-          <div className="rounded-lg border bg-card p-5 space-y-2">
+          <div className="rounded-xl border bg-card p-5 space-y-2 shadow-resting">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               {t("customerCard")}
             </h2>
@@ -518,7 +514,7 @@ export function TripDetailClient({
 
           {/* Tracking link */}
           {trip.tracking_token && (
-            <div className="rounded-lg border bg-card p-5 space-y-3">
+            <div className="rounded-xl border bg-card p-5 space-y-3 shadow-resting">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 {t("trackingLinkTitle")}
               </h2>
@@ -553,7 +549,7 @@ export function TripDetailClient({
 
           {/* Delivery signature */}
           {trip.delivery_signature_url && (
-            <div className="rounded-lg border bg-card p-5 space-y-3">
+            <div className="rounded-xl border bg-card p-5 space-y-3 shadow-resting">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 <PenLine className="size-4" />
                 {t("signatureTitle")}

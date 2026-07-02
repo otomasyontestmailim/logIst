@@ -10,11 +10,28 @@ import {
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Archive, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Archive,
+  Package as PackageIcon,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Field as FormField } from "@/components/field";
+import { EmptyState } from "@/components/empty-state";
 import {
   createTrip,
   deleteTrip,
@@ -102,11 +119,11 @@ export function TripsClient({
             placeholder={tc("searchPlaceholder")}
             className="max-w-xs"
           />
-          <select
+          <NativeSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label={t("filterStatus")}
-            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            className="w-44"
           >
             <option value="all">{t("statusAll")}</option>
             {ALL_STATUSES.map((s) => (
@@ -114,7 +131,7 @@ export function TripsClient({
                 {ts(s)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
         <Button
           onClick={() => {
@@ -207,7 +224,7 @@ function TripForm({
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-lg border bg-card p-6 shadow-sm"
+      className="rounded-xl border bg-card p-6 shadow-resting"
     >
       <h2 className="mb-4 text-lg font-semibold">
         {trip ? t("editTrip") : t("newTrip")}
@@ -235,13 +252,11 @@ function TripForm({
           error={fe.destination ? errText(fe.destination) : undefined}
         />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="customer_id">{t("customer")}</Label>
-          <select
+        <FormField label={t("customer")} htmlFor="customer_id">
+          <NativeSelect
             id="customer_id"
             name="customer_id"
             defaultValue={trip?.customer_id ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("selectCustomer")}</option>
             {customers.map((c) => (
@@ -249,16 +264,14 @@ function TripForm({
                 {c.name}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="driver_id">{t("driver")}</Label>
-          <select
+        <FormField label={t("driver")} htmlFor="driver_id">
+          <NativeSelect
             id="driver_id"
             name="driver_id"
             defaultValue={trip?.driver_id ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("selectDriver")}</option>
             {drivers.map((d) => (
@@ -266,16 +279,14 @@ function TripForm({
                 {d.full_name ?? d.email}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="vehicle_id">{t("vehicle")}</Label>
-          <select
+        <FormField label={t("vehicle")} htmlFor="vehicle_id">
+          <NativeSelect
             id="vehicle_id"
             name="vehicle_id"
             defaultValue={trip?.vehicle_id ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("vehiclePlaceholder")}</option>
             {vehicles.map((v) => (
@@ -285,8 +296,8 @@ function TripForm({
                   .join(" — ")}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
         <Field
           name="load_date"
@@ -307,13 +318,11 @@ function TripForm({
           defaultValue={trip?.cargo_type}
         />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="loading_type">{t("loadingType")}</Label>
-          <select
+        <FormField label={t("loadingType")} htmlFor="loading_type">
+          <NativeSelect
             id="loading_type"
             name="loading_type"
             defaultValue={trip?.loading_type ?? ""}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">{t("selectLoadingType")}</option>
             {LOADING_TYPES.map((lt) => (
@@ -321,8 +330,8 @@ function TripForm({
                 {tlt(lt)}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
         <Field
           name="tonnage_kg"
@@ -364,81 +373,71 @@ function TripForm({
           defaultValue={trip?.freight_amount?.toString()}
         />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="freight_currency">{ti("currency")}</Label>
-          <select
+        <FormField label={ti("currency")} htmlFor="freight_currency">
+          <NativeSelect
             id="freight_currency"
             name="freight_currency"
             defaultValue={trip?.freight_currency ?? "EUR"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="invoice_status">{ti("invoiceStatus")}</Label>
-          <select
+        <FormField label={ti("invoiceStatus")} htmlFor="invoice_status">
+          <NativeSelect
             id="invoice_status"
             name="invoice_status"
             defaultValue={trip?.invoice_status ?? "draft"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             {INVOICE_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {ti(s)}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="invoice_direction">{ti("invoiceDirection")}</Label>
-          <select
+        <FormField label={ti("invoiceDirection")} htmlFor="invoice_direction">
+          <NativeSelect
             id="invoice_direction"
             name="invoice_direction"
             defaultValue={trip?.invoice_direction ?? "outgoing"}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             {INVOICE_DIRECTIONS.map((d) => (
               <option key={d} value={d}>
                 {ti(d)}
               </option>
             ))}
-          </select>
-        </div>
+          </NativeSelect>
+        </FormField>
 
-        <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
-          <Label htmlFor="notes">{t("notes")}</Label>
-          <textarea
+        <FormField
+          label={t("notes")}
+          htmlFor="notes"
+          className="sm:col-span-2 lg:col-span-3"
+        >
+          <Textarea
             id="notes"
             name="notes"
             rows={2}
             defaultValue={trip?.notes ?? undefined}
-            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
-        </div>
+        </FormField>
 
         {trip && (
-          <div className="space-y-1.5">
-            <Label htmlFor="status">{t("status")}</Label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={trip.status}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
+          <FormField label={t("status")} htmlFor="status">
+            <NativeSelect id="status" name="status" defaultValue={trip.status}>
               {ALL_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {ts(s)}
                 </option>
               ))}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
         )}
       </div>
       <div className="mt-5 flex gap-2">
@@ -480,11 +479,7 @@ function Field({
   max?: number;
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>
-        {label}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+    <FormField label={label} htmlFor={name} required={required} error={error}>
       <Input
         id={name}
         name={name}
@@ -495,18 +490,8 @@ function Field({
         min={min}
         max={max}
         aria-invalid={!!error}
-        className={
-          error
-            ? "border-destructive focus-visible:ring-destructive"
-            : undefined
-        }
       />
-      {error && (
-        <p className="text-xs text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    </FormField>
   );
 }
 
@@ -547,7 +532,7 @@ function StopsEditor({ tripId, stops }: { tripId: string; stops: StopRow[] }) {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-xl border bg-card p-6 shadow-resting">
       <h2 className="mb-4 text-lg font-semibold">{t("title")}</h2>
       <div className="space-y-3">
         {rows.map((row, i) => (
@@ -555,17 +540,16 @@ function StopsEditor({ tripId, stops }: { tripId: string; stops: StopRow[] }) {
             key={i}
             className="grid items-end gap-2 sm:grid-cols-[8rem_1fr_14rem_2.5rem]"
           >
-            <select
+            <NativeSelect
               value={row.stop_type}
               onChange={(e) =>
                 update(i, { stop_type: e.target.value as StopType })
               }
               aria-label={t("type")}
-              className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             >
               <option value="pickup">{t("pickup")}</option>
               <option value="delivery">{t("delivery")}</option>
-            </select>
+            </NativeSelect>
             <Input
               value={row.address}
               onChange={(e) => update(i, { address: e.target.value })}
@@ -655,73 +639,72 @@ function TripTable({
   const driverMap = new Map(drivers.map((d) => [d.id, d.full_name ?? d.email]));
 
   if (trips.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {emptyText}
-      </div>
-    );
+    return <EmptyState icon={PackageIcon} title={emptyText} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 font-medium">{t("colTripNo")}</th>
-            <th className="px-4 py-3 font-medium">{t("colOrigin")}</th>
-            <th className="px-4 py-3 font-medium">{t("colDestination")}</th>
-            <th className="px-4 py-3 font-medium">{t("colCustomer")}</th>
-            <th className="px-4 py-3 font-medium">{t("colDriver")}</th>
-            <th className="px-4 py-3 font-medium">{t("colFuel")}</th>
-            <th className="px-4 py-3 font-medium">{t("colFreight")}</th>
-            <th className="px-4 py-3 font-medium">{t("colStatus")}</th>
-            <th className="px-4 py-3 font-medium">{t("colDates")}</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y">
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("colTripNo")}</TableHead>
+            <TableHead>{t("colOrigin")}</TableHead>
+            <TableHead>{t("colDestination")}</TableHead>
+            <TableHead>{t("colCustomer")}</TableHead>
+            <TableHead>{t("colDriver")}</TableHead>
+            <TableHead>{t("colFuel")}</TableHead>
+            <TableHead>{t("colFreight")}</TableHead>
+            <TableHead>{t("colStatus")}</TableHead>
+            <TableHead>{t("colDates")}</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {trips.map((trip) => (
-            <tr key={trip.id} className="align-top">
-              <td className="px-4 py-3 font-medium">
+            <TableRow key={trip.id} className="align-top">
+              <TableCell className="font-mono text-[0.8125rem] font-medium">
                 <Link
                   href={`/trips/${trip.id}`}
-                  className="text-primary hover:underline underline-offset-2"
+                  className="text-primary underline-offset-2 hover:underline"
                 >
                   {trip.trip_no ?? "—"}
                 </Link>
-              </td>
-              <td className="px-4 py-3 font-medium">{trip.origin}</td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </TableCell>
+              <TableCell className="font-medium">{trip.origin}</TableCell>
+              <TableCell className="text-muted-foreground">
                 {trip.destination}
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 {trip.customer_id ? customerMap.get(trip.customer_id) : "—"}
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-muted-foreground">
                 {trip.driver_id ? driverMap.get(trip.driver_id) : "—"}
-              </td>
-              <td className="px-4 py-3">
+              </TableCell>
+              <TableCell>
                 <FuelBadge level={trip.fuel_level} />
-              </td>
-              <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
+              </TableCell>
+              <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">
                 {trip.freight_amount != null
                   ? `${trip.freight_amount.toLocaleString()} ${trip.freight_currency ?? ""}`
                   : "—"}
-              </td>
-              <td className="px-4 py-3">
+              </TableCell>
+              <TableCell>
                 <StatusBadge status={trip.status} tripId={trip.id} />
-              </td>
-              <td className="px-4 py-3 text-xs text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
                 <div>{formatDate(format, trip.load_date)}</div>
                 <div>{formatDate(format, trip.delivery_date)}</div>
-              </td>
-              <td className="px-4 py-3 text-right">
+              </TableCell>
+              <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <a
                     href={`/api/trips/${trip.id}/documents-zip`}
                     aria-label={t("downloadDocsZip")}
                     title={t("downloadDocsZip")}
-                    className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted"
+                    className={buttonVariants({
+                      variant: "ghost",
+                      size: "icon",
+                    })}
                   >
                     <Archive className="size-4" />
                   </a>
@@ -745,11 +728,11 @@ function TripTable({
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <ConfirmDialog
         open={confirmId !== null}
         onOpenChange={(o) => {
@@ -773,11 +756,7 @@ function FuelBadge({ level }: { level: number | null }) {
   if (level == null)
     return <span className="text-sm text-muted-foreground">—</span>;
   const color =
-    level <= 20
-      ? "bg-red-500"
-      : level <= 50
-        ? "bg-amber-500"
-        : "bg-emerald-500";
+    level <= 20 ? "bg-destructive" : level <= 50 ? "bg-warning" : "bg-success";
   return (
     <div className="flex items-center gap-1.5">
       <div className="h-1.5 w-10 overflow-hidden rounded-full bg-muted">
@@ -833,7 +812,7 @@ function StatusBadge({ status, tripId }: { status: string; tripId: string }) {
             startTransition(() => formAction(data));
           }
         }}
-        className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[current as keyof typeof STATUS_CLASSES] ?? STATUS_CLASSES.requested}`}
+        className={`cursor-pointer rounded-full border-0 px-2.5 py-1 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 ${STATUS_CLASSES[current as keyof typeof STATUS_CLASSES] ?? STATUS_CLASSES.requested}`}
       >
         {ALL_STATUSES.map((s) => (
           <option key={s} value={s}>

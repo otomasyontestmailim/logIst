@@ -1,7 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { buttonVariants } from "@/components/ui/button";
 import { ExportButton } from "@/components/export-button";
 import { Link } from "@/i18n/navigation";
+import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import type { Database } from "@/lib/supabase/database.types";
 import { DriversClient, type DriverRow } from "./drivers-client";
@@ -74,22 +76,19 @@ export default async function DriversPage({
   }));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/drivers/invite"
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-          >
-            {t("inviteDriver")}
-          </Link>
-          <ExportButton href="/api/export/drivers" label={tc("exportCsv")} />
-        </div>
-      </div>
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        actions={
+          <>
+            <Link href="/drivers/invite" className={buttonVariants()}>
+              {t("inviteDriver")}
+            </Link>
+            <ExportButton href="/api/export/drivers" label={tc("exportCsv")} />
+          </>
+        }
+      />
       <DriversClient drivers={drivers} />
       <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
     </main>

@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { Check, Loader2, ScanText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
 import { useErrorText } from "@/lib/use-error-text";
 import {
   setDocumentStatus,
@@ -16,12 +17,11 @@ import type { DocumentStatus, OcrStatus } from "@/lib/supabase/database.types";
 
 const initial: DocumentInboxFormState = { ok: false };
 
-const OCR_STATUS_CLASSES: Record<OcrStatus, string> = {
-  pending: "bg-muted text-muted-foreground",
-  processing:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  done: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  failed: "bg-destructive/15 text-destructive",
+const OCR_STATUS_TONES: Record<OcrStatus, StatusTone> = {
+  pending: "idle",
+  processing: "info",
+  done: "done",
+  failed: "danger",
 };
 
 export function DocumentActions({
@@ -127,15 +127,13 @@ export function DocumentActions({
       </div>
 
       {/* OCR durum rozeti */}
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${OCR_STATUS_CLASSES[ocrStatus]}`}
-      >
+      <StatusChip tone={OCR_STATUS_TONES[ocrStatus]}>
         {isOcrBusy && <Loader2 className="size-3 animate-spin" />}
         {t(`ocrStatus_${ocrStatus}` as Parameters<typeof t>[0])}
         {ocrStatus === "failed" && ocrError && (
           <span className="ml-1 opacity-75">— {ocrError}</span>
         )}
-      </span>
+      </StatusChip>
     </div>
   );
 }

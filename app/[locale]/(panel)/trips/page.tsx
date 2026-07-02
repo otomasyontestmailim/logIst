@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
 import { ExportButton } from "@/components/export-button";
+import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import { TripsClient } from "./trips-client";
 import type { Database } from "@/lib/supabase/database.types";
@@ -114,14 +115,12 @@ export default async function TripsPage({
   if (customer) paginationParams.customer = customer;
 
   return (
-    <main className="flex flex-1 flex-col gap-2 p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
-        </div>
-        <ExportButton href={exportHref} label={tc("exportCsv")} />
-      </div>
+    <main className="flex flex-1 flex-col gap-2 p-4 md:p-8">
+      <PageHeader
+        title={t("title")}
+        description={t("subtitle")}
+        actions={<ExportButton href={exportHref} label={tc("exportCsv")} />}
+      />
 
       {lateMode && (
         <div className="status-chip status-wait mt-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium">

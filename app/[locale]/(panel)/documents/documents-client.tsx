@@ -12,7 +12,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Check, ExternalLink, ScanText, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
+import { EmptyState } from "@/components/empty-state";
 import { formatDate } from "@/lib/format-date";
 import { useErrorText } from "@/lib/use-error-text";
 import {
@@ -43,10 +46,10 @@ export type GroupedTrip = {
   documents: DocumentItem[];
 };
 
-const STATUS_CLASSES: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  approved: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  rejected: "bg-destructive/15 text-destructive",
+const STATUS_TONES: Record<string, StatusTone> = {
+  pending: "wait",
+  approved: "done",
+  rejected: "danger",
 };
 
 const DOC_TYPES = [
@@ -135,23 +138,23 @@ export function DocumentsClient({
     <div className="space-y-4">
       {/* Filtreler */}
       <div className="flex flex-wrap gap-3">
-        <select
+        <NativeSelect
           value={initialStatus}
           onChange={(e) => setFilter("status", e.target.value)}
           aria-label={t("filterStatus")}
-          className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="w-44"
         >
           <option value="all">{t("statusAll")}</option>
           <option value="pending">{tds("pending")}</option>
           <option value="approved">{tds("approved")}</option>
           <option value="rejected">{tds("rejected")}</option>
-        </select>
+        </NativeSelect>
 
-        <select
+        <NativeSelect
           value={initialType}
           onChange={(e) => setFilter("type", e.target.value)}
           aria-label={t("filterType")}
-          className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="w-44"
         >
           <option value="all">{t("typeAll")}</option>
           {DOC_TYPES.map((type) => (
@@ -159,13 +162,11 @@ export function DocumentsClient({
               {tdt(type)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {groups.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-          {hasFilter ? t("noResults") : t("empty")}
-        </div>
+        <EmptyState title={hasFilter ? t("noResults") : t("empty")} />
       ) : (
         <div className="space-y-4">
           {groups.map((group) => {
@@ -173,7 +174,10 @@ export function DocumentsClient({
               (d) => d.status === "pending",
             ).length;
             return (
-              <div key={group.tripId} className="rounded-lg border">
+              <div
+                key={group.tripId}
+                className="overflow-hidden rounded-xl border bg-card shadow-resting"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-3">
                   <h2 className="text-sm font-semibold">
                     {t("groupTitle", {
@@ -185,17 +189,15 @@ export function DocumentsClient({
                     })}
                   </h2>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                    <StatusChip tone="idle">
                       {t("documentsCount", { count: group.documents.length })}
-                    </span>
+                    </StatusChip>
                     {pendingCount > 0 ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                      <StatusChip tone="wait">
                         {pendingCount} {tds("pending")}
-                      </span>
+                      </StatusChip>
                     ) : (
-                      <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                        {t("noPending")}
-                      </span>
+                      <StatusChip tone="done">{t("noPending")}</StatusChip>
                     )}
                   </div>
                 </div>
@@ -211,14 +213,14 @@ export function DocumentsClient({
                       <Fragment key={doc.id}>
                         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
+                            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
                               {tdt(doc.type)}
                             </span>
-                            <span
-                              className={`rounded px-2 py-1 text-xs font-medium ${STATUS_CLASSES[doc.status] ?? STATUS_CLASSES.pending}`}
+                            <StatusChip
+                              tone={STATUS_TONES[doc.status] ?? "wait"}
                             >
                               {tds(doc.status)}
-                            </span>
+                            </StatusChip>
                             <span className="text-xs text-muted-foreground">
                               {formatDate(format, doc.createdAt)}
                             </span>
@@ -255,7 +257,10 @@ export function DocumentsClient({
                                 target="_blank"
                                 rel="noreferrer"
                                 aria-label={t("view")}
-                                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+                                className={buttonVariants({
+                                  variant: "ghost",
+                                  size: "icon",
+                                })}
                               >
                                 <ExternalLink className="size-4" />
                               </a>
@@ -270,7 +275,7 @@ export function DocumentsClient({
                                   onClick={() => setStatus(doc.id, "approved")}
                                   aria-label={t("approve")}
                                 >
-                                  <Check className="size-4 text-green-600" />
+                                  <Check className="size-4 text-success" />
                                 </Button>
                                 <Button
                                   type="button"

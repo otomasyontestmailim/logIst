@@ -4,8 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format-date";
-import { expiryStatus } from "@/lib/expiry";
-import { STATUS_CLASSES } from "@/lib/trip-status";
+import { StatusChip } from "@/components/ui/status-chip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { EmptyState } from "@/components/empty-state";
+import { ExpiryBadge } from "@/components/expiry-badge";
+import { STATUS_TONE_NAME } from "@/lib/trip-status";
 import { DriverDetailActions } from "./driver-detail-client";
 import type { Database, TripStatus } from "@/lib/supabase/database.types";
 
@@ -72,7 +82,7 @@ export default async function DriverDetailPage({
   ];
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       <div className="flex items-center gap-3">
         <Link
           href="/drivers"
@@ -92,7 +102,7 @@ export default async function DriverDetailPage({
       {/* Profile grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Info card */}
-        <div className="rounded-lg border bg-card p-6 space-y-4">
+        <div className="rounded-xl border bg-card p-6 space-y-4 shadow-resting">
           <h2 className="font-semibold">{td("vehicleInfo")}</h2>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <InfoRow label={td("phone")} value={driver.phone} />
@@ -119,43 +129,18 @@ export default async function DriverDetailPage({
         </div>
 
         {/* Expiry badges */}
-        <div className="rounded-lg border bg-card p-6 space-y-4">
+        <div className="rounded-xl border bg-card p-6 space-y-4 shadow-resting">
           <h2 className="font-semibold">{td("colExpiries")}</h2>
           <div className="space-y-2">
-            {expiryFields.map(({ label, date }) => {
-              if (!date)
-                return (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="text-muted-foreground">—</span>
-                  </div>
-                );
-              const status = expiryStatus(date);
-              let cls = "text-foreground";
-              let badge = "";
-              if (status === "expired") {
-                cls = "text-destructive font-medium";
-                badge = td("expired");
-              } else if (status === "expiring") {
-                cls = "text-amber-600 dark:text-amber-400 font-medium";
-                badge = td("expiringSoon");
-              }
-              return (
-                <div
-                  key={label}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className={cls}>
-                    {formatDate(format, date)}
-                    {badge && <span className="ml-2 text-xs">({badge})</span>}
-                  </span>
-                </div>
-              );
-            })}
+            {expiryFields.map(({ label, date }) => (
+              <div
+                key={label}
+                className="flex items-center justify-between text-sm"
+              >
+                <span className="text-muted-foreground">{label}</span>
+                <ExpiryBadge date={date} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -169,47 +154,45 @@ export default async function DriverDetailPage({
       <section className="space-y-3">
         <h2 className="font-semibold">{t("recentTrips")}</h2>
         {trips.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            {t("noTrips")}
-          </div>
+          <EmptyState title={t("noTrips")} />
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{td("colVehicle")}</th>
-                  <th className="px-4 py-3 font-medium">{td("colExpiries")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {trips.map((trip) => (
-                  <tr key={trip.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/trips/${trip.id}`}
-                        className="text-primary hover:underline underline-offset-2"
-                      >
-                        {trip.origin} → {trip.destination}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[trip.status as TripStatus]}`}
-                      >
-                        {ts(trip.status as TripStatus)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(format, trip.load_date)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(format, trip.delivery_date)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("colRoute")}</TableHead>
+                <TableHead>{t("colStatus")}</TableHead>
+                <TableHead>{t("colLoadDate")}</TableHead>
+                <TableHead>{t("colDeliveryDate")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trips.map((trip) => (
+                <TableRow key={trip.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      href={`/trips/${trip.id}`}
+                      className="text-primary underline-offset-2 hover:underline"
+                    >
+                      {trip.origin} → {trip.destination}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusChip
+                      tone={STATUS_TONE_NAME[trip.status as TripStatus]}
+                    >
+                      {ts(trip.status as TripStatus)}
+                    </StatusChip>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(format, trip.load_date)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(format, trip.delivery_date)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
     </main>

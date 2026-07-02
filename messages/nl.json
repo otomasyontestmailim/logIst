@@ -95,6 +95,11 @@
     "noRecentDocs": "Geen recente documenten.",
     "viewAll": "Alles bekijken"
   },
+  "Expiry": {
+    "ok": "Geldig",
+    "expired": "Verlopen",
+    "expiringSoon": "Verloopt binnenkort"
+  },
   "Drivers": {
     "title": "Chauffeurs",
     "subtitle": "Beheer chauffeurs en documentgeldigheid",
@@ -496,6 +501,10 @@
     "back": "← Terug naar chauffeurs",
     "recentTrips": "Recente ritten",
     "noTrips": "Nog geen ritten voor deze chauffeur.",
+    "colRoute": "Route",
+    "colStatus": "Status",
+    "colLoadDate": "Laaddatum",
+    "colDeliveryDate": "Leverdatum",
     "editSection": "Profiel bewerken",
     "deleteDriver": "Chauffeur verwijderen",
     "deleteConfirm": "Weet u zeker dat u deze chauffeur wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",

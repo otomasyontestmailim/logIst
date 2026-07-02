@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedDocumentUrls } from "@/lib/supabase/storage";
+import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import {
   DocumentsClient,
@@ -167,9 +168,8 @@ export default async function DocumentsPage({
   if (typeFilter) paginationParams.type = typeFilter;
 
   return (
-    <main className="flex flex-1 flex-col gap-2 p-8">
-      <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <p className="text-muted-foreground">{t("subtitle")}</p>
+    <main className="flex flex-1 flex-col gap-2 p-4 md:p-8">
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <div className="mt-4">
         <DocumentsClient
           groups={groups}

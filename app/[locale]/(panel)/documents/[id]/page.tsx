@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/format-date";
 import { getSignedDocumentUrls } from "@/lib/supabase/storage";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
 import { DocumentActions } from "./document-detail-client";
 import { OcrEditForm } from "./ocr-edit-form";
 import type { OcrData } from "@/lib/ocr-types";
@@ -17,12 +18,10 @@ import type {
 
 type DocumentRow = Database["public"]["Tables"]["documents"]["Row"];
 
-const STATUS_CLASSES: Record<DocumentStatus, string> = {
-  pending:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  approved:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  rejected: "bg-destructive/15 text-destructive",
+const STATUS_TONES: Record<DocumentStatus, StatusTone> = {
+  pending: "wait",
+  approved: "done",
+  rejected: "danger",
 };
 
 export default async function DocumentDetailPage({
@@ -84,7 +83,7 @@ export default async function DocumentDetailPage({
   const canApprove = me.role === "admin" || me.role === "dispatcher";
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       <Link
         href="/documents"
         className="text-sm text-muted-foreground hover:text-foreground w-fit"
@@ -98,11 +97,9 @@ export default async function DocumentDetailPage({
             {tdt(doc.type as DocumentType)}
           </h1>
           <div className="mt-1 flex items-center gap-3 text-sm">
-            <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[doc.status as DocumentStatus]}`}
-            >
+            <StatusChip tone={STATUS_TONES[doc.status as DocumentStatus]}>
               {tds(doc.status as DocumentStatus)}
-            </span>
+            </StatusChip>
             <span className="text-muted-foreground">
               {formatDate(format, doc.created_at)}
             </span>
@@ -122,7 +119,7 @@ export default async function DocumentDetailPage({
         {/* Document image */}
         <div className="space-y-2">
           <h2 className="font-semibold">{t("imageTitle")}</h2>
-          <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="overflow-hidden rounded-xl border bg-card shadow-resting">
             {signedUrl ? (
               <a href={signedUrl} target="_blank" rel="noopener noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,7 +140,7 @@ export default async function DocumentDetailPage({
         {/* Right panel: metadata + OCR */}
         <div className="space-y-4">
           {/* Metadata */}
-          <div className="rounded-lg border bg-card p-5 space-y-3">
+          <div className="rounded-xl border bg-card p-5 space-y-3 shadow-resting">
             <div className="space-y-2 text-sm">
               {trip && (
                 <MetaRow label={t("tripInfo")}>
@@ -169,7 +166,7 @@ export default async function DocumentDetailPage({
           </div>
 
           {/* OCR fields — düzenlenebilir form */}
-          <div className="rounded-lg border bg-card p-5">
+          <div className="rounded-xl border bg-card p-5 shadow-resting">
             <OcrEditForm
               documentId={doc.id}
               ocrData={ocrData}

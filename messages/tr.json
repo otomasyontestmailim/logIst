@@ -95,6 +95,11 @@
     "noRecentDocs": "Son belge bulunamadı.",
     "viewAll": "Tümü"
   },
+  "Expiry": {
+    "ok": "Geçerli",
+    "expired": "Süresi doldu",
+    "expiringSoon": "Yakında dolacak"
+  },
   "Drivers": {
     "title": "Şoförler",
     "subtitle": "Şoförleri ve belge geçerliliklerini yönetin",
@@ -496,6 +501,10 @@
     "back": "← Şoförlere dön",
     "recentTrips": "Son Seferler",
     "noTrips": "Bu şoföre henüz sefer atanmamış.",
+    "colRoute": "Güzergâh",
+    "colStatus": "Durum",
+    "colLoadDate": "Yükleme Tarihi",
+    "colDeliveryDate": "Teslim Tarihi",
     "editSection": "Profili Düzenle",
     "deleteDriver": "Şoförü Sil",
     "deleteConfirm": "Bu şoförü silmek istediğinize emin misiniz? İşlem geri alınamaz.",

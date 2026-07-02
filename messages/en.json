@@ -95,6 +95,11 @@
     "noRecentDocs": "No recent documents.",
     "viewAll": "View all"
   },
+  "Expiry": {
+    "ok": "Valid",
+    "expired": "Expired",
+    "expiringSoon": "Expiring soon"
+  },
   "Drivers": {
     "title": "Drivers",
     "subtitle": "Manage drivers and document validity",
@@ -496,6 +501,10 @@
     "back": "← Back to Drivers",
     "recentTrips": "Recent Trips",
     "noTrips": "No trips assigned to this driver yet.",
+    "colRoute": "Route",
+    "colStatus": "Status",
+    "colLoadDate": "Load Date",
+    "colDeliveryDate": "Delivery Date",
     "editSection": "Edit Profile",
     "deleteDriver": "Delete Driver",
     "deleteConfirm": "Are you sure you want to delete this driver? This cannot be undone.",

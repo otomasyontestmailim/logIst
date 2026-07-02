@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { Pencil, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { OCR_FIELDS, type OcrField, type OcrData } from "@/lib/ocr-types";
 import { saveOcrData, type DocumentInboxFormState } from "../actions";
 
@@ -109,12 +110,12 @@ export function OcrEditForm({
               >
                 {label}
               </label>
-              <input
+              <Input
                 id={`ocr_field_${field}`}
                 name={`ocr_field_${field}`}
                 type="text"
                 defaultValue={ocrData?.[field] ?? ""}
-                className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm outline-none ring-0 focus:ring-1 focus:ring-ring"
+                className="flex-1"
               />
             </div>
           );
