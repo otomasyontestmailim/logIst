@@ -74,7 +74,7 @@ export function PwaInstallBanner() {
     <div
       role="banner"
       aria-label={t("ariaLabel")}
-      className="fixed bottom-4 left-4 right-4 z-50 rounded-xl border bg-card shadow-lg p-4 flex items-start gap-3 md:left-auto md:right-6 md:max-w-sm"
+      className="fixed bottom-4 left-4 right-4 z-50 rounded-xl border bg-popover shadow-floating p-4 flex items-start gap-3 md:left-auto md:right-6 md:max-w-sm"
     >
       <div className="mt-0.5 rounded-lg bg-primary/10 p-2 shrink-0">
         <Download className="size-5 text-primary" />

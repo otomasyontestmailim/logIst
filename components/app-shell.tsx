@@ -67,7 +67,7 @@ export function AppShell({
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
             )}
           >
             <Icon className="size-4" />
@@ -99,7 +99,7 @@ export function AppShell({
             onClick={() => setMobileOpen(false)}
             aria-hidden
           />
-          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-lg">
+          <aside className="absolute inset-y-0 left-0 flex w-64 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-floating">
             <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
               <div className="flex items-center gap-2.5">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -111,7 +111,7 @@ export function AppShell({
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label={t("closeMenu")}
-                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-sidebar-accent"
               >
                 <X className="size-4" />
               </button>
@@ -129,7 +129,7 @@ export function AppShell({
               type="button"
               onClick={() => setMobileOpen(true)}
               aria-label={t("openMenu")}
-              className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+              className="inline-flex size-9 items-center justify-center rounded-lg hover:bg-sidebar-accent md:hidden"
             >
               <Menu className="size-5" />
             </button>

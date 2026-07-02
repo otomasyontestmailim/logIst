@@ -47,7 +47,7 @@ export function NotificationsDropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border bg-popover shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border bg-popover shadow-floating">
           <div className="border-b px-4 py-2.5">
             <p className="text-sm font-semibold">{t("title")}</p>
           </div>
