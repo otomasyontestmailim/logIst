@@ -92,7 +92,8 @@
     "recentTrips": "Son Seferler",
     "recentDocuments": "Son Belgeler",
     "noRecentTrips": "Son sefer bulunamadı.",
-    "noRecentDocs": "Son belge bulunamadı."
+    "noRecentDocs": "Son belge bulunamadı.",
+    "viewAll": "Tümü"
   },
   "Drivers": {
     "title": "Şoförler",

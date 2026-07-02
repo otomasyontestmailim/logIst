@@ -13,7 +13,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { PIPELINE_STATUSES, STATUS_TONE } from "@/lib/trip-status";
+import { buttonVariants } from "@/components/ui/button";
+import { StatusChip } from "@/components/ui/status-chip";
+import { StatTile } from "@/components/stat-tile";
+import {
+  PIPELINE_STATUSES,
+  STATUS_TONE,
+  STATUS_TONE_NAME,
+} from "@/lib/trip-status";
 import { daysUntil, expiryStatus, type ExpiryStatus } from "@/lib/expiry";
 import type { Database, TripStatus } from "@/lib/supabase/database.types";
 import { DashboardMap, type DriverInfo } from "./dashboard-map";
@@ -57,7 +64,7 @@ type RecentDoc = {
 
 export default function DashboardPage() {
   return (
-    <main className="flex flex-1 flex-col gap-8 p-8">
+    <main className="flex flex-1 flex-col gap-8 p-4 md:p-8">
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent />
       </Suspense>
@@ -333,21 +340,21 @@ async function DashboardContent() {
           </span>
           <Link
             href="/trips"
-            className="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-colors hover:bg-accent"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <Plus className="size-3" />
             {t("quickNewTrip")}
           </Link>
           <Link
             href="/drivers/invite"
-            className="inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-colors hover:bg-accent"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <Plus className="size-3" />
             {t("quickNewDriver")}
           </Link>
           <Link
             href="/documents?status=pending"
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            className={buttonVariants({ size: "sm" })}
           >
             <FileText className="size-3" />
             {t("quickDocInbox")}
@@ -358,26 +365,13 @@ async function DashboardContent() {
       {/* Metrik kartları */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {metricCards.map(({ key, label, value, href, alert }) => (
-          <Link
+          <StatTile
             key={key}
+            label={label}
+            value={value}
             href={href}
-            className={cn(
-              "group flex flex-col gap-1 rounded-xl border bg-card p-5 shadow-sm transition-all outline-none hover:border-primary/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              alert && "border-warning/40 bg-warning/5",
-            )}
-          >
-            <span className="text-xs font-medium text-muted-foreground">
-              {label}
-            </span>
-            <span
-              className={cn(
-                "text-3xl font-bold tabular-nums leading-none",
-                alert ? "text-warning" : "text-foreground",
-              )}
-            >
-              {value}
-            </span>
-          </Link>
+            tone={alert ? "warning" : "default"}
+          />
         ))}
       </div>
 
@@ -395,7 +389,7 @@ async function DashboardContent() {
                 key={status}
                 href={`/trips?status=${status}`}
                 className={cn(
-                  "rounded-lg border bg-card p-3 text-center transition-colors outline-none hover:border-primary/40 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "rounded-xl border bg-card p-3 text-center shadow-resting transition-colors outline-none hover:border-primary/40 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isEmpty && "opacity-55",
                 )}
               >
@@ -432,12 +426,12 @@ async function DashboardContent() {
             </h2>
             <Link
               href="/trips"
-              className="text-xs text-primary hover:underline underline-offset-2"
+              className="text-xs text-primary underline-offset-2 hover:underline"
             >
-              Tümü →
+              {t("viewAll")} →
             </Link>
           </div>
-          <div className="rounded-lg border bg-card">
+          <div className="rounded-xl border bg-card shadow-resting">
             {recentTrips.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">
                 {t("noRecentTrips")}
@@ -460,14 +454,12 @@ async function DashboardContent() {
                           </p>
                         )}
                       </div>
-                      <span
-                        className={cn(
-                          "shrink-0 rounded px-2 py-0.5 text-xs font-medium status-chip",
-                          STATUS_TONE[tr.status],
-                        )}
+                      <StatusChip
+                        tone={STATUS_TONE_NAME[tr.status]}
+                        className="shrink-0"
                       >
                         {ts(tr.status)}
-                      </span>
+                      </StatusChip>
                     </Link>
                   </li>
                 ))}
@@ -484,12 +476,12 @@ async function DashboardContent() {
             </h2>
             <Link
               href="/documents"
-              className="text-xs text-primary hover:underline underline-offset-2"
+              className="text-xs text-primary underline-offset-2 hover:underline"
             >
-              Tümü →
+              {t("viewAll")} →
             </Link>
           </div>
-          <div className="rounded-lg border bg-card">
+          <div className="rounded-xl border bg-card shadow-resting">
             {recentDocs.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">
                 {t("noRecentDocs")}
@@ -497,12 +489,12 @@ async function DashboardContent() {
             ) : (
               <ul className="divide-y">
                 {recentDocs.map((doc) => {
-                  const statusClass =
+                  const tone =
                     doc.status === "approved"
-                      ? "text-green-700 dark:text-green-300"
+                      ? "done"
                       : doc.status === "rejected"
-                        ? "text-destructive"
-                        : "text-amber-600 dark:text-amber-400";
+                        ? "danger"
+                        : "wait";
                   return (
                     <li key={doc.id}>
                       <Link
@@ -517,14 +509,9 @@ async function DashboardContent() {
                             {doc.tripLabel}
                           </p>
                         </div>
-                        <span
-                          className={cn(
-                            "shrink-0 text-xs font-medium",
-                            statusClass,
-                          )}
-                        >
+                        <StatusChip tone={tone} className="shrink-0">
                           {tds(doc.status)}
-                        </span>
+                        </StatusChip>
                       </Link>
                     </li>
                   );
@@ -557,7 +544,7 @@ async function ExpiringDocsSection({ items }: { items: ExpiringDoc[] }) {
       <h2 className="text-sm font-medium text-muted-foreground">
         {t("expiringDocsTitle")}
       </h2>
-      <ul className="divide-y rounded-lg border bg-card">
+      <ul className="divide-y rounded-xl border bg-card shadow-resting">
         {items.map((it, i) => {
           const expired = it.status === "expired";
           return (
@@ -620,7 +607,7 @@ async function SetupEmptyState({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-      <div className="max-w-xl rounded-lg border bg-card p-6">
+      <div className="max-w-xl rounded-xl border bg-card p-6 shadow-resting">
         <h2 className="text-lg font-semibold">{t("setupTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("setupDesc")}</p>
         <ol className="mt-5 flex flex-col gap-2">

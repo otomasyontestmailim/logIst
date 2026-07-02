@@ -1,4 +1,5 @@
 import type { TripStatus, UserRole } from "@/lib/supabase/database.types";
+import type { StatusTone } from "@/components/ui/status-chip";
 
 /** Pipeline sırası — dashboard sayaç barı ve filtreler bu sırayı kullanır. */
 export const PIPELINE_STATUSES: TripStatus[] = [
@@ -76,3 +77,9 @@ export const STATUS_TONE: Record<TripStatus, string> = {
 export const STATUS_CLASSES = Object.fromEntries(
   ALL_STATUSES.map((s) => [s, `status-chip ${STATUS_TONE[s]}`]),
 ) as Record<TripStatus, string>;
+
+/** Durum → <StatusChip tone=...> için kısa ton adı (STATUS_TONE'un
+ *  "status-" önekinden arındırılmış hali). */
+export const STATUS_TONE_NAME = Object.fromEntries(
+  ALL_STATUSES.map((s) => [s, STATUS_TONE[s].replace("status-", "")]),
+) as Record<TripStatus, StatusTone>;

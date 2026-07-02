@@ -92,7 +92,8 @@
     "recentTrips": "Recent Trips",
     "recentDocuments": "Recent Documents",
     "noRecentTrips": "No recent trips.",
-    "noRecentDocs": "No recent documents."
+    "noRecentDocs": "No recent documents.",
+    "viewAll": "View all"
   },
   "Drivers": {
     "title": "Drivers",

@@ -92,7 +92,8 @@
     "recentTrips": "Recente ritten",
     "recentDocuments": "Recente documenten",
     "noRecentTrips": "Geen recente ritten.",
-    "noRecentDocs": "Geen recente documenten."
+    "noRecentDocs": "Geen recente documenten.",
+    "viewAll": "Alles bekijken"
   },
   "Drivers": {
     "title": "Chauffeurs",
