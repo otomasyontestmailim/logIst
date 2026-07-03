@@ -4,12 +4,13 @@ description: Sevk kulesi sükûneti — şoför-belge & sefer yönetimi için sa
 colors:
   primary: "oklch(0.52 0.07 195)"
   primary-deep: "oklch(0.45 0.075 195)"
-  primary-foreground: "oklch(0.99 0 0)"
-  bg: "oklch(0.99 0 0)"
-  surface: "oklch(0.985 0.004 195)"
+  primary-foreground: "oklch(0.995 0.002 195)"
+  bg: "oklch(0.975 0.005 195)"
+  card: "oklch(0.995 0.002 195)"
+  surface: "oklch(0.96 0.01 195)"
   ink: "oklch(0.20 0.01 195)"
-  muted-ink: "oklch(0.55 0.012 195)"
-  border: "oklch(0.92 0.005 195)"
+  muted-ink: "oklch(0.53 0.014 195)"
+  border: "oklch(0.91 0.008 195)"
   success: "oklch(0.60 0.11 155)"
   warning: "oklch(0.75 0.13 80)"
   danger: "oklch(0.577 0.245 27.325)"
@@ -119,15 +120,23 @@ nötrler aynı hue'ya (195) hafifçe çekilir.
 - **Petrol Deep** (`#25575d` / `oklch(0.45 0.075 195)`): Birincil butonun hover/active
   hali ve metin üstü vurgular.
 
-### Neutral
+### Neutral — 3 katmanlı tonal istif
 
-- **Bg** (`#fdfdfd` / `oklch(0.99 0 0)`): Ana içerik zemini.
-- **Surface** (`#f8fbfb` / `oklch(0.985 0.004 195)`): Sidebar, toolbar, panel — içerik
-  zemininden bir tık soğuk ikinci nötr katman.
-- **Ink** (`#19211f` / `oklch(0.20 0.01 195)`): Gövde ve başlık metni.
-- **Muted Ink** (`#6b7375` / `oklch(0.55 0.012 195)`): İkincil metin, etiketler,
-  placeholder — gövde zemininde ≥4.5:1 sağlar (placeholder dahil).
-- **Border** (`#e5e9e9` / `oklch(0.92 0.005 195)`): Ayraç, kenarlık, input stroke.
+> Kural: chrome (sidebar/header) kanvasın bir ton ALTINDA, kartlar bir ton
+> ÜSTÜNDE. Derinlik gölgeyle değil bu ton farkıyla kurulur. Dark istif aynı
+> mantığın aynası: sidebar 0.14 < kanvas 0.155 < kart 0.205 < popover 0.245
+> (koyu temada yüzey yükseldikçe AÇILIR).
+
+- **Bg / kanvas** (`oklch(0.975 0.005 195)`): Ana içerik zemini — soğuk tonlu.
+- **Card** (`oklch(0.995 0.002 195)`): Kart/tablo/form yüzeyi — kanvastan
+  ayrışan near-white; `--elevation-resting` gölgeyle birlikte.
+- **Surface / chrome** (`oklch(0.96 0.01 195)`): Sidebar, header — kanvasın
+  bir adım altındaki ray.
+- **Ink** (`oklch(0.20 0.01 195)`): Gövde ve başlık metni.
+- **Muted Ink** (`oklch(0.53 0.014 195)`): İkincil metin, etiketler,
+  placeholder — tonlu yüzeylerde ≥4.5:1 sağlar.
+- **Border** (`oklch(0.91 0.008 195)`): Ayraç, kenarlık; input stroke
+  `oklch(0.90 0.008 195)`.
 
 ### Semantic
 

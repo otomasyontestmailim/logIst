@@ -64,7 +64,7 @@ export function AppShell({
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/50",
               active
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
@@ -123,7 +123,7 @@ export function AppShell({
 
       {/* Ana içerik */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-sidebar-border bg-sidebar px-4">
           <div className="flex items-center gap-2">
             <button
               type="button"

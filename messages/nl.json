@@ -108,6 +108,7 @@
     "inviteTitle": "Chauffeur uitnodigen",
     "inviteSubtitle": "Stuur systeemtoegang naar de chauffeur via e-mail",
     "inviteButton": "Uitnodiging sturen",
+    "copyPassword": "Wachtwoord kopiëren",
     "inviteSending": "Bezig met verzenden...",
     "inviteSuccess": "Chauffeur toegevoegd. Tijdelijk wachtwoord: {password}",
     "backToList": "← Terug naar chauffeurs",
@@ -665,10 +666,13 @@
     "signatureSaved": "Handtekening opgeslagen."
   },
   "Tracking": {
+    "title": "Zending volgen",
     "status": "Status",
     "origin": "Vertrekpunt",
     "destination": "Bestemming",
+    "loadDate": "Laaddatum",
     "estimatedDelivery": "Verwachte levering",
+    "deliveredOn": "Geleverd op {date}",
     "lastUpdate": "Laatste update",
     "driver": "Chauffeur"
   },

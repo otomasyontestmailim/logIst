@@ -39,7 +39,7 @@ export function NewOrgForm() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-xl border bg-card p-6 shadow-resting">
       <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <Building2 className="size-5 text-primary" />
         {t("newOrgTitle")}
@@ -65,12 +65,12 @@ export function NewOrgForm() {
       </form>
 
       {state.ok && state.tempPassword && (
-        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
-          <p className="text-sm font-medium text-green-800 dark:text-green-200">
+        <div className="status-done mt-4 rounded-lg border border-[var(--tone-fg)]/25 bg-[var(--tone-bg)] p-4">
+          <p className="text-sm font-medium text-[var(--tone-fg)]">
             {t("orgCreatedSuccess", { email: state.adminEmail ?? "" })}
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <code className="flex-1 rounded bg-white px-3 py-1.5 font-mono text-sm dark:bg-black">
+            <code className="flex-1 rounded-md bg-card px-3 py-1.5 font-mono text-sm text-foreground">
               {state.tempPassword}
             </code>
             <Button
@@ -81,13 +81,13 @@ export function NewOrgForm() {
               aria-label={copied ? t("copied") : t("copyPassword")}
             >
               {copied ? (
-                <Check className="size-4 text-green-600" />
+                <Check className="size-4 text-success" />
               ) : (
                 <Copy className="size-4" />
               )}
             </Button>
           </div>
-          <p className="mt-2 text-xs text-green-700 dark:text-green-300">
+          <p className="mt-2 text-xs text-[var(--tone-fg)]/85">
             {t("orgCreatedWarning")}
           </p>
         </div>

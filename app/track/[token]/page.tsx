@@ -1,16 +1,7 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { adminClientOrNull } from "@/lib/supabase/admin";
-
-const STATUS_LABELS: Record<string, string> = {
-  requested: "Order Received",
-  driver_approval: "Awaiting Driver",
-  dispatched: "Dispatched",
-  loading: "Loading",
-  in_transit: "In Transit",
-  delivering: "Out for Delivery",
-  delivery_approval: "Delivered — Pending Confirmation",
-  completed: "Completed",
-};
+import { routing } from "@/i18n/routing";
 
 export default async function TrackingPage({
   params,
@@ -51,95 +42,95 @@ export default async function TrackingPage({
     }
   }
 
-  const statusLabel = STATUS_LABELS[trip.status] ?? trip.status;
+  // Halka açık sayfa: oturum/locale yok → varsayılan dilde çevir.
+  const locale = routing.defaultLocale;
+  const t = await getTranslations({ locale, namespace: "Tracking" });
+  const ts = await getTranslations({ locale, namespace: "TripStatus" });
+  const format = await getFormatter({ locale });
+
   const isCompleted =
     trip.status === "completed" || trip.status === "delivery_approval";
 
   function fmt(dateStr: string | null) {
     if (!dateStr) return null;
     try {
-      return new Date(dateStr).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
+      return format.dateTime(new Date(dateStr), { dateStyle: "medium" });
     } catch {
       return dateStr;
     }
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4">
+    <main className="min-h-screen bg-background p-4">
       <div className="mx-auto max-w-md space-y-4 pt-8">
-        {/* Header */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Shipment Tracking
+        {/* Başlık */}
+        <div className="rounded-xl border bg-card p-6 shadow-resting">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">
+            {t("title")}
           </p>
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold tracking-tight">
             {trip.origin ?? "—"} → {trip.destination ?? "—"}
           </h1>
         </div>
 
-        {/* Status */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Status
+        {/* Durum */}
+        <div className="rounded-xl border bg-card p-6 shadow-resting">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">
+            {t("status")}
           </p>
-          <div className="flex items-center gap-3">
+          <div
+            className={`flex items-center gap-3 ${isCompleted ? "status-done" : "status-active"}`}
+          >
             <span
-              className={[
-                "inline-block h-2.5 w-2.5 rounded-full",
-                isCompleted ? "bg-green-500" : "bg-blue-500 animate-pulse",
-              ].join(" ")}
+              className={`status-dot inline-block size-2.5 rounded-full ${isCompleted ? "" : "animate-pulse"}`}
             />
-            <span className="text-lg font-semibold text-gray-900">
-              {statusLabel}
+            <span className="text-lg font-semibold">
+              {ts(trip.status as Parameters<typeof ts>[0])}
             </span>
           </div>
           {trip.delivered_at && isCompleted && (
-            <p className="mt-1 text-sm text-gray-500">
-              Delivered on {fmt(trip.delivered_at)}
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("deliveredOn", { date: fmt(trip.delivered_at) ?? "—" })}
             </p>
           )}
         </div>
 
-        {/* Dates */}
+        {/* Tarihler */}
         <div className="grid grid-cols-2 gap-4">
           {trip.load_date && (
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="mb-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Load Date
+            <div className="rounded-xl border bg-card p-5 shadow-resting">
+              <p className="mb-0.5 text-xs font-medium text-muted-foreground">
+                {t("loadDate")}
               </p>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold tabular-nums">
                 {fmt(trip.load_date)}
               </p>
             </div>
           )}
           {trip.delivery_date && (
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="mb-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Est. Delivery
+            <div className="rounded-xl border bg-card p-5 shadow-resting">
+              <p className="mb-0.5 text-xs font-medium text-muted-foreground">
+                {t("estimatedDelivery")}
               </p>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold tabular-nums">
                 {fmt(trip.delivery_date)}
               </p>
             </div>
           )}
         </div>
 
-        {/* Driver */}
+        {/* Şoför */}
         {driverFirstName && (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="mb-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Driver
+          <div className="rounded-xl border bg-card p-5 shadow-resting">
+            <p className="mb-0.5 text-xs font-medium text-muted-foreground">
+              {t("driver")}
             </p>
-            <p className="font-semibold text-gray-900">{driverFirstName}</p>
+            <p className="font-semibold">{driverFirstName}</p>
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-400">
-          Last updated: {fmt(new Date().toISOString())}
+        <p className="text-center text-xs text-muted-foreground">
+          {t("lastUpdate")}: {fmt(new Date().toISOString())}
         </p>
       </div>
     </main>

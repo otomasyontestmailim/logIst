@@ -36,7 +36,7 @@ export default function InviteDriverPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-8">
+    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
       <div>
         <Link
           href="/drivers"
@@ -58,7 +58,7 @@ export default function InviteDriverPage() {
       <form
         ref={formRef}
         action={formAction}
-        className="flex max-w-md flex-col gap-5 rounded-lg border bg-card p-6 shadow-sm"
+        className="flex max-w-md flex-col gap-5 rounded-xl border bg-card p-6 shadow-resting"
       >
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="full_name">{t("fullName")}</Label>
@@ -88,19 +88,19 @@ export default function InviteDriverPage() {
         )}
 
         {state.ok && state.password && (
-          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900 dark:bg-green-950">
-            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+          <div className="status-done rounded-lg border border-[var(--tone-fg)]/25 bg-[var(--tone-bg)] px-4 py-3">
+            <p className="text-sm font-medium text-[var(--tone-fg)]">
               {t("inviteSuccess", { password: "" })}
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <code className="rounded bg-background px-3 py-1.5 font-mono text-base font-semibold tracking-wider">
+              <code className="rounded-md bg-card px-3 py-1.5 font-mono text-base font-semibold tracking-wider text-foreground">
                 {state.password}
               </code>
               <button
                 type="button"
                 onClick={copyPassword}
-                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
-                aria-label="Kopyala"
+                className="inline-flex size-8 items-center justify-center rounded-lg text-foreground transition-colors outline-none hover:bg-card/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-label={t("copyPassword")}
               >
                 <Copy className="size-4" />
               </button>

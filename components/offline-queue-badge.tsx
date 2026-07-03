@@ -17,7 +17,7 @@ export function OfflineQueueBadge() {
   return (
     <div
       title={t("pendingTitle", { count })}
-      className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+      className="status-chip status-wait flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium"
     >
       <CloudUpload className="size-3" />
       {t("pending", { count })}

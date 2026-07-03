@@ -5,6 +5,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { Link } from "@/i18n/navigation";
 import { AlertTriangle, Building2, CalendarDays, Users } from "lucide-react";
 import { formatDate } from "@/lib/format-date";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { OrgPlanToggle } from "./admin-detail-client";
 
 export default async function AdminOrgDetailPage({
@@ -110,48 +118,46 @@ export default async function AdminOrgDetailPage({
       {/* Members table */}
       <div>
         <h2 className="mb-3 font-semibold">{t("membersTitle")}</h2>
-        <div className="overflow-hidden rounded-lg border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">{t("colFullName")}</th>
-                <th className="px-4 py-3">{t("colEmail")}</th>
-                <th className="px-4 py-3">{t("colRole")}</th>
-                <th className="px-4 py-3">{t("colCreated")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {members.map((member) => (
-                <tr key={member.id} className="hover:bg-muted/20">
-                  <td className="px-4 py-3 font-medium">
-                    {member.full_name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {member.email}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      {tRoles(member.role as "admin" | "dispatcher" | "driver")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(format, member.created_at)}
-                  </td>
-                </tr>
-              ))}
-              {members.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-muted-foreground"
-                  >
-                    {t("noMembers")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("colFullName")}</TableHead>
+              <TableHead>{t("colEmail")}</TableHead>
+              <TableHead>{t("colRole")}</TableHead>
+              <TableHead>{t("colCreated")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {members.map((member) => (
+              <TableRow key={member.id}>
+                <TableCell className="font-medium">
+                  {member.full_name ?? "—"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {member.email}
+                </TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                    {tRoles(member.role as "admin" | "dispatcher" | "driver")}
+                  </span>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDate(format, member.created_at)}
+                </TableCell>
+              </TableRow>
+            ))}
+            {members.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="py-8 text-center text-muted-foreground"
+                >
+                  {t("noMembers")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
@@ -167,7 +173,7 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card p-4">
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-resting">
       {icon}
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>

@@ -108,6 +108,7 @@
     "inviteTitle": "Invite Driver",
     "inviteSubtitle": "Send system access to the driver via email",
     "inviteButton": "Send Invite",
+    "copyPassword": "Copy password",
     "inviteSending": "Sending...",
     "inviteSuccess": "Driver added. Temporary password: {password}",
     "backToList": "← Back to Drivers",
@@ -665,10 +666,13 @@
     "signatureSaved": "Signature saved."
   },
   "Tracking": {
+    "title": "Shipment Tracking",
     "status": "Status",
     "origin": "Origin",
     "destination": "Destination",
+    "loadDate": "Load Date",
     "estimatedDelivery": "Estimated Delivery",
+    "deliveredOn": "Delivered on {date}",
     "lastUpdate": "Last Update",
     "driver": "Driver"
   },

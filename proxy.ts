@@ -14,6 +14,8 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // API, auth callback, statik dosyalar ve Next dahili yolları hariç tüm yollar
-  matcher: ["/((?!api|auth|_next|_vercel|.*\\..*).*)"],
+  // API, auth callback, halka açık takip (/track), offline fallback, statik
+  // dosyalar ve Next dahili yolları hariç tüm yollar. /track locale'siz
+  // yaşar; i18n middleware'i onu /tr/track'e yönlendirip 404'e düşürüyordu.
+  matcher: ["/((?!api|auth|track|offline|_next|_vercel|.*\\..*).*)"],
 };

@@ -25,6 +25,9 @@ import { MapView } from "@/components/map/map-view";
 import { StopsTimeline } from "@/components/stops-timeline";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { StatusChip, type StatusTone } from "@/components/ui/status-chip";
+import { EmptyState } from "@/components/empty-state";
 import { compressImage } from "@/lib/image";
 import { useUploadQueue } from "@/lib/use-upload-queue";
 import { formatDate } from "@/lib/format-date";
@@ -36,7 +39,7 @@ import {
   saveDeliverySignature,
   type DocumentFormState,
 } from "./actions";
-import { DRIVER_NEXT_STATUS, STATUS_CLASSES } from "@/lib/trip-status";
+import { DRIVER_NEXT_STATUS, STATUS_TONE_NAME } from "@/lib/trip-status";
 import { createClient } from "@/lib/supabase/client";
 import { SignaturePad } from "@/components/signature-pad";
 import dynamic from "next/dynamic";
@@ -82,10 +85,10 @@ const ACTION_LABEL_KEYS: Partial<Record<TripStatus, string>> = {
   delivery_approval: "actionDelivered",
 };
 
-const DOC_STATUS_CLASSES: Record<string, string> = {
-  pending: "status-chip status-wait",
-  approved: "status-chip status-done",
-  rejected: "bg-destructive/15 text-destructive",
+const DOC_STATUS_TONES: Record<string, StatusTone> = {
+  pending: "wait",
+  approved: "done",
+  rejected: "danger",
 };
 
 type StopRow = Database["public"]["Tables"]["trip_stops"]["Row"];
@@ -128,11 +131,7 @@ export function DriverClient({
   }, []);
 
   if (trips.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        {t("noTrips")}
-      </div>
-    );
+    return <EmptyState title={t("noTrips")} />;
   }
 
   const customerMap = new Map(customers.map((c) => [c.id, c.name]));
@@ -219,18 +218,16 @@ function TripCard({
   const statusLabel = tts(trip.status);
 
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
+    <div className="space-y-4 rounded-xl border bg-card p-4 shadow-resting">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 text-lg font-semibold">
           <span>{trip.origin}</span>
           <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
           <span>{trip.destination}</span>
         </div>
-        <span
-          className={`rounded px-2 py-1 text-xs font-medium whitespace-nowrap ${STATUS_CLASSES[trip.status] ?? STATUS_CLASSES.requested}`}
-        >
+        <StatusChip tone={STATUS_TONE_NAME[trip.status] ?? "idle"}>
           {statusLabel}
-        </span>
+        </StatusChip>
       </div>
 
       {stops.some((s) => s.lat != null && s.lng != null) && (
@@ -486,11 +483,9 @@ function DocumentSection({
               className="flex items-center justify-between gap-2 text-sm"
             >
               <span>{tdt(doc.type)}</span>
-              <span
-                className={`rounded px-2 py-0.5 text-xs font-medium ${DOC_STATUS_CLASSES[doc.status] ?? DOC_STATUS_CLASSES.pending}`}
-              >
+              <StatusChip tone={DOC_STATUS_TONES[doc.status] ?? "wait"}>
                 {tds(doc.status)}
-              </span>
+              </StatusChip>
             </li>
           ))}
         </ul>
@@ -499,19 +494,20 @@ function DocumentSection({
       <div className="space-y-2">
         <div className="space-y-1.5">
           <Label htmlFor={`doc-type-${trip.id}`}>{t("selectType")}</Label>
-          <select
+          {/* Mobil dokunma hedefi: şoför ekranında select 40px yükseklikte kalır */}
+          <NativeSelect
             id={`doc-type-${trip.id}`}
             value={docType}
             onChange={(e) => setDocType(e.target.value as DocumentType)}
             disabled={busy}
-            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            className="[&>select]:h-10"
           >
             {DOCUMENT_TYPES.map((dt) => (
               <option key={dt} value={dt}>
                 {tdt(dt)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         <input

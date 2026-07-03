@@ -108,6 +108,7 @@
     "inviteTitle": "Şoför Davet Et",
     "inviteSubtitle": "E-posta ile şoföre sistem erişimi gönderin",
     "inviteButton": "Davet Gönder",
+    "copyPassword": "Parolayı kopyala",
     "inviteSending": "Gönderiliyor...",
     "inviteSuccess": "Şoför eklendi. Geçici şifre: {password}",
     "backToList": "← Şoförlere dön",
@@ -665,10 +666,13 @@
     "signatureSaved": "İmza kaydedildi."
   },
   "Tracking": {
+    "title": "Gönderi Takibi",
     "status": "Durum",
     "origin": "Kalkış",
     "destination": "Varış",
+    "loadDate": "Yükleme Tarihi",
     "estimatedDelivery": "Tahmini Teslimat",
+    "deliveredOn": "{date} tarihinde teslim edildi",
     "lastUpdate": "Son Güncelleme",
     "driver": "Şoför"
   },

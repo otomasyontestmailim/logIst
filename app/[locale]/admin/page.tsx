@@ -2,6 +2,14 @@ import { getTranslations } from "next-intl/server";
 import { adminClientOrNull } from "@/lib/supabase/admin";
 import { Building2, Users, CalendarDays, AlertTriangle } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { NewOrgForm } from "./new-org-form";
 
 export default async function AdminPage() {
@@ -55,66 +63,64 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3">{t("colName")}</th>
-              <th className="px-4 py-3">{t("colTaxNo")}</th>
-              <th className="px-4 py-3">{t("colPlan")}</th>
-              <th className="px-4 py-3">{t("colUsers")}</th>
-              <th className="px-4 py-3">{t("colCreated")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {(orgs ?? []).map((org) => (
-              <tr key={org.id} className="hover:bg-muted/20">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="size-4 shrink-0 text-muted-foreground" />
-                    <Link
-                      href={`/admin/${org.id}`}
-                      className="font-medium text-primary hover:underline underline-offset-2"
-                    >
-                      {org.name}
-                    </Link>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {org.tax_no ?? "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {org.plan}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Users className="size-3.5" />
-                    {countMap[org.id] ?? 0}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <CalendarDays className="size-3.5" />
-                    {new Date(org.created_at).toLocaleDateString("tr-TR")}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {(orgs ?? []).length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-8 text-center text-muted-foreground"
-                >
-                  {t("noOrgs")}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("colName")}</TableHead>
+            <TableHead>{t("colTaxNo")}</TableHead>
+            <TableHead>{t("colPlan")}</TableHead>
+            <TableHead>{t("colUsers")}</TableHead>
+            <TableHead>{t("colCreated")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {(orgs ?? []).map((org) => (
+            <TableRow key={org.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Building2 className="size-4 shrink-0 text-muted-foreground" />
+                  <Link
+                    href={`/admin/${org.id}`}
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {org.name}
+                  </Link>
+                </div>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {org.tax_no ?? "—"}
+              </TableCell>
+              <TableCell>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {org.plan}
+                </span>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-muted-foreground tabular-nums">
+                  <Users className="size-3.5" />
+                  {countMap[org.id] ?? 0}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <CalendarDays className="size-3.5" />
+                  {new Date(org.created_at).toLocaleDateString("tr-TR")}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {(orgs ?? []).length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="py-8 text-center text-muted-foreground"
+              >
+                {t("noOrgs")}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { MapView, type MapMarker } from "@/components/map/map-view";
 import { StopsTimeline } from "@/components/stops-timeline";
-import { STATUS_CLASSES } from "@/lib/trip-status";
+import { StatusChip } from "@/components/ui/status-chip";
+import { STATUS_TONE_NAME } from "@/lib/trip-status";
 import type { Database } from "@/lib/supabase/database.types";
 
 type LocationRow = Database["public"]["Tables"]["driver_locations"]["Row"];
@@ -67,7 +68,7 @@ export function DashboardMap({
         emptyDesc={t("mapEmptyDesc")}
         className="z-0 h-[28rem] w-full rounded-lg border"
       />
-      <aside className="rounded-lg border bg-card p-4 shadow-sm">
+      <aside className="rounded-xl border bg-card p-4 shadow-resting">
         <h2 className="mb-3 text-base font-semibold">{t("tripInfo")}</h2>
         {!driver ? (
           <p className="text-sm text-muted-foreground">{t("noTripSelected")}</p>
@@ -82,11 +83,9 @@ export function DashboardMap({
               <>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{tt("status")}</span>
-                  <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[trip.status]}`}
-                  >
+                  <StatusChip tone={STATUS_TONE_NAME[trip.status]}>
                     {tts(trip.status)}
-                  </span>
+                  </StatusChip>
                 </div>
                 <InfoRow label={tt("cargoType")} value={trip.cargo_type} />
                 <InfoRow
