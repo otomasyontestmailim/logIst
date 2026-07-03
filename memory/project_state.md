@@ -1,6 +1,42 @@
 # Proje Durumu — Lojistik CRM
 
-> Son güncelleme: 2026-06-30 · Session başında oku, sonda güncelle.
+> Son güncelleme: 2026-07-03 · Session başında oku, sonda güncelle.
+
+---
+
+## Session (2026-07-02/03) — Premium UI uplift (5 aşama, 5 commit) + OCR fix
+
+**Plan onaylı "Sevk Kulesi" görsel yenileme — check ✓ + build ✓ + Chrome
+smoke test her aşamada. Commitler: 4f0e2d8 → (S2..S5). PUSH EDİLMEDİ —
+kullanıcı onayı bekliyor.**
+
+- **S1 token temeli:** 3 katmanlı tonal istif (light: sidebar 0.96 < kanvas
+  0.975 < kart 0.995; dark: 0.14 < 0.155 < 0.205 < popover 0.245),
+  `--elevation-resting/floating` gölge token'ları (`shadow-resting` utility),
+  dark border 10%→14%. **BUG FIX: `--font-sans` kendine referanstı — Geist
+  hiç render olmuyordu** (uygulama Segoe UI'daydı); `--font-geist-sans`'a
+  bağlandı. themeColor → viewport export (Next 16), marka hex'leri.
+  Yeni `status-danger`/`status-info` tonları.
+- **S2 primitif kit:** `components/ui/{table,native-select,status-chip,
+skeleton}.tsx` + `components/{page-header,empty-state,stat-tile,field,
+page-skeleton,expiry-badge}.tsx`; `lib/trip-status.ts`'e `STATUS_TONE_NAME`.
+  Dashboard adaptasyonu + `Dashboard.viewAll` i18n (hardcoded "Tümü →" idi).
+- **S3–S4 ekran adaptasyonu:** trips/drivers/documents/customers/vehicles/
+  reports/settings/audit — 18 ham select → NativeSelect, 12 elle tablo →
+  Table, 6 rakip rozet paleti → StatusChip, 5 kopya Field → paylaşılan,
+  tüm bölümlere `loading.tsx`, `p-8` → `p-4 md:p-8`.
+  **2 tablo BUG FIX:** `drivers/[id]` (2 başlık / 4 hücre) ve
+  `customers/[id]` (müşteri başlıkları sefer satırlarında) — yeni
+  `DriverDetail.col*` / `CustomerDetail.col*` anahtarları ×3 dil.
+- **S5 kenarlar:** **BUG FIX: `/track` halka açık takip sayfası HİÇ
+  ÇALIŞMIYORDU** — proxy.ts matcher'ı locale'e yönlendirip 404 veriyordu +
+  kök layout yoktu ("Missing <html>"); matcher'a `track|offline` eklendi,
+  `app/track/layout.tsx` + `app/offline/layout.tsx` oluşturuldu. Track tam
+  re-theme + Tracking i18n. Driver PWA/admin StatusChip+Table; app-shell
+  sticky header + nav odak halkaları. DESIGN.md yeni istifle senkronlandı.
+- **OCR (önceki gün):** model ID `claude-haiku-4-5-20251001`'e sabitlendi
+  (537f9e9, pushlandı). Kalan iş: Coolify'a `ANTHROPIC_API_KEY` eklenmesi
+  (kullanıcı yapacak) + canlıda gerçek belge OCR testi.
 
 ---
 
